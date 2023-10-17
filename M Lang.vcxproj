@@ -18,6 +18,25 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="header\AST.h" />
+    <ClInclude Include="header\base64.h" />
+    <ClInclude Include="header\ByteArray.h" />
+    <ClInclude Include="header\Common.h" />
+    <ClInclude Include="header\Lexer.h" />
+    <ClInclude Include="header\SectionManager.h" />
+    <ClInclude Include="header\Struct.h" />
+    <ClInclude Include="header\Tree.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="cpp\AST.cpp" />
+    <ClCompile Include="cpp\base64.cpp" />
+    <ClCompile Include="cpp\ByteArray.cpp" />
+    <ClCompile Include="cpp\Common.cpp" />
+    <ClCompile Include="cpp\Lexer.cpp" />
+    <ClCompile Include="cpp\M Lang.cpp" />
+    <ClCompile Include="cpp\SectionManager.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
@@ -128,25 +147,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="AST.cpp" />
-    <ClCompile Include="base64.cpp" />
-    <ClCompile Include="ByteArray.cpp" />
-    <ClCompile Include="Common.cpp" />
-    <ClCompile Include="Lexer.cpp" />
-    <ClCompile Include="M Lang.cpp" />
-    <ClCompile Include="SectionManager.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="AST.h" />
-    <ClInclude Include="base64.h" />
-    <ClInclude Include="ByteArray.h" />
-    <ClInclude Include="Common.h" />
-    <ClInclude Include="Lexer.h" />
-    <ClInclude Include="SectionManager.h" />
-    <ClInclude Include="Struct.h" />
-    <ClInclude Include="Tree.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
