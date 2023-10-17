@@ -43,7 +43,7 @@ int main()
 
     s.Ins(R("A"), A, {});
     s.Ins(R("B"), B, {});
-
+    B = s.Get(R("B"));
     s.translate(s.build());
     A = s.Get(R("A"));
     B = s.Get(R("B"));
