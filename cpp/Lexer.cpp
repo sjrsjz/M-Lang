@@ -321,6 +321,77 @@ intptr_t Lexer::analyze_globalVars(std::vector<lstring> tks, size_t ip) {
     }
     return ip;
 }
+
+void cut_tokens(lstring code,std::vector<lstring>& tks){
+    intptr_t currentPos{}, length{}, i{}, j{};
+    bool forbid{}, annotation{}, annotation_line{};
+    lstring tmp_tk{}, curr_tk{}, tk{}, tmp_tk2{};
+    tks.clear();
+    forbid = false;
+    i = 0;
+    curr_tk = code;
+    length = code.length();
+    while (i < length)
+    {
+        i++;
+        tmp_tk = code.substr(i - 1, 2);
+        if (tmp_tk == R("//") && !forbid) annotation_line = true;
+        if (tmp_tk == R("/*") && !forbid && !annotation_line) { annotation = true; i++; }
+        if (tmp_tk == R("*/") && !forbid && !annotation_line) { annotation = false; i++; }
+        if (code.substr(i - 1, 1) == R("\n") && !annotation && !forbid) annotation_line = false;
+        if (annotation || annotation_line) continue;
+        if (IsOperator(tmp_tk, 0) && !forbid && !j == 0 && !annotation_line) {
+            tks.push_back(RemoveSpaceLR(curr_tk));
+            tks.push_back(tmp_tk);
+            curr_tk = R(""); continue;
+        }
+        if (tmp_tk == R("\"") && j == 0) forbid = !forbid;
+        curr_tk += tmp_tk;
+
+    }
+    tks.push_back(RemoveSpaceLR(curr_tk));
+    i = 0;
+    while (i < tks.size())
+    {
+        i++;
+        if (tks[i - 1] == R("") || tks[i - 1] == R("\n") || tks[i - 1] == R("\t")) {
+            tks.erase(tks.begin() + i - 1); i--; continue;
+        }
+        if (tks[i - 1].substr(0, 1) != R("\"") && tks[i - 1].substr(tks[i - 1].length() - 1, 1) != R("\"")) {
+            tmp_tk2 = tks[i - 1];
+            tks[i - 1] = RemoveSpaceLR(subreplace(tks[i - 1], R("\t"), R(" ")));
+            if (tmp_tk2 != tks[i - 1]) {
+                i--; continue;
+            }
+        }
+        tmp_tk2 = R("");
+        while (tmp_tk2 != tks[i - 1])
+        {
+            tmp_tk2 = tks[i - 1];
+            tks[i - 1] = subreplace(tks[i - 1], R("  "), R(" "));
+        }
+        if (tks[i - 1] == R(" ")) {
+            tks.erase(tks.begin() + i - 1);
+            i--;
+        }
+    }
+    i = 0;
+    while (i < tks.size())
+    {
+        i++;
+        if (tks.size() >= i + 2 && tks[i] == R(".") && (isNum(tks[i - 1]) || tks[i - 1] == R("-0"))) {
+            tks[i - 1] += R(".") + tks[i + 1];
+            tks.erase(tks.begin() + i);
+            tks.erase(tks.begin() + i);
+            continue;
+        }
+        if (tks.size() >= i + 2 && tks[i] == R("-") && IsOperator(tks[i - 1], 1) && isNum(tks[i + 1])) {
+            tks[i] = R("-") + tks[i + 1];
+            tks.erase(tks.begin() + i + 1);
+            continue;
+        }
+    }
+}
 bool Lexer::analyze(lstring code) {
     Error = false;
     return true;

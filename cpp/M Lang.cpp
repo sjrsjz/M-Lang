@@ -1,5 +1,5 @@
 ﻿#pragma once
-
+#include "../header/Common.h"
 #include "../header/Tree.h"
 #include "../header/ByteArray.h"
 #include "../header/SectionManager.h"
@@ -14,7 +14,7 @@ int main()
     t.insert(4);
 
 
-    std::cout << t.Get() << " " << t[0] << " " << t[1] << std::endl;
+    std::cout << RemoveSpaceLR(R("  A B  c ")).c_str() << t.Get() << " " << t[0] << " " << t[1] << std::endl;
 
     t.child();
     t.insert(10);

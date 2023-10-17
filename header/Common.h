@@ -5,14 +5,17 @@
 #include <string>
 #include <optional>
 #include <vector>
+#include <sstream>
 
 #ifdef UNICODE
 typedef std::wstring lstring;
+typedef std::wstringstream lstringstream;
 typedef wchar_t lchar;
 #define R(x) L##x
 #else
 typedef std::string lstring;
 typedef char lchar;
+typedef std::stringstream lstringstream;
 #define R(x) x
 #endif //
 
@@ -26,5 +29,9 @@ namespace MLang {
     bool iftk(std::vector<lstring>& tks, lstring tk, intptr_t i);
     lstring process_quotation_mark(lstring tk);
     bool analyze_dims(std::vector<lstring>& tks, std::vector<size_t>& dims, intptr_t ip, intptr_t & final);
-
+    bool IsOperator(lstring t, int type);
+    lstring RemoveSpaceLR(lstring str);
+    lstring subreplace(lstring resource_str, lstring sub_str, lstring new_str);
+    bool isNum(lstring str);
+    
 }
