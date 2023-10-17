@@ -47,7 +47,7 @@ int main()
     s.translate(s.build());
     A = s.Get(R("A"));
     B = s.Get(R("B"));
-
+    B = s.Get(R("B"));
     std::cout << A.ToString() << " " << B.ToString() << std::endl;
 
     //std::cout <<B.Get<double>(0) << " " << B.Get<double>(8) << " " << A.Get<double>(0) << " " << A.Get<double>(8) ;
