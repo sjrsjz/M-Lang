@@ -13,8 +13,8 @@ int main()
     t.insert(3);
     t.insert(4);
 
-
-    std::cout << RemoveSpaceLR(R("  A B  c ")).c_str() << t.Get() << " " << t[0] << " " << t[1] << std::endl;
+    lstring a = RemoveSpaceLR(R("  A B  c "));
+    std::cout << t.Get() << " " << t[0] << " " << t[1] << std::endl;
 
     t.child();
     t.insert(10);

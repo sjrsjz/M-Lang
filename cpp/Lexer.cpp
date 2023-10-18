@@ -396,3 +396,13 @@ bool Lexer::analyze(lstring code) {
     Error = false;
     return true;
 }
+bool Lexer::analyze_type(std::vector<lstring>& tk, type var) {
+    intptr_t final; std::vector<size_t> dim;
+    if (tk.size() >= 1) {
+        var.typeName = tk[0];
+        var.array = analyze_dims(tk, dim, 2, final);
+        var.dim = dim;
+        if (final == tk.size() + 1) return true;
+    }
+    return false;
+}
