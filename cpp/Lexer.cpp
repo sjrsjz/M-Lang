@@ -14,7 +14,7 @@ bool Lexer::lexical_analyze(functionSet& set, lstring space, std::vector<lstring
         ip = analyze_setVars(set, space, tks, ip);
         ip = analyze_function(set, space, tks, ip);
         if (ip0 > ip) {
-            error(tks, R("³öÏÖδ֪½ṹ"), ip); return false;
+            error(tks, R("出现未知结构"), ip); return false;
         }
         if (ip0 == ip) ip++;
     }
@@ -25,7 +25,7 @@ intptr_t Lexer::analyze_struct(functionSet& set, lstring space, std::vector<lstr
     lstring name = space == R("") ? tks[ip] : space + DIVISION + tks[ip];
     intptr_t final = search(tks, R("}"), 0, ip + 3, -1);
     if (final == -1) {
-        error(tks, R("À¨ºŲ»ƥÅä"), ip + 2);
+        error(tks, R("括号不匹配"), ip + 2);
         return -1;
     }
     std::vector<lstring> tk0{}, tk1{};
@@ -68,7 +68,7 @@ intptr_t Lexer::analyze_function(functionSet& set, lstring space, std::vector<ls
     lstring name; name = space == R("") ? t1 : space + DIVISION + t1;
     intptr_t final; final = search(tks, R(")"), 0, ip + 1, -1);
     if (final == -1) {
-        error(tks, R("À¨ºŲ»ƥÅä"), ip + 1); return -1;
+        error(tks, R("括号不匹配"), ip + 1); return -1;
     }
     if (!iftk(tks, R("->"), final + 1)) return ip_;
     std::vector<lstring> tk0{}, tk1{};
@@ -95,17 +95,17 @@ intptr_t Lexer::analyze_function(functionSet& set, lstring space, std::vector<ls
     ip0 = final + 2;
     final = search(tks, R("{"), 0, ip0, 1);
     if (final == -1 || tks[final - 2] != R(":=")) {
-        error(tks, R("´íÎóµĺ¯Êý¶¨Òå"), ip0);
+        error(tks, R("错误的函数定义"), ip0);
         return -1;
     }
     if (!analyze_type(tk0, func.ret)) {
-        error(tks, R("·µ»Øֵ¶¨Òå´íÎó"), ip0);
+        error(tks, R("返回值定义错误"), ip0);
         return -1;
     }
     ip = final;
     final = search(tks, R("}"), 0, ip, -1);
     if (final == -1) {
-        error(tks, R("À¨ºŲ»ƥÅä"), ip);
+        error(tks, R("括号不匹配"), ip);
         return -1;
     }
     SubTokens(tks, tk0, ip + 1, final - 1);
@@ -135,7 +135,7 @@ intptr_t Lexer::analyze_function(functionSet& set, lstring space, std::vector<ls
         else if (head[i] == R("stdcall")) func.call_type = R("stdcall");
         else if (head[i] == R("Transit")) func.transit = true;
         else if (head[i] == R("ArgSize")) func.use_arg_size = false;
-        else { error(tks, R("·Ƿ¨ǰ׺:") + head[i], ip); return -1; }
+        else { error(tks, R("非法前缀:") + head[i], ip); return -1; }
     }
     set.func.push_back(func);
     return final + 1;
@@ -150,7 +150,7 @@ intptr_t Lexer::analyze_externedFunction(functionSet& set, lstring DLL, std::vec
     lstring name = process_quotation_mark(tks[ip - 1]);
     intptr_t final = search(tks, R(")"), 0, ip + 1, -1);
     if (final == -1) {
-        error(tks, R("À¨ºŲ»ƥÅä"), ip + 1);
+        error(tks, R("括号不匹配"), ip + 1);
         return -1;
     }
     if (!iftk(tks, R("->"), final + 1)) return ip;
@@ -178,12 +178,12 @@ intptr_t Lexer::analyze_externedFunction(functionSet& set, lstring DLL, std::vec
     ip0 = final + 2;
     final = search(tks, R(":="), 0, ip0, 0);
     if (final == -1 || final >= tks.size()) {
-        error(tks, R("´íÎóµÄÍⲿº¯Êý¶¨Òå"), ip0);
+        error(tks, R("错误的外部函数定义"), ip0);
         return -1;
     }
     SubTokens(tks, tk0, ip0, final - 1);
     if (!analyze_type(tk0, func.ret)) {
-        error(tks, R("·µ»Øֵ¶¨Òå´íÎó"), ip0);
+        error(tks, R("返回值定义错误"), ip0);
         return -1;
     }
     func.extra_name = process_quotation_mark(tks[final]);
@@ -200,7 +200,7 @@ intptr_t Lexer::analyze_externedFunction(functionSet& set, lstring DLL, std::vec
         else if (head[i] == R("stdcall")) func.call_type = R("stdcall");
         else if (head[i] == R("Transit")) func.transit = true;
         else if (head[i] == R("ArgSize")) func.use_arg_size = false;
-        else { error(tks, R("·Çs·¨ǰ׺:") + head[i], ip); return -1; }
+        else { error(tks, R("非法前缀:") + head[i], ip); return -1; }
     }
     set.func.push_back(func);
     return final + 2;
@@ -238,7 +238,7 @@ bool Lexer::analyze_vars(std::vector<lstring> tks, type& var) {
         if (final == lp) {
             if (head == R("Public")) var.publiced = true;
             else if (head == R("Private") || head == R("")) var.publiced = false;
-            else { error(tks, R("·Ƿ¨ǰ׺:") + head, 2); }
+            else { error(tks, R("非法前缀:") + head, 2); }
             return true;
         }
     }
@@ -251,7 +251,7 @@ intptr_t Lexer::analyze_externedFunctionSet(std::vector<lstring> tks, size_t ip)
         Extra = process_quotation_mark(tks[ip + 1]);
         final = search(tks, R("}"), 0, ip + 3, -1);
         if (final == -1) {
-            error(tks, R("À¨ºŲ»ƥÅä"), ip + 3);
+            error(tks, R("括号不匹配"), ip + 3);
             return -1;
         }
         SubTokens(tks, tk1, ip + 4, final - 1);
@@ -259,7 +259,7 @@ intptr_t Lexer::analyze_externedFunctionSet(std::vector<lstring> tks, size_t ip)
             ip0 = ip1;
             ip1 = analyze_externedFunction(ExternFunctions, Extra, tk1, ip1);
             if (ip0 > ip1) {
-                error(tks, R("³öÏÖδ֪½ṹ"), ip1);
+                error(tks, R("出现未知结构"), ip1);
                 return -1;
             }
             if (ip1 == ip0) ip1++;
@@ -286,7 +286,7 @@ intptr_t Lexer::analyze_functionSet(std::vector<lstring> tks, size_t ip) {
     if (iftk(tks, R("{"), ip + 1)) {
         final = search(tks, R("}"), 0, ip + 1, -1);
         if (final == -1) {
-            error(tks, R("À¨ºŲ»ƥÅä"), ip + 1);
+            error(tks, R("括号不匹配"), ip + 1);
             return ip;
         }
         SubTokens(tks, tk0, ip + 2, final - 1);
