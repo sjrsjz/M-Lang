@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "Common.h"
 namespace MLang {
     template<typename class_T = char>

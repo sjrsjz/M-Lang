@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "../header/Common.h"
 namespace MLang {
     void output(lstring str) {
@@ -14,7 +14,7 @@ namespace MLang {
     {
         lstring dst_str = resource_str;
         lstring::size_type; intptr_t pos = 0;
-        while ((pos = dst_str.find(sub_str)) != lstring::npos)   //Ìæ»»ËùÓĞÖ¸¶¨×Ó´®
+        while ((pos = dst_str.find(sub_str)) != lstring::npos)   //æ›¿æ¢æ‰€æœ‰æŒ‡å®šå­ä¸²
         {
             dst_str.replace(pos, sub_str.length(), new_str);
         }

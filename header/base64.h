@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #pragma once
 #include "Common.h"
 bool is_base64(unsigned char c);

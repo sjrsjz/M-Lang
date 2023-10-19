@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "../header/base64.h"
 static const std::string base64_chars =
 "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
