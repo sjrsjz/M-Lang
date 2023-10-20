@@ -104,4 +104,17 @@ public:
         assert(index < c->nodes.size());
         return c->nodes[index].data;
     }
+    bool remove() {
+        Tree* c = LocateParentTree();
+        if (!c) return false;
+        if (c->pointer < 0 || c->pointer >= c->nodes.size()) return false;
+        c->nodes.erase(c->nodes.begin() + c->pointer, c->nodes.begin() + c->pointer + 1);
+        parent();
+        return true;
+    }
+    bool clear() {
+        nodes.clear();
+        pointer = -1;
+        return true;
+    }
 };

@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "../header/Common.h"
+
 namespace MLang {
     void output(lstring str) {
         printf((char*)(str + R("\n")).c_str());
@@ -97,5 +98,44 @@ namespace MLang {
         size_t layer0 = layer;
         lstring head;
         
+    }
+
+    //convert string to wstring
+    inline std::wstring to_wide_string(const std::string& input)
+    {
+#pragma warning(suppress : 4996)
+        std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+#pragma warning(suppress : 4996)
+        return converter.from_bytes(input);
+    }
+
+    //convert wstring to string 
+    inline std::string to_byte_string(const std::wstring& input)
+    {
+#pragma warning(suppress : 4996)
+        std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+#pragma warning(suppress : 4996)
+        return converter.to_bytes(input);
+    }
+    lstring readFileString(lstring path) {
+        std::ifstream fin{};
+        fin.open(path, std::ios::in);
+        if (!fin.is_open()) return R("");
+        std::string buf;
+        lstring buf2{};
+        while (std::getline(fin, buf)) {
+#ifdef  UNICODE
+            buf2 += to_wide_string(buf);
+#elif
+            buf2 += buf;
+#endif //  UNICODE
+        }
+        fin.close();
+        return buf2;
+    }
+    size_t DimSize(std::vector<size_t> dim) {
+        size_t j = 1;
+        for (int i = 0; i < dim.size(); i++) j *= dim[i];
+        return j;
     }
 }

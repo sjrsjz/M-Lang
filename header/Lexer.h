@@ -24,5 +24,6 @@ namespace MLang {
         intptr_t analyze_globalVars(std::vector<lstring> tks, size_t ip);
         bool analyze(lstring code);
         bool analyze_type(std::vector<lstring>& tk, type var);
+        void preprocesser(std::vector<lstring>& tk);
     };
 }

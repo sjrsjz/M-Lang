@@ -406,3 +406,45 @@ bool Lexer::analyze_type(std::vector<lstring>& tk, type var) {
     }
     return false;
 }
+void Lexer::preprocesser(std::vector<lstring>& tk) {
+    size_t i{}, size{};
+    std::vector<lstring> ttk{};
+    lstring t{}, t2{}, t3{}, path{}, file{}, a{}, b{};
+    while (i<tk.size())
+    {
+        
+        t2 = tk[i];
+        i++;
+        if (t2.substr(0, 1) == R("#")) {
+            t = t2.substr(1, t2.size() - 1);
+            if (t == R("include")) {
+                if (i + 3 <= tk.size() && tk[i] == R("<") && tk[i + 2] == R(">")) {
+                    t3 = tk[i + 1];
+                    path = (t3.substr(0, 1) == R("@")) ? t3.substr(2, t3.size() - 3) : t3.substr(1, t3.size());
+                    file = readFileString(path);
+                    cut_tokens(file, ttk);
+                    tk.insert(tk.end(),ttk.begin(),ttk.end());
+                    tk.erase(tk.begin() + i - 1, tk.begin() + i + 3);
+                    i--;
+                }
+                else {
+                    error(tk, R("include用法错误"), i);
+                }
+            }
+            else if (t == R("define")) {
+                if (i + 2 > tk.size()) {
+                    error(tk, R("define用法错误"), i); continue;
+                }
+                a = tk[i]; b = tk[i + 1];
+                size = tk.size();
+                for (int j = 0; j < size; j++) {
+                    if (tk[j].substr(0, 1) != R("\"") || tk[j].substr(tk.size() - 1, 1) != R("\"")){
+                        tk[j] = subreplace(tk[j], a, b);
+                    }
+                }
+                tk.erase(tk.begin() + i - 1, tk.begin() + i + 2);
+                i--;
+            }
+        }
+    }
+}

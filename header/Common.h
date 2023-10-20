@@ -6,6 +6,8 @@
 #include <optional>
 #include <vector>
 #include <sstream>
+#include <fstream>
+#include <codecvt>
 
 #ifdef UNICODE
 typedef std::wstring lstring;
@@ -35,4 +37,6 @@ namespace MLang {
     bool isNum(lstring str);
     void output(std::vector<lstring> tk,lstring str,intptr_t pos);
     lstring gather(std::vector<lstring> tks, size_t c);
+    lstring readFileString(lstring path);
+    size_t DimSize(std::vector<size_t> dim);
 }
