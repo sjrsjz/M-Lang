@@ -97,7 +97,7 @@ namespace MLang {
     lstring gather(std::vector<lstring> tks, size_t layer) {
         size_t layer0 = layer;
         lstring head;
-        
+        return head;
     }
 
     //convert string to wstring
@@ -126,7 +126,7 @@ namespace MLang {
         while (std::getline(fin, buf)) {
 #ifdef  UNICODE
             buf2 += to_wide_string(buf);
-#elif
+#else
             buf2 += buf;
 #endif //  UNICODE
         }
@@ -137,5 +137,19 @@ namespace MLang {
         size_t j = 1;
         for (int i = 0; i < dim.size(); i++) j *= dim[i];
         return j;
+    }
+    std::vector<lstring> split(lstring str, lstring str_0) {
+        std::vector<lstring> tmp{};
+        size_t p{};
+        size_t lp{};
+        size_t off = str_0.length();
+        while ((p = str.find(str_0, p)) != std::string::npos)
+        {
+            tmp.push_back(str.substr(lp, p - lp));
+            p += off;
+            lp = p;
+        }
+        tmp.push_back(str.substr(lp, str.size() - lp + 1));
+        return tmp;
     }
 }

@@ -21,7 +21,7 @@ namespace MLang {
 
 	private:
 		std::vector<bool> list{};
-		size_t analyzeStructureSize();
+		void analyzeStructureSize();
 		size_t countStructureSize(lstring type);
 		analyzed_functionSet analyzeFunctionSet(functionSet functionSet_);
 		analyzed_function analyzeFunction(functionSet functionSet_, function func);
@@ -32,12 +32,12 @@ namespace MLang {
 		size_t size(type var);
 		bool getVarType(lstring name, lstring& type, lstring& var);
 		size_t getStructureSize(lstring type);
-		bool analyzeVar(std::vector<lstring> tk, type var);
+		bool analyzeVar(std::vector<lstring> tk, type& var);
 		bool haveVar(functionSet functionSet_, function func, lstring name);
 		lstring getVarFullName(functionSet functionSet_, function func, lstring name);
-		bool analyzeArg(functionSet functionSet_, function func, lstring name);
-		bool matchBracket(std::vector<lstring> tk, intptr_t start);
-		bool checkBracket(lstring tk);
+		bool analyzeArg(functionSet functionSet_, function func, Tree<node> EX, std::vector<lstring> tk);
+		size_t matchBracket(std::vector<lstring> tk, intptr_t start);
+		intptr_t checkBracket(lstring tk);
 		bool bracketIsMatched(lstring tk1, lstring tk2);
 		lstring getFunctionFullName(lstring name, functionSet functionSet_);
 		void error(lstring err);

@@ -6,7 +6,9 @@
 using namespace MLang;
 int main()
 {
-    SectionManager s;
+    std::vector<lstring> a = split(R("WTFWTFWTFF"), R("F"));
+    std::cout << "" << std::endl;
+    /*SectionManager s;
     Tree<int> t;
     t = 1;
     t.insert(2);
@@ -51,4 +53,6 @@ int main()
     std::cout << A.ToString() << " " << B.ToString() << std::endl;
 
     //std::cout <<B.Get<double>(0) << " " << B.Get<double>(8) << " " << A.Get<double>(0) << " " << A.Get<double>(8) ;
+    */
+
 }

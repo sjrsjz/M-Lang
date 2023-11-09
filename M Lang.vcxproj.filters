@@ -15,51 +15,51 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="M Lang.cpp">
+    <ClCompile Include="cpp\AST.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Common.cpp">
+    <ClCompile Include="cpp\base64.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="ByteArray.cpp">
+    <ClCompile Include="cpp\ByteArray.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="base64.cpp">
+    <ClCompile Include="cpp\Common.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="SectionManager.cpp">
+    <ClCompile Include="cpp\Lexer.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Lexer.cpp">
+    <ClCompile Include="cpp\M Lang.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="AST.cpp">
+    <ClCompile Include="cpp\SectionManager.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Common.h">
+    <ClInclude Include="header\AST.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="ByteArray.h">
+    <ClInclude Include="header\base64.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Tree.h">
+    <ClInclude Include="header\ByteArray.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="base64.h">
+    <ClInclude Include="header\Common.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="SectionManager.h">
+    <ClInclude Include="header\Lexer.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Lexer.h">
+    <ClInclude Include="header\SectionManager.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="AST.h">
+    <ClInclude Include="header\Struct.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Struct.h">
+    <ClInclude Include="header\Tree.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

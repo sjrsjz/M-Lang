@@ -93,7 +93,35 @@ public:
     bool insert(const Tree& o, size_t index) {
         Tree* c = LocateCurrentTree();
         if (index < 0 || index > c->nodes.size()) return false;
-        c->nodes.insert((c->nodes.begin() + index), o);
+        c->nodes.push_back((c->nodes.begin() + index), o);
+        return true;
+    }
+    bool push_back(const T& o) {
+        Tree* c = LocateCurrentTree();
+        if (c->pointer > c->nodes.size()) return false;
+        Tree t;
+        t.data = o;
+        c->nodes.push_back(t);
+        return true;
+    }
+    bool push_back(const T& o, size_t index) {
+        Tree* c = LocateCurrentTree();
+        if (index < 0 || index > c->nodes.size()) return false;
+        Tree t;
+        t.data = o;
+        c->nodes.push_back(t);
+        return true;
+    }
+    bool push_back(const Tree& o) {
+        Tree* c = LocateCurrentTree();
+        if (c->pointer > c->nodes.size()) return false;
+        c->nodes.push_back(o);
+        return true;
+    }
+    bool push_back(const Tree& o, size_t index) {
+        Tree* c = LocateCurrentTree();
+        if (index < 0 || index > c->nodes.size()) return false;
+        c->nodes.push_back(o);
         return true;
     }
     void operator = (const T& o) {
@@ -115,6 +143,11 @@ public:
     bool clear() {
         nodes.clear();
         pointer = -1;
+        return true;
+    }
+    bool ToChildrenEnd() {
+        if (!child()) return false;
+        while (next());
         return true;
     }
 };

@@ -14,11 +14,13 @@ typedef std::wstring lstring;
 typedef std::wstringstream lstringstream;
 typedef wchar_t lchar;
 #define R(x) L##x
+#define to_lstring(x) std::to_wstring(x)
 #else
 typedef std::string lstring;
 typedef char lchar;
 typedef std::stringstream lstringstream;
 #define R(x) x
+#define to_lstring(x) std::to_string(x)
 #endif //
 
 
@@ -39,4 +41,5 @@ namespace MLang {
     lstring gather(std::vector<lstring> tks, size_t c);
     lstring readFileString(lstring path);
     size_t DimSize(std::vector<size_t> dim);
+    std::vector<lstring> split(lstring str, lstring str_0);
 }
