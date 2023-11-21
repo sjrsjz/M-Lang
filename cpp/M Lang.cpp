@@ -3,11 +3,25 @@
 #include "../header/Tree.h"
 #include "../header/ByteArray.h"
 #include "../header/SectionManager.h"
+#include "../header/AST.h"
+#include "../header/Lexer.h"
 using namespace MLang;
 int main()
 {
     std::vector<lstring> a = split(R("WTFWTFWTFF"), R("F"));
     std::cout << "" << std::endl;
+    Lexer lex{};
+
+
+    lex.analyze(R(
+        "Main{\n"
+        "main()->N:={\n"
+        "print(&\"Hello World\")\n"
+        "}\n"
+        "}\n"
+    ));
+    AST ast{};
+
     /*SectionManager s;
     Tree<int> t;
     t = 1;

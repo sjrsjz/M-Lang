@@ -5,12 +5,12 @@ namespace MLang {
     class Lexer {
         void preprocess(std::vector<lstring>& tk);
     public:
-        std::vector<lstring> importedLibs;
-        std::vector<type> globals;
-        std::vector<functionSet> functionSets;
-        std::vector<structure> structures;
-        std::vector<type> constants;
-        functionSet ExternFunctions;
+        std::vector<lstring> importedLibs{};
+        std::vector<type> globals{};
+        std::vector<functionSet> functionSets{};
+        std::vector<structure> structures{};
+        std::vector<type> constants{};
+        functionSet ExternFunctions{};
         Lexer();
         ~Lexer();
         bool lexical_analyze(functionSet& set, lstring space, std::vector<lstring> tks);

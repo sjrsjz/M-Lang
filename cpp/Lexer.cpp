@@ -329,7 +329,6 @@ void cut_tokens(lstring code,std::vector<lstring>& tks){
     tks.clear();
     forbid = false;
     i = 0;
-    curr_tk = code;
     length = code.length();
     while (i < length)
     {
@@ -343,8 +342,15 @@ void cut_tokens(lstring code,std::vector<lstring>& tks){
         if (IsOperator(tmp_tk, 0) && !forbid && !j == 0 && !annotation_line) {
             tks.push_back(RemoveSpaceLR(curr_tk));
             tks.push_back(tmp_tk);
-            curr_tk = R(""); continue;
+            curr_tk = R("");
+            i++;
+            continue;
         }
+        if (tmp_tk == R("\r\n") && !forbid) { annotation_line = false; continue; }
+        tmp_tk = code.substr(i - 1, 1);
+        if (tmp_tk == R("\r") && !forbid) { annotation_line = false; continue; }
+        if (tmp_tk == R("\n") && !forbid) { annotation_line = false; continue; }
+
         if (tmp_tk == R("\"") && j == 0) forbid = !forbid;
         curr_tk += tmp_tk;
 
@@ -394,7 +400,22 @@ void cut_tokens(lstring code,std::vector<lstring>& tks){
 }
 bool Lexer::analyze(lstring code) {
     Error = false;
-    return true;
+    std::vector<lstring> tks{};
+    cut_tokens(code,tks);
+    preprocesser(tks);
+    functionSets.clear();
+    ExternFunctions.func.clear();
+    size_t ip = 1;
+    size_t ip0{};
+    while (ip <= tks.size()) {
+        ip0 = ip;
+        ip = analyze_functionSet(tks, ip);
+        ip = analyze_externedFunctionSet(tks, ip);
+        ip = analyze_globalVars(tks, ip);
+        if (ip0 > ip) { error(tks, R("出现未知结构"), ip); return Error; }
+        if (ip0 == ip) ip++;
+    }
+    return Error;
 }
 bool Lexer::analyze_type(std::vector<lstring>& tk, type var) {
     intptr_t final; std::vector<size_t> dim;
@@ -448,3 +469,5 @@ void Lexer::preprocesser(std::vector<lstring>& tk) {
         }
     }
 }
+Lexer::Lexer() {}
+Lexer::~Lexer() {}

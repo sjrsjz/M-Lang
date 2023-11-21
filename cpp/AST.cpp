@@ -314,6 +314,42 @@ bool AST::analyze_2(functionSet functionSet_, function func, Tree<node> EX, std:
 			EX.parent();
 			return p1;
 		}
+		if (tk[tk.size() - 2] == R(".")) {
+			p.token = tk[tk.size() - 1];
+			p.type = R("Element");
+			EX.push_back(p);
+			EX.ToChildrenEnd();
+			t1 = tk;
+			t1.erase(t1.end() - 1, t1.end());
+			bool p1 = analyzeExper(functionSet_, func, EX, t1);
+			EX.parent();
+			return p1;
+		}
+		if (tk[tk.size() - 1] == R("}")) {
+			pos = search(tk, R("{"), 1, {}, 0);
+			t1 = tk;
+			t1.erase(t1.begin() + pos - 1, t1.end());
+			bool p1 = analyze_2(functionSet_, func, EX, t1);
+			bool p2{};
+			if (p2 = EX.haveParent()) EX.ToChildrenEnd();
+			p.token = R("");
+			p.type = R("Block");
+			EX.push_back(p);
+			EX.ToChildrenEnd();
+			t1 = tk;
+			t1.erase(t1.begin(), t1.begin() + pos - 1);
+			t1.erase(t1.end());
+			p1 = analyzeExper(functionSet_, func, EX, t1) && p1;
+			if (p2) EX.parent();
+			EX.parent();
+			return p1;
+		}
+		if (tk[tk.size() - 1] == R(".")) {
+			t1 = tk;
+			t1.erase(t1.end());
+			return analyze_2(functionSet_, func, EX, t1);
+		}
+		return false;
 	}
 }
 size_t AST::size(type var) {

@@ -57,6 +57,9 @@ public:
         if (!c) return false;
         c->reset(); return true;
     }
+    bool haveParent() {
+        return (bool)LocateParentTree(nullptr);
+    }
     size_t size() {
         return nodes.size();
     }
