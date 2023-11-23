@@ -63,7 +63,7 @@ namespace MLang {
         ByteArray Attach(const std::wstring& o) {
             ByteArray t(size + o.length());
             if (ptr) memcpy(t.ptr, ptr, size);
-            if (o.c_str()) memcpy((void*)((size_t)t.ptr + size), o.c_str(), o.size());
+            if (o.c_str()) memcpy((void*)((size_t)t.ptr + size), o.c_str(), o.size() * sizeof(wchar_t));
             return t;
         }
         template<typename T>ByteArray Attach(const T& o) {
@@ -103,19 +103,19 @@ namespace MLang {
         std::string ToString() {
             std::string t;
             t.resize(size);
-            memcpy((void*)t.c_str(), (void*)ptr, size);
+            memcpy((void*)t.data(), (void*)ptr, size);
             return t;
         }
         std::wstring ToWString() {
             std::wstring t;
             t.resize(size);
-            memcpy((void*)t.c_str(), (void*)ptr, size);
+            memcpy((void*)t.data(), (void*)ptr, size);
             return t;
         }
         lstring TolString() {
             lstring t;
             t.resize(size);
-            memcpy((void*)t.c_str(), (void*)ptr, size);
+            memcpy((void*)t.data(), (void*)ptr, size);
             return t;
         }
     };
