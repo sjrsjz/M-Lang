@@ -134,7 +134,7 @@ namespace MLang {
         std::string buf;
         lstring buf2{};
         while (std::getline(fin, buf)) {
-#ifdef  UNICODE
+#ifdef  _UNICODE_
             buf2 += to_wide_string(buf);
 #else
             buf2 += buf;
@@ -162,4 +162,6 @@ namespace MLang {
         tmp.push_back(str.substr(lp, str.size() - lp + 1));
         return tmp;
     }
+
+
 }

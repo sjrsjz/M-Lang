@@ -74,7 +74,8 @@ public:
         if (!c->size()) return false;
         c->pointer = 0;
         c->located = false;
-        c->nodes[pointer].located = true;
+        assert(c->pointer >= 0 && c->pointer < c->nodes.size());
+        c->nodes[c->pointer].located = true;
         return true;
     }
     bool insert(const T& o) {

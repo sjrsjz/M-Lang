@@ -111,7 +111,7 @@ intptr_t Lexer::analyze_function(functionSet& set, lstring space, std::vector<ls
     }
     SubTokens(tks, tk0, ip + 1, final - 1);
     ip0 = 1;
-    ip1 = search(tk0, R(":"), 0, ip0, 0);
+    ip1 = search(tk0, R(";"), 0, ip0, 0);
     func.codes.resize(0);
     func.local.resize(0);
     code code0{};
@@ -120,7 +120,7 @@ intptr_t Lexer::analyze_function(functionSet& set, lstring space, std::vector<ls
         code0.tokens = tk1;
         func.codes.push_back(code0);
         ip0 = ip1 + 1;
-        ip1 = search(tk0, R(":"), 0, ip0, 0);
+        ip1 = search(tk0, R(";"), 0, ip0, 0);
     }
     SubTokens(tk0, tk1, ip0, tk0.size());
     code0.tokens = tk1;
@@ -215,7 +215,7 @@ intptr_t Lexer::analyze_setVars(functionSet& set, lstring space, std::vector<lst
         final = search(tks, R(":"), 0, ip, -1);
     else
         final = search(tks, R(":"), 0, ip, 0);
-    if (final == -1) final = tks.size() - 1;
+    if (final == -1) final = tks.size() + 1;
     SubTokens(tks, tk0, ip, final - 1);
     if (analyze_vars(tk0, var)) {
         set.local.push_back(var); return final + 1;

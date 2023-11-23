@@ -2,7 +2,23 @@
 using namespace MLang;
 static OP op[7];
 const int OP_size = 7;
-void cutTK(std::vector<lstring> tk, std::vector<lstring> op1, std::vector<lstring> tk1, std::vector<lstring> tk2, lstring op2) {
+lstring root(size_t num) {
+	lstring t{};
+	for (size_t i = 0; i < num; i++) t += R("  ");
+	return t + R("[]--");
+}
+void outputNodes(Tree<node>& EX, size_t c) {
+	node p = EX.Get(); lstring t{}, l{};
+	std_lcout << c << R(" ") << root(c) << R("Type=") << p.type << R("  Token=") << p.token << std::endl;
+	if (!EX.child()) return;
+	outputNodes(EX, c + 1);
+	while (EX.next())
+	{
+		outputNodes(EX, c + 1);
+	}
+	EX.parent();
+}
+void cutTK(std::vector<lstring> tk, std::vector<lstring> op1, std::vector<lstring>& tk1, std::vector<lstring>& tk2, lstring op2) {
 	std::vector<lstring> t1 = tk, t2 = tk;
 	intptr_t bracket{};
 	bool a{};
@@ -31,7 +47,7 @@ void cutTK(std::vector<lstring> tk, std::vector<lstring> op1, std::vector<lstrin
 		tk2 = tk;
 		return;
 	}
-	k--;
+	k = tk.size() - k;
 	t1.erase(t1.begin() + k,t1.end());
 	t2.erase(t2.begin(), t2.begin() + k + 1);
 	tk1 = t1;
@@ -79,18 +95,19 @@ analyzed_function AST::analyzeFunction(functionSet functionSet_, function func) 
 	analyzed_function func0{};
 	func0.codes.clear();
 	size_t i{};
-	while (i>=0 && i< func.codes.size() - 1)
+	while (i>=0 && i< func.codes.size())
 	{
-		i++;
 		error_line = i;
 		error_function = func.name;
 		error_functionSet = functionSet_.name;
 		std::vector<lstring> tk = func.codes[i].tokens;
 		Tree<node> EX;
 		EX.clear();
-		if (!tk.size()) continue;
+		if (!tk.size()) { i++; continue; }
 		analyzeExper(functionSet_, func, EX, tk);
+		outputNodes(EX, 0);
 		func0.codes.push_back(EX);
+		i++;
 	}
 	func0.ret = func.ret;
 	func0.api = func.api;
@@ -435,6 +452,16 @@ bool AST::analyzeArg(functionSet functionSet_, function func, Tree<node>& EX, st
 			}
 			pos2 = pos + 1;
 			pos = search(tk, R(","), 0, pos, 0);
+		}
+		SubTokens(tk, t1, pos2, tk.size());
+		if (!t1.size()) {
+			node p;
+			p.token = R("");
+			p.type = R("Blank");
+			EX.push_back(p);
+		}
+		else {
+			a = analyzeExper(functionSet_, func, EX, t1) && a;
 		}
 	}
 	else {

@@ -9,18 +9,23 @@
 #include <fstream>
 #include <codecvt>
 
-#ifdef UNICODE
+#define _UNICODE_ UNICODE
+
+#ifdef _UNICODE_
 typedef std::wstring lstring;
 typedef std::wstringstream lstringstream;
 typedef wchar_t lchar;
 #define R(x) L##x
 #define to_lstring(x) std::to_wstring(x)
+#define std_lcout std::wcout
+
 #else
 typedef std::string lstring;
 typedef char lchar;
 typedef std::stringstream lstringstream;
 #define R(x) x
 #define to_lstring(x) std::to_string(x)
+#define std_lcout std::cout
 #endif //
 
 

@@ -41,5 +41,7 @@ namespace MLang {
 		bool bracketIsMatched(lstring tk1, lstring tk2);
 		lstring getFunctionFullName(lstring name, functionSet functionSet_);
 		void error(lstring err);
+
+
 	};
 }
