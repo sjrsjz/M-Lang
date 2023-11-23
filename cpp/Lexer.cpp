@@ -4,7 +4,7 @@ using namespace MLang;
 bool Error{};
 
 void error(std::vector<lstring>& tks, lstring err, size_t ip) {
-
+    std::wcout << err << std::endl;
 }
 
 bool Lexer::lexical_analyze(functionSet& set, lstring space, std::vector<lstring> tks) {
@@ -98,6 +98,7 @@ intptr_t Lexer::analyze_function(functionSet& set, lstring space, std::vector<ls
         error(tks, R("错误的函数定义"), ip0);
         return -1;
     }
+    SubTokens(tks, tk0, ip0, final - 2);
     if (!analyze_type(tk0, func.ret)) {
         error(tks, R("返回值定义错误"), ip0);
         return -1;
@@ -323,7 +324,7 @@ intptr_t Lexer::analyze_globalVars(std::vector<lstring> tks, size_t ip) {
 }
 
 void cut_tokens(lstring code,std::vector<lstring>& tks){
-    intptr_t currentPos{}, length{}, i{}, j{};
+    intptr_t currentPos{}, length{}, i{};
     bool forbid{}, annotation{}, annotation_line{};
     lstring tmp_tk{}, curr_tk{}, tk{}, tmp_tk2{};
     tks.clear();
@@ -339,7 +340,7 @@ void cut_tokens(lstring code,std::vector<lstring>& tks){
         if (tmp_tk == R("*/") && !forbid && !annotation_line) { annotation = false; i++; }
         if (code.substr(i - 1, 1) == R("\n") && !annotation && !forbid) annotation_line = false;
         if (annotation || annotation_line) continue;
-        if (IsOperator(tmp_tk, 0) && !forbid && !j == 0 && !annotation_line) {
+        if (IsOperator(tmp_tk, 0) && !forbid && !annotation_line) {
             tks.push_back(RemoveSpaceLR(curr_tk));
             tks.push_back(tmp_tk);
             curr_tk = R("");
@@ -350,8 +351,13 @@ void cut_tokens(lstring code,std::vector<lstring>& tks){
         tmp_tk = code.substr(i - 1, 1);
         if (tmp_tk == R("\r") && !forbid) { annotation_line = false; continue; }
         if (tmp_tk == R("\n") && !forbid) { annotation_line = false; continue; }
-
-        if (tmp_tk == R("\"") && j == 0) forbid = !forbid;
+        if (IsOperator(tmp_tk, 0) && !forbid && !annotation_line) {
+            tks.push_back(RemoveSpaceLR(curr_tk));
+            tks.push_back(tmp_tk);
+            curr_tk = R("");
+            continue;
+        }
+        if (tmp_tk == R("\"")) forbid = !forbid;
         curr_tk += tmp_tk;
 
     }
@@ -417,7 +423,7 @@ bool Lexer::analyze(lstring code) {
     }
     return Error;
 }
-bool Lexer::analyze_type(std::vector<lstring>& tk, type var) {
+bool Lexer::analyze_type(std::vector<lstring>& tk, type& var) {
     intptr_t final; std::vector<size_t> dim;
     if (tk.size() >= 1) {
         var.typeName = tk[0];

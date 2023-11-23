@@ -47,6 +47,7 @@ namespace MLang {
     }
 
     intptr_t search(std::vector<lstring>& tks, lstring str, int type, std::optional<intptr_t> begin, intptr_t offset) {
+        if (!tks.size()) return -1;
         if (!begin.has_value()) begin = type == 0 ? 0 : tks.size();
         intptr_t j{};
         for (int i = 1; i <= (type == 0 ? tks.size() - begin.value() : begin.value()); i++) {
@@ -57,7 +58,7 @@ namespace MLang {
                 p = begin.value() - i;
             if (tks[p] == R("(") || tks[p] == R("[") || tks[p] == R("{")) j++;
             if (tks[p] == R(")") || tks[p] == R("]") || tks[p] == R("}")) j--;
-            if (tks[p] == str && j == offset) return p;
+            if (tks[p] == str && j == offset) return p + 1;
         }
         return -1;
     }
@@ -72,7 +73,7 @@ namespace MLang {
         if (start < 1) start = 1;
         t = tks;
         t.erase(t.begin() + end, t.end());
-        if (start > 1) t.erase(t.begin(), t.begin() + start - 2);
+        if (start > 1) t.erase(t.begin(), t.begin() + start - 1);
         output = t;
     }
     bool iftk(std::vector<lstring>& tks, lstring tk, intptr_t i) {
