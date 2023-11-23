@@ -4,7 +4,7 @@ template<typename T>class Tree {
 private:
     std::vector<Tree> nodes{};
     T data{};
-    size_t pointer{};
+    intptr_t pointer{};
     bool located;
 public:
     Tree() {
@@ -16,7 +16,7 @@ public:
         pointer = o.pointer;
         located = o.located;
     }
-    Tree(Tree&& o) {
+    Tree(Tree&& o) noexcept {
         data = std::move(o.data);
         nodes = std::move(o.nodes);
         pointer = o.pointer;
@@ -28,11 +28,17 @@ public:
         located = o.located;
         pointer = o.pointer;
     }
-    ~Tree() {}
+    void operator =(Tree&& o) noexcept {
+        data = std::move(o.data);
+        nodes = std::move(o.nodes);
+        pointer = o.pointer;
+        located = o.located;
+    }
+    ~Tree() { data.~T(); }
     bool next() {
         Tree* c = LocateParentTree(nullptr);
         c->pointer++;
-        if (c->pointer >= c->nodes.size()) {
+        if (c->pointer >= (intptr_t)c->nodes.size()) {
             c->pointer = c->nodes.size() - 1; return false;
         }
         c->nodes[pointer].located = true;
@@ -40,12 +46,12 @@ public:
     }
     Tree* LocateCurrentTree() {
         if (located) return this;
-        assert(pointer < nodes.size());
+        assert(pointer < (intptr_t)nodes.size());
         return nodes[pointer].LocateCurrentTree();
     }
     Tree* LocateParentTree(Tree* parent) {
         if (located) return parent;
-        assert(pointer < nodes.size());
+        assert(pointer < (intptr_t)nodes.size());
         return nodes[pointer].LocateParentTree(this);
     }
     T& Get() {
@@ -73,7 +79,7 @@ public:
     }
     bool insert(const T& o) {
         Tree* c = LocateCurrentTree();
-        if (c->pointer > c->nodes.size()) return false;
+        if (c->pointer > (intptr_t)c->nodes.size()) return false;
         Tree t;
         t.data = o;
         c->nodes.insert((c->nodes.begin() + (c->pointer > 0 ? c->pointer : 0)), t);
@@ -89,7 +95,7 @@ public:
     }
     bool insert(const Tree& o) {
         Tree* c = LocateCurrentTree();
-        if (c->pointer > c->nodes.size()) return false;
+        if (c->pointer > (intptr_t)c->nodes.size()) return false;
         c->nodes.insert((c->nodes.begin() + (c->pointer > 0 ? c->pointer : 0)), o);
         return true;
     }
@@ -101,7 +107,7 @@ public:
     }
     bool push_back(const T& o) {
         Tree* c = LocateCurrentTree();
-        if (c->pointer > c->nodes.size()) return false;
+        if (c->pointer > (intptr_t)c->nodes.size()) return false;
         Tree t;
         t.data = o;
         c->nodes.push_back(t);
@@ -117,7 +123,7 @@ public:
     }
     bool push_back(const Tree& o) {
         Tree* c = LocateCurrentTree();
-        if (c->pointer > c->nodes.size()) return false;
+        if (c->pointer > (intptr_t)c->nodes.size()) return false;
         c->nodes.push_back(o);
         return true;
     }
@@ -138,8 +144,8 @@ public:
     bool remove() {
         Tree* c = LocateParentTree();
         if (!c) return false;
-        if (c->pointer < 0 || c->pointer >= c->nodes.size()) return false;
-        c->nodes.erase(c->nodes.begin() + c->pointer, c->nodes.begin() + c->pointer + 1);
+        if (c->pointer < 0 || c->pointer >= (intptr_t)c->nodes.size()) return false;
+        c->nodes.erase(c->nodes.begin() + c->pointer);
         parent();
         return true;
     }

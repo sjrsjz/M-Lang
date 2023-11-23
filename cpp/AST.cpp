@@ -6,7 +6,7 @@ void cutTK(std::vector<lstring> tk, std::vector<lstring> op1, std::vector<lstrin
 	std::vector<lstring> t1 = tk, t2 = tk;
 	intptr_t bracket{};
 	bool a{};
-	std::vector<lstring>::iterator k=t1.begin();
+	size_t k=0;
 	for (size_t i = 1; i <= tk.size(); i++) {
 		k++;
 		if (tk[tk.size() - i] == R("(") || tk[tk.size() - i] == R("[") || tk[tk.size() - i] == R("{")) {
@@ -17,11 +17,11 @@ void cutTK(std::vector<lstring> tk, std::vector<lstring> op1, std::vector<lstrin
 		}
 		if (bracket != 0) continue;
 		for (size_t j = 1; j <= op1.size(); j++) {
-			if (tk[tk.size() - i] == op1[j]) {
+			if (tk[tk.size() - i] == op1[j - 1]) {
 				if (i == tk.size()) break;
 				if (IsOperator(tk[tk.size() - i - 1], 1)) break;
 				a = true;
-				op2 = op1[j];
+				op2 = op1[j - 1];
 				break;
 			}
 		}
@@ -32,8 +32,8 @@ void cutTK(std::vector<lstring> tk, std::vector<lstring> op1, std::vector<lstrin
 		return;
 	}
 	k--;
-	t1.erase(k,t1.end());
-	t2.erase(t1.begin(), k);
+	t1.erase(t1.begin() + k,t1.end());
+	t2.erase(t2.begin(), t2.begin() + k + 1);
 	tk1 = t1;
 	tk2 = t2;
 }
@@ -79,7 +79,7 @@ analyzed_function AST::analyzeFunction(functionSet functionSet_, function func) 
 	analyzed_function func0{};
 	func0.codes.clear();
 	size_t i{};
-	while (i>=0 && i< func.codes.size())
+	while (i>=0 && i< func.codes.size() - 1)
 	{
 		i++;
 		error_line = i;
@@ -89,6 +89,7 @@ analyzed_function AST::analyzeFunction(functionSet functionSet_, function func) 
 		Tree<node> EX;
 		EX.clear();
 		if (!tk.size()) continue;
+		analyzeExper(functionSet_, func, EX, tk);
 		func0.codes.push_back(EX);
 	}
 	func0.ret = func.ret;
@@ -105,7 +106,7 @@ analyzed_function AST::analyzeFunction(functionSet functionSet_, function func) 
 	func0.use_arg_size = func.use_arg_size;
 	return func0;
 }
-bool AST::analyzeExper(functionSet functionSet_, function func, Tree<node> EX, std::vector<lstring> tk) {
+bool AST::analyzeExper(functionSet functionSet_, function func, Tree<node>& EX, std::vector<lstring> tk) {
 	size_t size = tk.size();
 	if (!size) return true;
 	intptr_t final = search(tk, R(";"), 0, 0, 0);
@@ -132,7 +133,7 @@ bool AST::analyzeExper(functionSet functionSet_, function func, Tree<node> EX, s
 		return p1;
 	}
 }
-bool AST::analyze_0(functionSet functionSet_, function func, Tree<node> EX, std::vector<lstring> tk, int num) {
+bool AST::analyze_0(functionSet functionSet_, function func, Tree<node>& EX, std::vector<lstring> tk, int num) {
 	node node{};
 	std::vector<lstring> t1{}, t2{};
 	lstring top{};
@@ -150,7 +151,7 @@ bool AST::analyze_0(functionSet functionSet_, function func, Tree<node> EX, std:
 	EX.parent();
 	return p1 && p2;
 }
-bool AST::analyze_1(functionSet functionSet_, function func, Tree<node> EX, std::vector<lstring> tk) {
+bool AST::analyze_1(functionSet functionSet_, function func, Tree<node>& EX, std::vector<lstring> tk) {
 	node p{};
 	std::vector<lstring> t1{};
 	if (!tk.size()) return false;
@@ -178,7 +179,7 @@ bool AST::analyze_1(functionSet functionSet_, function func, Tree<node> EX, std:
 	}
 	return analyze_2(functionSet_, func, EX, tk);
 }
-bool AST::analyze_2(functionSet functionSet_, function func, Tree<node> EX, std::vector<lstring> tk) {
+bool AST::analyze_2(functionSet functionSet_, function func, Tree<node>& EX, std::vector<lstring> tk) {
 	node p{};
 	std::vector<lstring> t1{};
 	type var{};
@@ -190,9 +191,9 @@ bool AST::analyze_2(functionSet functionSet_, function func, Tree<node> EX, std:
 			EX.push_back(p);
 			return true;
 		}
-		if(std::stold(tk[0])!=0 || tk[0].substr(0,1)==R("0")|| tk[0].substr(0, 1) == R("\"")|| tk[0].substr(0, 1) == R("-")){
+		if(isNum_(tk[0]) || tk[0].substr(0,1)==R("0")|| tk[0].substr(0, 1) == R("\"")|| tk[0].substr(0, 1) == R("-")){
 			p.token = tk[0];
-			if (std::stold(tk[0]) != 0 || tk[0].substr(0, 1) == R("0")) 
+			if (isNum_(tk[0]) || tk[0].substr(0, 1) == R("0")) 
 				p.type = (tk[0].find(R(".")) != std::string::npos) ? R("Double") : R("Int");
 			else 
 				p.type = R("Const");
@@ -262,8 +263,8 @@ bool AST::analyze_2(functionSet functionSet_, function func, Tree<node> EX, std:
 			EX.push_back(p);
 			EX.ToChildrenEnd();
 			t1 = tk;
-			t1.erase(t1.begin(), t1.begin() + 1);
-			t1.erase(t1.end());
+			t1.erase(t1.begin(), t1.begin() + 2);
+			t1.erase(t1.end() - 1);
 			bool p1 = analyzeArg(functionSet_, func, EX, t1);
 			EX.parent();
 			return p1;
@@ -288,7 +289,7 @@ bool AST::analyze_2(functionSet functionSet_, function func, Tree<node> EX, std:
 			pos = search(tk, R("["), 1, {}, 0);
 			while (pos != -1) {
 				t1 = tk;
-				t1.erase(t1.begin(), t1.begin() + pos - 1);
+				t1.erase(t1.begin(), t1.begin() + pos );
 				t1.erase(t1.end() - (t1.size() - pos2), t1.end());
 				dim tdim;
 				tdim.tk = t1;
@@ -337,7 +338,7 @@ bool AST::analyze_2(functionSet functionSet_, function func, Tree<node> EX, std:
 			EX.push_back(p);
 			EX.ToChildrenEnd();
 			t1 = tk;
-			t1.erase(t1.begin(), t1.begin() + pos - 1);
+			t1.erase(t1.begin(), t1.begin() + pos);
 			t1.erase(t1.end());
 			p1 = analyzeExper(functionSet_, func, EX, t1) && p1;
 			if (p2) EX.parent();
@@ -415,7 +416,7 @@ lstring AST::getVarFullName(functionSet functionSet_, function func, lstring nam
 	error(R("未知变量:") + name);
 	return R("");
 }
-bool AST::analyzeArg(functionSet functionSet_, function func, Tree<node> EX, std::vector<lstring> tk) {
+bool AST::analyzeArg(functionSet functionSet_, function func, Tree<node>& EX, std::vector<lstring> tk) {
 	intptr_t pos{}, pos2{};
 	std::vector<lstring> t1{};
 	pos = search(tk, R(","), 0, pos, 0);

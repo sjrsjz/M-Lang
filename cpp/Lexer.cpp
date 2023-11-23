@@ -451,7 +451,7 @@ void Lexer::preprocesser(std::vector<lstring>& tk) {
                     file = readFileString(path);
                     cut_tokens(file, ttk);
                     tk.insert(tk.end(),ttk.begin(),ttk.end());
-                    tk.erase(tk.begin() + i - 1, tk.begin() + i + 3);
+                    tk.erase(tk.begin() + i - 1, tk.begin() + i + 4);
                     i--;
                 }
                 else {
@@ -469,7 +469,7 @@ void Lexer::preprocesser(std::vector<lstring>& tk) {
                         tk[j] = subreplace(tk[j], a, b);
                     }
                 }
-                tk.erase(tk.begin() + i - 1, tk.begin() + i + 2);
+                tk.erase(tk.begin() + i - 1, tk.begin() + i + 3);
                 i--;
             }
         }

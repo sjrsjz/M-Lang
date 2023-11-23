@@ -24,7 +24,13 @@ namespace MLang {
             ptr = new class_T[size];
             memcpy(ptr, o.ptr, size);
         }
-        ByteArray(ByteArray&& o) {
+        ByteArray(ByteArray&& o) noexcept {
+            size = o.size;
+            ptr = o.ptr;
+            o.size = 0;
+            o.ptr = nullptr;
+        }
+        void operator =(ByteArray&& o) noexcept {
             size = o.size;
             ptr = o.ptr;
             o.size = 0;

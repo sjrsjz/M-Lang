@@ -22,11 +22,12 @@ namespace MLang {
         return dst_str;
     }
     bool IsOperator(lstring t, int type) {
+        
         bool l{};
         l = t == R("+") || t == R("-") || t == R("*") || t == R("/") || t == R("\\") || t == R("%") || t == R("&") || t == R("!") || t == R("^") || t == R("~") || t == R("=") || t == R("==") || t == R(">") || t == R("<") || t == R("<=") || t == R(">=") || t == R("!=") || t == R("?=") || t == R("|") ||
             t == R("&&") || t == R(",") || t == R(".") || t == R("\n") || t == R(":") || t == R("->") || t == R("<<") || t == R(">>") || t == R("/*") || t == R("*/") || t == R(";") || t == R(" ") || t == R(":=");
         if (type == 0) {
-            l |= t == R("(") || t == R(")") || t == R("[") || t == R("]") || t == R("{") || t == R("}");
+            l = l || t == R("(") || t == R(")") || t == R("[") || t == R("]") || t == R("{") || t == R("}");
         }
         return l;
     }
@@ -45,9 +46,17 @@ namespace MLang {
         if (sin >> c) return false;
         return true;
     }
-
+    bool isNum_(lstring str) {
+        try {
+            std::stold(str);
+            return true;
+        }
+        catch (std::exception e) {
+            return false;
+        }
+    }
     intptr_t search(std::vector<lstring>& tks, lstring str, int type, std::optional<intptr_t> begin, intptr_t offset) {
-        if (!tks.size()) return -1;
+        if (!tks.size() || begin > tks.size()) return -1;
         if (!begin.has_value()) begin = type == 0 ? 0 : tks.size();
         intptr_t j{};
         for (int i = 1; i <= (type == 0 ? tks.size() - begin.value() : begin.value()); i++) {

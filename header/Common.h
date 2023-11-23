@@ -37,6 +37,7 @@ namespace MLang {
     lstring RemoveSpaceLR(lstring str);
     lstring subreplace(lstring resource_str, lstring sub_str, lstring new_str);
     bool isNum(lstring str);
+    bool isNum_(lstring str);
     void output(std::vector<lstring> tk,lstring str,intptr_t pos);
     lstring gather(std::vector<lstring> tks, size_t c);
     lstring readFileString(lstring path);
