@@ -4,7 +4,7 @@ using namespace MLang;
 bool Error{};
 
 void error(std::vector<lstring>& tks, lstring err, size_t ip) {
-    std::wcout << err << std::endl;
+    std_lcout << RED << R("[错误]") << RESET << R("[词法分析]") << err << std::endl;
 }
 
 bool Lexer::lexical_analyze(functionSet& set, lstring space, std::vector<lstring> tks) {
@@ -212,9 +212,9 @@ intptr_t Lexer::analyze_setVars(functionSet& set, lstring space, std::vector<lst
     type var{};
     std::vector<lstring> tk0{};
     if (iftk(tks, R("["), ip))
-        final = search(tks, R(":"), 0, ip, -1);
+        final = search(tks, R(";"), 0, ip, -1);
     else
-        final = search(tks, R(":"), 0, ip, 0);
+        final = search(tks, R(";"), 0, ip, 0);
     if (final == -1) final = tks.size() + 1;
     SubTokens(tks, tk0, ip, final - 1);
     if (analyze_vars(tk0, var)) {

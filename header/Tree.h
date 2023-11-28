@@ -8,7 +8,8 @@ private:
     bool located;
 public:
     Tree() {
-        located = true;
+        located = false;
+        pointer = -1;
     }
     Tree(const Tree& o) {
         data = o.data;
@@ -41,12 +42,12 @@ public:
         if (c->pointer >= (intptr_t)c->nodes.size()) {
             c->pointer = c->nodes.size() - 1; return false;
         }
-        c->nodes[pointer].located = true;
+        c->nodes[c->pointer].located = true;
         return true;
     }
     Tree* LocateCurrentTree() {
         if (located) return this;
-        assert(pointer < (intptr_t)nodes.size());
+        if (pointer >= (intptr_t)nodes.size() || pointer<0) return nullptr;
         return nodes[pointer].LocateCurrentTree();
     }
     Tree* LocateParentTree(Tree* parent) {
@@ -55,7 +56,10 @@ public:
         return nodes[pointer].LocateParentTree(this);
     }
     T& Get() {
-        return LocateCurrentTree()->data;
+        T tmp;
+        Tree* c = LocateCurrentTree();
+        if (!c) return tmp;
+        return c->data;
     }
     void reset() { located = true; }
     bool parent() {
@@ -71,7 +75,7 @@ public:
     }
     bool child() {
         Tree* c = LocateCurrentTree();
-        if (!c->size()) return false;
+        if (!c || !c->size()) return false;
         c->pointer = 0;
         c->located = false;
         assert(c->pointer >= 0 && c->pointer < c->nodes.size());
@@ -80,6 +84,7 @@ public:
     }
     bool insert(const T& o) {
         Tree* c = LocateCurrentTree();
+        if (!c) { pointer = 0; data = o; located = true; return true; }
         if (c->pointer > (intptr_t)c->nodes.size()) return false;
         Tree t;
         t.data = o;
@@ -88,6 +93,7 @@ public:
     }
     bool insert(const T& o, size_t index) {
         Tree* c = LocateCurrentTree();
+        if (!c) { pointer = 0; data = o; located = true; return true; }
         if (index < 0 || index > c->nodes.size()) return false;
         Tree t;
         t.data = o;
@@ -96,18 +102,22 @@ public:
     }
     bool insert(const Tree& o) {
         Tree* c = LocateCurrentTree();
+        if (!c) { pointer = 0; data = o; located = true; return true; }
         if (c->pointer > (intptr_t)c->nodes.size()) return false;
         c->nodes.insert((c->nodes.begin() + (c->pointer > 0 ? c->pointer : 0)), o);
         return true;
     }
     bool insert(const Tree& o, size_t index) {
         Tree* c = LocateCurrentTree();
+        if (!c) { pointer = 0; data = o; located = true; return true; }
         if (index < 0 || index > c->nodes.size()) return false;
+        if (!c) { pointer = 0; data = o; located = true; return true; }
         c->nodes.push_back((c->nodes.begin() + index), o);
         return true;
     }
     bool push_back(const T& o) {
         Tree* c = LocateCurrentTree();
+        if (!c) { nodes.clear(); pointer = 0; data = o; located = true; return true; }
         if (c->pointer > (intptr_t)c->nodes.size()) return false;
         Tree t;
         t.data = o;
@@ -116,6 +126,7 @@ public:
     }
     bool push_back(const T& o, size_t index) {
         Tree* c = LocateCurrentTree();
+        if (!c) { nodes.clear(); pointer = 0; data = o; located = true; return true; }
         if (index < 0 || index > c->nodes.size()) return false;
         Tree t;
         t.data = o;
@@ -124,12 +135,14 @@ public:
     }
     bool push_back(const Tree& o) {
         Tree* c = LocateCurrentTree();
+        if (!c) { pointer = 0; nodes = o.nodes; located = true; return true; }
         if (c->pointer > (intptr_t)c->nodes.size()) return false;
         c->nodes.push_back(o);
         return true;
     }
     bool push_back(const Tree& o, size_t index) {
         Tree* c = LocateCurrentTree();
+        if (!c) { pointer = 0; nodes = o.nodes; located = true; return true; }
         if (index < 0 || index > c->nodes.size()) return false;
         c->nodes.push_back(o);
         return true;

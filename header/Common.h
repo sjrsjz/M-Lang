@@ -9,9 +9,9 @@
 #include <fstream>
 #include <codecvt>
 
-#define _UNICODE_ UNICODE
+#define G_UNICODE_ UNICODE
 
-#ifdef _UNICODE_
+#ifdef G_UNICODE_
 typedef std::wstring lstring;
 typedef std::wstringstream lstringstream;
 typedef wchar_t lchar;
@@ -28,6 +28,23 @@ typedef std::stringstream lstringstream;
 #define std_lcout std::cout
 #endif //
 
+#define RESET   R("\033[0m")
+#define BLACK   R("\033[30m")      /* Black */
+#define RED     R("\033[31m")      /* Red */
+#define GREEN   R("\033[32m")      /* Green */
+#define YELLOW  R("\033[33m")      /* Yellow */
+#define BLUE    R("\033[34m")      /* Blue */
+#define MAGENTA R("\033[35m")      /* Magenta */
+#define CYAN    R("\033[36m")      /* Cyan */
+#define WHITE   R("\033[37m")      /* White */
+#define BOLDBLACK   R("\033[1m\033[30m")      /* Bold Black */
+#define BOLDRED     R("\033[1m\033[31m")      /* Bold Red */
+#define BOLDGREEN   R("\033[1m\033[32m")      /* Bold Green */
+#define BOLDYELLOW  R("\033[1m\033[33m")      /* Bold Yellow */
+#define BOLDBLUE    R("\033[1m\033[34m")      /* Bold Blue */
+#define BOLDMAGENTA R("\033[1m\033[35m")      /* Bold Magenta */
+#define BOLDCYAN    R("\033[1m\033[36m")      /* Bold Cyan */
+#define BOLDWHITE   R("\033[1m\033[37m")      /* Bold White */
 
 namespace MLang {
     size_t max_(size_t A, size_t B);

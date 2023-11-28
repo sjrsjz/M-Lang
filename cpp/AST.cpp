@@ -18,7 +18,7 @@ void outputNodes(Tree<node>& EX, size_t c) {
 	}
 	EX.parent();
 }
-void cutTK(std::vector<lstring> tk, std::vector<lstring> op1, std::vector<lstring>& tk1, std::vector<lstring>& tk2, lstring op2) {
+void cutTK(std::vector<lstring> tk, std::vector<lstring> op1, std::vector<lstring>& tk1, std::vector<lstring>& tk2, lstring& op2) {
 	std::vector<lstring> t1 = tk, t2 = tk;
 	intptr_t bracket{};
 	bool a{};
@@ -60,12 +60,12 @@ size_t AST::countStructureSize(lstring type) {
 		if (structures[i].name == type) {
 			if (structures[i].size > 0) return structures[i].size;
 			if (list[i]) { error(R("发生循环定义")); return 0; }
+			list[i] = true;
+			for (size_t j = 0; j < structures[i].elements.size(); j++)
+				size += (structures[i].elements[j].array ? DimSize(structures[i].elements[j].dim) : 1) * countStructureSize(structures[i].elements[j].typeName);
+			structures[i].size = size;
+			return size;
 		}
-		list[i] = true;
-		for (size_t j = 0; j < structures[i].elements.size(); j++)
-			size += (structures[i].elements[j].array ? DimSize(structures[i].elements[j].dim) : 1) * countStructureSize(structures[i].elements[j].typeName);
-		structures[i].size = size;
-		return size;
 	}
 	error(R("未知数据类型:") + type);
 	return 0;
@@ -79,7 +79,7 @@ void AST::analyzeStructureSize() {
 	}
 
 }
-analyzed_functionSet AST::analyzeFunctionSet(functionSet functionSet_) {
+analyzed_functionSet AST::analyzeFunctionSet(functionSet& functionSet_) {
 	analyzed_functionSet set{};
 	set.name = functionSet_.name;
 	set.base = functionSet_.base;
@@ -91,10 +91,11 @@ analyzed_functionSet AST::analyzeFunctionSet(functionSet functionSet_) {
 		set.func.push_back(analyzeFunction(functionSet_, functionSet_.func[i]));
 	return set;
 }
-analyzed_function AST::analyzeFunction(functionSet functionSet_, function func) {
+analyzed_function AST::analyzeFunction(functionSet& functionSet_, function& func) {
 	analyzed_function func0{};
 	func0.codes.clear();
 	size_t i{};
+	//std_lcout << std::endl << "[Function]" << func.name << std::endl ;
 	while (i>=0 && i< func.codes.size())
 	{
 		error_line = i;
@@ -105,7 +106,11 @@ analyzed_function AST::analyzeFunction(functionSet functionSet_, function func) 
 		EX.clear();
 		if (!tk.size()) { i++; continue; }
 		analyzeExper(functionSet_, func, EX, tk);
-		outputNodes(EX, 0);
+		
+		//print AST
+		// 
+		//outputNodes(EX, 0);
+
 		func0.codes.push_back(EX);
 		i++;
 	}
@@ -123,7 +128,7 @@ analyzed_function AST::analyzeFunction(functionSet functionSet_, function func) 
 	func0.use_arg_size = func.use_arg_size;
 	return func0;
 }
-bool AST::analyzeExper(functionSet functionSet_, function func, Tree<node>& EX, std::vector<lstring> tk) {
+bool AST::analyzeExper(functionSet& functionSet_, function& func, Tree<node>& EX, std::vector<lstring> tk) {
 	size_t size = tk.size();
 	if (!size) return true;
 	intptr_t final = search(tk, R(";"), 0, 0, 0);
@@ -150,7 +155,7 @@ bool AST::analyzeExper(functionSet functionSet_, function func, Tree<node>& EX, 
 		return p1;
 	}
 }
-bool AST::analyze_0(functionSet functionSet_, function func, Tree<node>& EX, std::vector<lstring> tk, int num) {
+bool AST::analyze_0(functionSet& functionSet_, function& func, Tree<node>& EX, std::vector<lstring> tk, int num) {
 	node node{};
 	std::vector<lstring> t1{}, t2{};
 	lstring top{};
@@ -160,7 +165,7 @@ bool AST::analyze_0(functionSet functionSet_, function func, Tree<node>& EX, std
 		return analyze_0(functionSet_, func, EX, tk, num - 1);
 	}
 	node.token = top;
-	node.type = R("OP");
+	node.type = R("Operator");
 	EX.push_back(node);
 	EX.ToChildrenEnd();
 	bool p1 = analyze_0(functionSet_, func, EX, t1, num);
@@ -168,13 +173,13 @@ bool AST::analyze_0(functionSet functionSet_, function func, Tree<node>& EX, std
 	EX.parent();
 	return p1 && p2;
 }
-bool AST::analyze_1(functionSet functionSet_, function func, Tree<node>& EX, std::vector<lstring> tk) {
+bool AST::analyze_1(functionSet& functionSet_, function& func, Tree<node>& EX, std::vector<lstring> tk) {
 	node p{};
 	std::vector<lstring> t1{};
 	if (!tk.size()) return false;
 	if (tk[0] == R("-") || tk[0] == R("+") || tk[0] == R("not")) {
 		p.token = tk[0] == R("-") ? R("Minus") : (tk[0] == R("+") ? R("Abs") : R("not"));
-		p.type = R("OP");
+		p.type = R("Operator");
 		EX.push_back(p);
 		EX.ToChildrenEnd();
 		t1 = tk;
@@ -189,14 +194,14 @@ bool AST::analyze_1(functionSet functionSet_, function func, Tree<node>& EX, std
 		EX.push_back(p);
 		EX.ToChildrenEnd();
 		t1 = tk;
-		t1.erase(t1.end() - 1, t1.end());
+		t1.erase(t1.end() - 2, t1.end());
 		bool a = analyze_1(functionSet_, func, EX, t1);
 		EX.parent();
 		return a;
 	}
 	return analyze_2(functionSet_, func, EX, tk);
 }
-bool AST::analyze_2(functionSet functionSet_, function func, Tree<node>& EX, std::vector<lstring> tk) {
+bool AST::analyze_2(functionSet& functionSet_, function& func, Tree<node>& EX, std::vector<lstring> tk) {
 	node p{};
 	std::vector<lstring> t1{};
 	type var{};
@@ -226,7 +231,7 @@ bool AST::analyze_2(functionSet functionSet_, function func, Tree<node>& EX, std
 	}
 	if (tk[0] == R("&")) {
 		p.token = R("&");
-		p.type = R("OP");
+		p.type = R("Operator");
 		EX.push_back(p);
 		EX.ToChildrenEnd();
 		t1 = tk;
@@ -271,7 +276,7 @@ bool AST::analyze_2(functionSet functionSet_, function func, Tree<node>& EX, std
 		if (pos == 1) {
 			t1 = tk;
 			t1.erase(t1.begin());
-			t1.erase(t1.end());
+			t1.erase(t1.end() - 1);
 			return analyzeExper(functionSet_, func, EX, t1);
 		}
 		if (pos == 2) {
@@ -293,82 +298,83 @@ bool AST::analyze_2(functionSet functionSet_, function func, Tree<node>& EX, std
 			EX.ToChildrenEnd();
 			t1 = tk;
 			t1.erase(t1.begin() + pos - 1, t1.end());
-			t1.erase(t1.end() - 1, t1.end());
+			t1.erase(t1.end() - 2, t1.end());
 			bool p1 = analyze_2(functionSet_, func, EX, t1);
 			SubTokens(tk, t1, pos + 1, tk.size() - 1);
 			p1 = analyzeArg(functionSet_, func, EX, t1) || p1;
 			EX.parent();
 			return p1;
 		}
-		if (tk[tk.size() - 1] == R("]")) {
-			std::vector<dim> dims{};
-			intptr_t pos2 = tk.size();
-			pos = search(tk, R("["), 1, {}, 0);
-			while (pos != -1) {
-				t1 = tk;
-				t1.erase(t1.begin(), t1.begin() + pos );
-				t1.erase(t1.end() - (t1.size() - pos2), t1.end());
-				dim tdim;
-				tdim.tk = t1;
-				
-				dims.push_back(tdim);
-				pos2 = pos - 1;
-				if (pos2 <= 0) {
-					error(R("处理数组索引时出错"));
-					return false;
-				}
-				if (tk[pos2 - 1] != R("]")) continue;
-				pos = search(tk, R("["), 1, pos2, 0);
-			}
-			p.token = R(""); p.type = R("Array");
-			EX.push_back(p);
-			EX.ToChildrenEnd();
-			t1 = tk;
-			t1.erase(t1.begin() + pos2, t1.end());
-			bool p1 = analyzeExper(functionSet_, func, EX, t1);
-			for (size_t i = 0; i < dims.size(); i++) {
-				p1 = analyzeExper(functionSet_, func, EX, dims[dims.size() - i].tk) || p1;
-			}
-			EX.parent();
-			return p1;
-		}
-		if (tk[tk.size() - 2] == R(".")) {
-			p.token = tk[tk.size() - 1];
-			p.type = R("Element");
-			EX.push_back(p);
-			EX.ToChildrenEnd();
-			t1 = tk;
-			t1.erase(t1.end() - 1, t1.end());
-			bool p1 = analyzeExper(functionSet_, func, EX, t1);
-			EX.parent();
-			return p1;
-		}
-		if (tk[tk.size() - 1] == R("}")) {
-			pos = search(tk, R("{"), 1, {}, 0);
-			t1 = tk;
-			t1.erase(t1.begin() + pos - 1, t1.end());
-			bool p1 = analyze_2(functionSet_, func, EX, t1);
-			bool p2{};
-			if (p2 = EX.haveParent()) EX.ToChildrenEnd();
-			p.token = R("");
-			p.type = R("Block");
-			EX.push_back(p);
-			EX.ToChildrenEnd();
-			t1 = tk;
-			t1.erase(t1.begin(), t1.begin() + pos);
-			t1.erase(t1.end());
-			p1 = analyzeExper(functionSet_, func, EX, t1) && p1;
-			if (p2) EX.parent();
-			EX.parent();
-			return p1;
-		}
-		if (tk[tk.size() - 1] == R(".")) {
-			t1 = tk;
-			t1.erase(t1.end());
-			return analyze_2(functionSet_, func, EX, t1);
-		}
-		return false;
 	}
+	
+	if (tk[tk.size() - 1] == R("]")) {
+		std::vector<dim> dims{};
+		intptr_t pos2 = tk.size();
+		intptr_t pos = search(tk, R("["), 1, {}, 0);
+		while (pos != -1) {
+			t1 = tk;
+			t1.erase(t1.begin()  + pos2 - 1, t1.end());
+			t1.erase(t1.begin(), t1.begin() + pos);
+			dim tdim;
+			tdim.tk = t1;
+
+			dims.push_back(tdim);
+			pos2 = pos - 1;
+			if (pos2 <= 0) {
+				error(R("处理数组索引时出错"));
+				return false;
+			}
+			if (tk[pos2 - 1] != R("]")) break;
+			pos = search(tk, R("["), 1, pos2, 0);
+		}
+		p.token = R(""); p.type = R("Array");
+		EX.push_back(p);
+		EX.ToChildrenEnd();
+		t1 = tk;
+		t1.erase(t1.begin() + pos2, t1.end());
+		bool p1 = analyzeExper(functionSet_, func, EX, t1);
+		for (size_t i = 1; i <= dims.size(); i++) {
+			p1 = analyzeExper(functionSet_, func, EX, dims[dims.size() - i].tk) || p1;
+		}
+		EX.parent();
+		return p1;
+	}
+	if (tk[tk.size() - 2] == R(".")) {
+		p.token = tk[tk.size() - 1];
+		p.type = R("Element");
+		EX.push_back(p);
+		EX.ToChildrenEnd();
+		t1 = tk;
+		t1.erase(t1.end() - 2, t1.end());
+		bool p1 = analyzeExper(functionSet_, func, EX, t1);
+		EX.parent();
+		return p1;
+	}
+	if (tk[tk.size() - 1] == R("}")) {
+		intptr_t pos = search(tk, R("{"), 1, {}, 0);
+		t1 = tk;
+		t1.erase(t1.begin() + pos - 1, t1.end());
+		bool p1 = analyze_2(functionSet_, func, EX, t1);
+		bool p2{};
+		if (p2 = EX.haveParent()) EX.ToChildrenEnd();
+		p.token = R("");
+		p.type = R("Block");
+		EX.push_back(p);
+		EX.ToChildrenEnd();
+		t1 = tk;
+		t1.erase(t1.begin(), t1.begin() + pos);
+		t1.erase(t1.end() - 1);
+		p1 = analyzeExper(functionSet_, func, EX, t1) && p1;
+		if (p2) EX.parent();
+		EX.parent();
+		return p1;
+	}
+	if (tk[tk.size() - 1] == R(".")) {
+		t1 = tk;
+		t1.erase(t1.end() - 1);
+		return analyze_2(functionSet_, func, EX, t1);
+	}
+	return false;
 }
 size_t AST::size(type var) {
 	return getStructureSize(var.typeName) * (var.array ? var.dim.size() : 1);
@@ -433,7 +439,7 @@ lstring AST::getVarFullName(functionSet functionSet_, function func, lstring nam
 	error(R("未知变量:") + name);
 	return R("");
 }
-bool AST::analyzeArg(functionSet functionSet_, function func, Tree<node>& EX, std::vector<lstring> tk) {
+bool AST::analyzeArg(functionSet& functionSet_, function& func, Tree<node>& EX, std::vector<lstring> tk) {
 	intptr_t pos{}, pos2{};
 	std::vector<lstring> t1{};
 	pos = search(tk, R(","), 0, pos, 0);
@@ -453,20 +459,20 @@ bool AST::analyzeArg(functionSet functionSet_, function func, Tree<node>& EX, st
 			pos2 = pos + 1;
 			pos = search(tk, R(","), 0, pos, 0);
 		}
-		SubTokens(tk, t1, pos2, tk.size());
-		if (!t1.size()) {
-			node p;
-			p.token = R("");
-			p.type = R("Blank");
-			EX.push_back(p);
-		}
-		else {
-			a = analyzeExper(functionSet_, func, EX, t1) && a;
-		}
+	}
+	SubTokens(tk, t1, pos2, tk.size());
+	if (!t1.size()) {
+		node p;
+		p.token = R("");
+		p.type = R("Blank");
+		EX.push_back(p);
 	}
 	else {
-		if (!tk.size()) a = analyzeExper(functionSet_, func, EX, tk) && a;
+		a = analyzeExper(functionSet_, func, EX, t1) && a;
 	}
+	/*else {
+		if (!tk.size()) a = analyzeExper(functionSet_, func, EX, tk) && a;
+	}*/
 	return a;
 }
 size_t AST::matchBracket(std::vector<lstring> tk, intptr_t start) {
@@ -548,7 +554,10 @@ lstring AST::getFunctionFullName(lstring name, functionSet functionSet_) {
 	return R("Unknown") + DIVISION + R("Unknown") + DIVISION + func;
 }
 
-void AST::error(lstring err) {}
+void AST::error(lstring err) {
+	std_lcout << RED << R("[错误][语法分析]") << RESET << R("[程序集/类:") << error_functionSet << R("][函数/方法:") << error_function << R("][行:") << error_line + 1 << R("]") << err << std::endl;
+	Error = true;
+}
 bool AST::analyze(
 	std::vector<lstring> libs_,
 	std::vector < type> globalVars_,
@@ -563,6 +572,13 @@ bool AST::analyze(
 	op[4].op = { R("and"),R("&&") };
 	op[5].op = { R("xor"),R("or"),R("|"),R("||") };
 	op[6].op = { R("=") };
+
+	NewType(structures_, R("N"), false, 4);
+	NewType(structures_, R("Z"), false, 4);
+	NewType(structures_, R("R"), false, 8);
+	NewType(structures_, R("B"), false, 1);
+	NewType(structures_, R("Boolen"), false, 4);
+
 
 	libs = libs_;
 	globalVars = globalVars_;
@@ -590,4 +606,13 @@ bool AST::getFunctionType(lstring fullname, lstring& type, lstring& super, lstri
 		type = t[0]; super = t[1]; name = t[2]; return true;
 	}
 	return false;
+}
+void AST::NewType(std::vector<structure>& structure_, lstring name, bool publiced, size_t size) {
+	structure tmp;
+	tmp.elements.clear();
+	tmp.isClass = false;
+	tmp.name = name;
+	tmp.publiced = publiced;
+	tmp.size = size;
+	structure_.push_back(tmp);
 }
