@@ -23,6 +23,7 @@
     <ClInclude Include="header\base64.h" />
     <ClInclude Include="header\ByteArray.h" />
     <ClInclude Include="header\Common.h" />
+    <ClInclude Include="header\IRGenerator.h" />
     <ClInclude Include="header\Lexer.h" />
     <ClInclude Include="header\SectionManager.h" />
     <ClInclude Include="header\Struct.h" />
@@ -33,6 +34,7 @@
     <ClCompile Include="cpp\base64.cpp" />
     <ClCompile Include="cpp\ByteArray.cpp" />
     <ClCompile Include="cpp\Common.cpp" />
+    <ClCompile Include="cpp\IRGenerator.cpp" />
     <ClCompile Include="cpp\Lexer.cpp" />
     <ClCompile Include="cpp\M Lang.cpp" />
     <ClCompile Include="cpp\SectionManager.cpp" />

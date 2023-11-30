@@ -80,6 +80,7 @@ struct analyzed_functionSet {
     lstring base;
     bool publiced;
     bool isClass;
+    size_t size;
 };
 struct redirection {
     size_t ip;
