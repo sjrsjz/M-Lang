@@ -236,4 +236,10 @@ bool IRGenerator::analyze(
 	}
 	error_type = R("Code");
 	
+	GlobalOffset = GlobalSize0;
+	for (size_t i = 0; i < functionSets.size(); i++) {
+		if (functionSets[i].name == R("[System]")) {
+		
+		}
+	}
 }

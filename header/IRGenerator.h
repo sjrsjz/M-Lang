@@ -44,6 +44,10 @@ namespace MLang {
 		type Type_B{};
 		type Type_Boolen{};
 
+		size_t GlobalSize0{};
+		intptr_t GlobalOffset{};
+
+
 		void error(lstring err);
 		bool getFunctionType(lstring fullName,lstring& type,lstring& super,lstring& name);
 		size_t countVarSize(const std::vector<type>&);
