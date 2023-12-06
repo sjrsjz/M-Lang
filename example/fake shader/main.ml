@@ -20,11 +20,11 @@ Main{
                 while(y<=1.0){
                     Boolen:c=shader.color(x,y,frame);
                     if(c){
-                        N(TextBuffer.ad+offset)->B=64;
+                        N(TextBuffer.ad+offset)->B=&"#"->B;
                         N(TextBuffer.ad+offset+1)->B=32;
                         
                     }{
-                        N(TextBuffer.ad+offset)->B=46;
+                        N(TextBuffer.ad+offset)->B=&"."->B;
                         N(TextBuffer.ad+offset+1)->B=32;
                     };
                     offset=offset+2;
@@ -38,7 +38,7 @@ Main{
             };
             print(TextBuffer.ad);
             i=0;
-            while(i<200000000){i=i+1};
+            while(i<2000000){i=i+1};
             frame=frame+1
         };
         B:buffer[512];input(&buffer,512);

@@ -10,7 +10,7 @@ _string_{
     }
 }
 Class:string{
-    N:ad;N:size;
+    [Public]N:ad;[Public]N:size;
     _init_()->N:={
         ad=0;size=0
     }
@@ -21,13 +21,13 @@ Class:string{
     _string_:={
         N:ad,N:size
     }
-    _return_string(string:s)->N:={//prevent RAII destroys data
+    [Public]_return_string(string:s)->N:={//prevent RAII destroys data
         _destroy_();
         ad=new(s.size);
         size=s.size;
         memcopy(s.ad,ad,size)
     }
-    =(string:s)->string:={
+    [Public]=(string:s)->string:={
         _destroy_();
         ad=new(s.size);
         
@@ -35,7 +35,7 @@ Class:string{
         memcopy(s.ad,ad,s.size);
         return(this)
     }
-    const(N:str)->N:={
+    [Public]const(N:str)->N:={
         _destroy_();
         N:i=0;
         while(N(str+i)->B!=0){i=i+1};
@@ -43,7 +43,7 @@ Class:string{
         ad=new(size);
         memcopy(str,ad,size);
     }
-    +(string:s)->string:={
+    [Public]+(string:s)->string:={
         string:tmp;
         if(this.size!=0){
             tmp.size=s.size+size-1;
@@ -55,7 +55,7 @@ Class:string{
         };
         return(tmp)
     }
-    *(N:times)->string:={
+    [Public]*(N:times)->string:={
         string:tmp;
         N:i=0;
         while(i<times){
@@ -64,13 +64,13 @@ Class:string{
         };
         return(tmp)
     }
-    ToR()->R:={
+    [Public]ToR()->R:={
         return(T2R(ad))
     }
-    ==(string:s)->Boolen:={
+    [Public]==(string:s)->Boolen:={
         return(CmpStr(ad,s.ad))
     }
-    !=(string:s)->Boolen:={
+    [Public]!=(string:s)->Boolen:={
         return(not CmpStr(ad,s.ad))
     }
 }
