@@ -29,14 +29,14 @@ bool IRGenerator::getFunctionType(lstring fullName, lstring& type, lstring& supe
 }
 size_t IRGenerator::countVarSize(const std::vector<type>& var) {
 	size_t size_{};
-	for (size_t i = 0; i < var.size(); i++) size_ += size(var[i]);
+	foreach(var, x) size_ += size(*x);
 	return size_;
 }
 void IRGenerator::generateFunctionSet(analyzed_functionSet& functionSet) {
 	if (Error) return;
-	for (size_t i = 0; i < functionSet.func.size(); i++) {
-		error_function = functionSet.func[i].name;
-		generateFunction(functionSet, functionSet.func[i]);
+	foreach(functionSet.func, x) {
+		error_function = x->name;
+		generateFunction(functionSet, *x);
 	}
 }
 void IRGenerator::generateFunction(analyzed_functionSet& functionSet, analyzed_function& func) {
@@ -121,7 +121,7 @@ type IRGenerator::getElement(analyzed_functionSet& functionSet, lstring struct_,
 	error(R("试图在 ") + struct_ + R(" 中引用不存在的成员 ") + element);
 	type ret{};
 	return ret;
-}
+} 
 size_t IRGenerator::getElementOffset(analyzed_functionSet& functionSet, lstring struct_, lstring element) {
 	size_t k{};
 	foreach(structures, x) {
@@ -285,10 +285,8 @@ bool IRGenerator::analyze(
 	Type_Boolen.array = false;
 	Type_Boolen.address = false;
 
-	for (size_t i = 0; i < analyzed_functionSets.size(); i++) analyzed_functionSets[i].size = countVarSize(analyzed_functionSets[i].local);
-	for (size_t i = 0; i < constants.size(); i++) {
-		if (constants[i].typeName == R("R")) constantData.Attach<double>(std::stod(constants[i].data));
-	}
+	foreach(analyzed_functionSets, x) x->size = countVarSize(x->local);
+	foreach(constants, x) if (x->typeName == R("R")) constantData.Attach<double>(std::stod(x->data));
 	error_type = R("Struct");
 	countGlobalSize();
 	ins(R("[GlobalSize]") + to_lstring(GlobalSize));
@@ -299,10 +297,10 @@ bool IRGenerator::analyze(
 	size_t tmp2 = allocTmpID(Type_R);
 	initSetVars(globalVars, tmp, 0, R("$"), false);
 	size_t j = countVarSize(globalVars);
-	for (size_t i = 0; i < analyzed_functionSets.size(); i++) {
-		if (!analyzed_functionSets[i].isClass) {
-			initSetVars(analyzed_functionSets[i].local, tmp, j, R("$"), false);
-			j += analyzed_functionSets[i].size;
+	foreach(analyzed_functionSets, x) {
+		if (!x->isClass) {
+			initSetVars(x->local, tmp, j, R("$"), false);
+			j += x->size;
 		}
 	}
 
@@ -324,20 +322,20 @@ bool IRGenerator::analyze(
 	error_type = R("Code");
 	
 	GlobalOffset = GlobalSize0;
-	for (size_t i = 0; i < functionSets.size(); i++) {
-		if (functionSets[i].name == R("[System]")) {
-			for (size_t j = 0; j < analyzed_functionSets[i].func.size(); j++) {
-				ins(R("[System]#label_function_Local") + DIVISION + R("[System") + DIVISION + analyzed_functionSets[i].func[j].name);
+	foreach(analyzed_functionSets, x) { 
+		if (x->name == R("[System]")) {
+			foreach(x->func, y) {
+				ins(R("[System]#label_function_Local") + DIVISION + R("[System]") + DIVISION + y->name);
 			}
 			continue;
 		}
-		error_functionSet = analyzed_functionSets[i].name;
-		generateFunctionSet(analyzed_functionSets[i]);
-		if (!analyzed_functionSets[i].isClass) GlobalOffset += analyzed_functionSets[i].size;
+		error_functionSet = x->name;
+		generateFunctionSet(*x);
+		if (!x->isClass) GlobalOffset += x->size;
 	}
-	for (size_t i = 0; i < ExtraFunctions.func, i++) {
-		ins(R("#label_function_Extra") + DIVISION + ExtraFunctions.func[i].DLL + DIVISION + ExtraFunctions.func[i].extra_name);
-		ins(R("[API]") + base64_encode(ExtraFunctions.func[i].DLL) + R(" ") + base64_encode(ExtraFunctions.func[i].extra_name));
+	foreach(ExtraFunctions.func, x) {
+		ins(R("#label_function_Extra") + DIVISION + x->DLL + DIVISION + x->extra_name);
+		ins(R("[API]") + base64_encode(x->DLL) + R(" ") + base64_encode(x->extra_name));
 	}
 	return Error;
 }
