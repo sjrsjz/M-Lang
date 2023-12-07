@@ -27,6 +27,7 @@ typedef std::stringstream lstringstream;
 #define to_lstring(x) std::to_string(x)
 #define std_lcout std::cout
 #endif //
+#define foreach(x, y) for(auto y=x.begin();y<x.end();y++)
 
 #define RESET   R("\033[0m")
 #define BLACK   R("\033[30m")      /* Black */

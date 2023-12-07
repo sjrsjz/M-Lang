@@ -46,7 +46,9 @@ namespace MLang {
 
 		size_t GlobalSize0{};
 		intptr_t GlobalOffset{};
-
+		size_t currLocalSize{};
+		std::vector<size_t> tmpStack{};
+		std::vector<lstring> destroyCode{};
 
 		void error(lstring err);
 		bool getFunctionType(lstring fullName,lstring& type,lstring& super,lstring& name);
@@ -54,11 +56,11 @@ namespace MLang {
 		void generateFunctionSet(analyzed_functionSet& functionSet);
 		void generateFunction(analyzed_functionSet& functionSet, analyzed_function& func);
 		void generateLine(analyzed_functionSet& functionSet, analyzed_function& func,Tree<node>& EX);
-		void compileTree(analyzed_functionSet& functionSet, analyzed_function& func, Tree<node>& EX, lstring ExtraInfo);
+		void compileTree(analyzed_functionSet& functionSet, analyzed_function& func, Tree<node>& EX, std::optional<lstring> ExtraInfo);
 		bool ifMethod(lstring FullName);
 		size_t allocStr(lstring text);
 		type getElement(analyzed_functionSet& functionSet, lstring struct_, lstring element);
-		type getElementOffset(analyzed_functionSet& functionSet, lstring struct_, lstring element);
+		size_t getElementOffset(analyzed_functionSet& functionSet, lstring struct_, lstring element);
 		void initGenerator(type local,size_t tmp,size_t offset,lstring tk,bool localMode);
 		void destroyGenerator(type local, size_t tmp, size_t offset, lstring tk, bool localMode);
 		void initSetVars(std::vector<type>& local,size_t tmp,size_t offset,lstring tk,bool localMode);

@@ -5,8 +5,8 @@ static const std::string base64_chars =
 "abcdefghijklmnopqrstuvwxyz"
 "0123456789+/";
 
-std::string base64_encode(const std::string& input) {
-    std::string encoded;
+lstring base64_encode(const lstring& input) {
+    lstring encoded;
     int i = 0;
     int j = 0;
     unsigned char char_array_3[3];
@@ -44,13 +44,13 @@ std::string base64_encode(const std::string& input) {
     return encoded;
 }
 
-std::string base64_decode(const std::string& input) {
+lstring base64_decode(const lstring& input) {
     int in_len = input.size();
     int i = 0;
     int j = 0;
     int in_ = 0;
     unsigned char char_array_4[4], char_array_3[3];
-    std::string decoded;
+    lstring decoded;
 
     while (in_len-- && (input[in_] != '=') && (is_base64(input[in_]))) {
         char_array_4[i++] = input[in_]; in_++;
@@ -84,6 +84,6 @@ std::string base64_decode(const std::string& input) {
     return decoded;
 }
 
-bool is_base64(unsigned char c) {
+bool is_base64(lchar c) {
     return (isalnum(c) || (c == '+') || (c == '/'));
 }
