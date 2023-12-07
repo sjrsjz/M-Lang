@@ -1,0 +1,47 @@
+##include<"Shader.ml">;
+##include<"string.ml">;
+##include<"Cmd.ml">;
+
+Main{
+    Shader:shader;
+    Cmd:cmd;
+    main()->N:={
+        string:TextBuffer;
+        TextBuffer.size=64*64;
+        TextBuffer.ad=new(TextBuffer.size);
+        N:frame=0;
+        while(true){
+            R:x=-1.0;
+            cmd.clear();
+            
+            N:offset=0;
+            while(x<=1.0){
+                R:y=-1.0;
+                while(y<=1.0){
+                    Boolen:c=shader.color(x,y,frame);
+                    if(c){
+                        N(TextBuffer.ad+offset)->B=&"#"->B;
+                        N(TextBuffer.ad+offset+1)->B=32;
+                        
+                    }{
+                        N(TextBuffer.ad+offset)->B=&"."->B;
+                        N(TextBuffer.ad+offset+1)->B=32;
+                    };
+                    offset=offset+2;
+                    y=y+0.05;
+                };
+                x=x+0.05;
+                N(TextBuffer.ad+offset)->B=10;
+                N:i=0;
+                while(i<100000){i=i+1};
+                offset=offset+1;
+            };
+            print(TextBuffer.ad);
+            i=0;
+            while(i<2000000){i=i+1};
+            frame=frame+1
+        };
+        B:buffer[512];input(&buffer,512);
+        return(0)
+    }
+}

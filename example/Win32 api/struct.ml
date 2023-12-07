@@ -1,0 +1,29 @@
+Struct{
+    RECT:={
+        N:Left,
+        N:Top,
+        N:Right,
+        N:Bottom
+    }
+    MSG:={
+        N:hwnd,
+        N:message,
+        N:wParam,
+        N:lParam,
+        N:time,
+        N:x,
+        N:y
+    }
+    WNDCLASS:={
+        N:style,
+        N:lpfnwndproc,
+        N:cbClsextra,
+        N:cbWndExtra,
+        N:hInstance,
+        N:hIcon,
+        N:hCursor,
+        N:hbrBackground,
+        N:lpszMenuName,
+        N:lpszClassName
+    }
+}
