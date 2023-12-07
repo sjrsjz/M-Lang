@@ -94,7 +94,6 @@ namespace MLang {
         }
         ByteArray Replace(size_t offset, const ByteArray& o, std::optional<size_t> length) {
             size_t length0 = length.has_value() ? min_(o.size, length.value()) : o.size;
-            assert(length0 >= 0);
             ByteArray t(length + max_(0, offset + length0 - size));
             if (ptr) memcpy(t.ptr, ptr, size);
             if (o.ptr) memcpy(t.ptr + offset, o.ptr, length0);
