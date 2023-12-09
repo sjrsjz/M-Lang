@@ -97,6 +97,6 @@ namespace MLang {
 		bool getVarType(lstring name, lstring& type, lstring& var);
 		size_t countGlobalSize();
 		size_t getStructureSize(lstring type);
-		void ins(lstring tk);
+		bool ins(lstring tk);
 	};
 }
