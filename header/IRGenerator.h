@@ -66,10 +66,11 @@ namespace MLang {
 		void initSetVars(std::vector<type>& local,size_t tmp,size_t offset,lstring tk,bool localMode);
 		void destroySetVars(std::vector<type>& local, size_t tmp, size_t offset, lstring tk, bool localMode);
 		bool handleBuiltInFunctions(analyzed_functionSet& functionSet, analyzed_function& func, Tree<node>& EX, lstring name, type& ret);
-		bool cmpTK(std::vector<size_t>& tk1, std::vector<size_t>& tk2);
+		bool cmpDim(const std::vector<size_t>& tk1, const std::vector<size_t>& tk2);
+		bool cmpTK(const lstring& tk1, const std::vector<lstring>& tk2);
 		bool generateImplictConversion(type& A, type& B, analyzed_functionSet functionSet, analyzed_function func, Tree<node> EX);
 		bool haveFunction(lstring name);
-		bool isObject(type A);
+		bool ifNotRef(type A);
 		size_t allocTmpID(type A);
 		size_t tmpOffset(size_t id,const std::vector<size_t>& stack);
 		bool setHasFunction(const analyzed_functionSet& functionSet, lstring name);
@@ -86,7 +87,7 @@ namespace MLang {
 		bool cmpArgNum(const std::vector<type>& A, const std::vector<type>& B);
 		bool cmpArg(const std::vector<type>& A, const std::vector<type>& B);
 		analyzed_function toAnalyzedFunction(function func);
-		lstring getFullName(lstring name, const analyzed_function& functionSet);
+		lstring getFullName(lstring name, const analyzed_functionSet& functionSet);
 		bool ifBaseType(const type& A);
 		size_t argSize(const type& A);
 		size_t countArgSize(const analyzed_functionSet& functionSet, const analyzed_function& func);
