@@ -1,2 +1,1 @@
-﻿#pragma once
-#include "../header/ByteArray.h"
+﻿#include "../header/ByteArray.h"

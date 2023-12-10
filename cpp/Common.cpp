@@ -1,5 +1,4 @@
-﻿#pragma once
-#include "../header/Common.h"
+﻿#include "../header/Common.h"
 
 namespace MLang {
     void output(lstring str) {

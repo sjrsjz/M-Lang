@@ -1,5 +1,4 @@
-﻿#pragma once
-#include "../header/SectionManager.h"
+﻿#include "../header/SectionManager.h"
 namespace MLang {
 	SectionManager::SectionManager() {}
 	SectionManager::~SectionManager() {}

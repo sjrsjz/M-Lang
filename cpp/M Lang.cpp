@@ -1,5 +1,4 @@
-﻿#pragma once
-#include "../header/Common.h"
+﻿#include "../header/Common.h"
 #include "../header/Tree.h"
 #include "../header/ByteArray.h"
 #include "../header/SectionManager.h"
