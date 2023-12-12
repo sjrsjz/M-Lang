@@ -92,11 +92,11 @@ namespace MLang {
 		size_t argSize(const type& A);
 		size_t countArgSize(const analyzed_functionSet& functionSet, const analyzed_function& func);
 		size_t getLocalOffset(const analyzed_function& func, size_t id);
-		size_t getVarOffset(const analyzed_function& functionSet, const analyzed_function& func, lstring name);
+		size_t getVarOffset(const analyzed_functionSet& functionSet, const analyzed_function& func, lstring name);
 		size_t constSize(const type& A);
 		size_t size(const type& A);
 		bool getVarType(lstring name, lstring& type, lstring& var);
-		size_t countGlobalSize();
+		void countGlobalSize();
 		size_t getStructureSize(lstring type);
 		bool ins(lstring tk);
 	};

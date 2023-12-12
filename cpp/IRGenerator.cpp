@@ -535,49 +535,243 @@ type IRGenerator::getGlobalVarType(lstring name) {
 	return t;
 }
 analyzed_function IRGenerator::getFunction(const analyzed_functionSet& functionSet, lstring fullName, std::vector<type>& args, std::optional<bool> variable) {
-
+	lstring type{}, className{}, name{};
+	analyzed_function tfunc{};
+	if (!getFunctionType(fullName, type, className, name)) {
+		error(R("错误的函数名称格式:") + fullName);
+		return tfunc;
+	}
+	if (type == R("Local")) {
+		for (auto& x : analyzed_functionSets) {
+			analyzed_function* k{};
+			bool a{};
+			for (auto& y : x.func) {
+				if (y.name == name) {
+					k = &y;
+					a =x.isClass && (y.publiced && x.name != functionSet.name || x.name == functionSet.name);
+					if (a && cmpArg(y.args, args)) return y;
+				}
+			}
+			if (k) {
+				if (x.isClass && !a) {
+					error(R("试图调用 ") + x.name + R(" 中未公开的方法:") + k->name);
+					return tfunc;
+				}
+				if (!cmpArgNum(k->args, args) && !variable && !k->use_arg_size) {
+					error(R("参数过多或过少:") + fullName);
+					return tfunc;
+				}
+				return *k;
+			}
+		}
+		error(R("未知函数:") + fullName);
+	}
+	else if (type == R("Extra")) {
+		for (auto& x : ExtraFunctions.func) {
+			if (x.extra_name == name) {
+				return toAnalyzedFunction(x);
+			}
+		}
+		error(R("未知外部函数:") + fullName);
+	}
+	else {
+		error(R("未知函数:") + fullName);
+	}
+	return tfunc;
 }
 bool IRGenerator::cmpArgNum(const std::vector<type>& A, const std::vector<type>& B) {
-
+	size_t j{}, k{};
+	for (size_t i = B.size() - 1; i >= 0; i--) {
+		if (!B[i].can_be_ignored) break;
+		j++;
+	}
+	for (size_t i = A.size() - 1; i >= 0; i--) {
+		if (!A[i].can_be_ignored) break;
+		k++;
+	}
+	return A.size() == B.size() - j || A.size() - k == B.size() - j;
 }
 bool IRGenerator::cmpArg(const std::vector<type>& A, const std::vector<type>& B) {
-
+	if (A.size() != B.size()) return false;
+	for (size_t i = 0; i < A.size(); i++) {
+		if (A[i].typeName != B[i].typeName || A[i].array != B[i].array) return false;
+	}
+	return true;
 }
 analyzed_function IRGenerator::toAnalyzedFunction(function func) {
-
+	analyzed_function tfunc{};
+	tfunc.ret = func.ret;
+	tfunc.api = func.api;
+	tfunc.call_type = func.call_type;
+	tfunc.DLL = func.DLL;
+	tfunc.name = func.name;
+	tfunc.args = func.args;
+	tfunc.local = func.local;
+	tfunc.publiced = func.publiced;
+	tfunc.extra_name = func.extra_name;
+	tfunc.externed = func.externed;
+	tfunc.transit = func.transit;
+	tfunc.use_arg_size = func.use_arg_size;
+	return tfunc;
 }
 lstring IRGenerator::getFullName(lstring name, const analyzed_functionSet& functionSet) {
-
+	std::vector<lstring> t = split(name, DIVISION);
+	lstring className{}, func{};
+	if (!t.size()) return R("");
+	if (t.size() == 1) {
+		className = R("");
+		func = t[0];
+	}
+	else if (t.size() == 2) {
+		className = t[0];
+		func = t[1];
+	}
+	else {
+		error(R("错误的函数名称格式") + name);
+		return R("");
+	}
+	if (className != R("") && functionSet.name == className || className == R("")) {
+		for (auto& x : functionSet.func) return R("Local") + DIVISION + functionSet.name + DIVISION + func;
+	}
+	for (auto& x : analyzed_functionSets) {
+		for (auto& y : x.func) {
+			if (x.name == functionSet.name) continue;
+			if (y.name == func) {
+				if (x.isClass && x.name != className) continue;
+				if (x.isClass && !y.publiced) {
+					error(R("试图调用 ") + className + R(" 中未公开的方法:") + func);
+					return R("");
+				}
+				return R("Local") + DIVISION + x.name + DIVISION + func;
+			}
+		}
+	}
+	for (auto& x : ExtraFunctions.func) {
+		if (className != R("")) {
+			if (x.DLL == className) {
+				return R("Extra") + DIVISION + className + DIVISION + x.extra_name;
+			}
+			else continue;
+		}
+		if (x.name == func) return R("Extra") + DIVISION + className + DIVISION + x.extra_name;
+	}
+	return R("Unknown") + DIVISION + R("Unknown") + DIVISION + func;
 }
 bool IRGenerator::ifBaseType(const type& A) {
-
+	return !A.array && cmpTK(A.typeName, { R("N"),R("R"),R("Z"),R("B"),R("Boolen") });
 }
 size_t IRGenerator::argSize(const type& A) {
-
+	if (A.address || !ifNotRef(A)) return getStructureSize(R("N"));
+	if (A.typeName == R("B")) return 2;
+	return getStructureSize(A.typeName);
 }
 size_t IRGenerator::countArgSize(const analyzed_functionSet& functionSet, const analyzed_function& func) {
-
+	size_t size{};
+	if (func.call_type == R("stdcall")) {
+		if (functionSet.isClass) size += 0;
+		if (!ifBaseType(func.ret)) size += getStructureSize(R("N"));
+		for (auto& x : func.args) size += argSize(x);
+	}
+	else if (func.call_type == R("cdecl")) size = 0;
+	return size;
 }
 size_t IRGenerator::getLocalOffset(const analyzed_function& func, size_t id) {
-
+	if (id >= func.local.size()) {
+		error(R("局部变量ID溢出"));
+		return 0;
+	}
+	size_t offset{};
+	for (size_t i = 0; i < id; i++) {
+		offset += size(func.local[i]);
+	}
+	return offset;
 }
-size_t IRGenerator::getVarOffset(const analyzed_function& functionSet, const analyzed_function& func, lstring name) {
-
+size_t IRGenerator::getVarOffset(const analyzed_functionSet& functionSet, const analyzed_function& func, lstring name) {
+	lstring type{}, var{};
+	if (!getVarType(name, type, var)) return 0;
+	size_t offset{};
+	if (type == R("Local")) {
+		if (functionSet.isClass) offset += getStructureSize(R("N"));
+		if (var == R("[this]")) return offset;
+		for (auto& x : func.local) {
+			offset += size(x);
+			if (x.name == var) return offset;
+		}
+		error(R("未知局部变量:") + var);
+	}
+	if (type == R("Arg")) {
+		if (var == R("[ret]")) return offset;
+		if(!ifNotRef(func.ret)) offset += getStructureSize(R("N"));
+		for (auto& x : func.args) {
+			if (x.name == var) return offset;
+			offset += size(x);
+		}
+		error(R("未知参数:") + var);
+	}
+	if (type == R("Class")) {
+		for (auto& x : functionSet.local) {
+			if (x.name == var) return offset;
+			offset += size(x);
+		}
+		error(R("未知类成员:") + var);
+	}
+	if (type == R("Set")) {
+		for (auto& x : functionSet.local) {
+			if (x.name == var) return offset;
+			offset += size(x);
+		}
+		error(R("未知程序集变量:") + var);
+	}
+	if (type == R("Global")) {
+		for (auto& x : globalVars) {
+			if (x.name == var) return offset;
+			offset += size(x);
+		}
+		error(R("未知全局变量:") + var);
+	}
+	if (type == R("Const")) {
+		for (auto& x : functionSet.local) {
+			if (x.name == var) return offset;
+			offset += size(x);
+		}
+		error(R("未知常量:") + var);
+	}
+	else error(R("未知变量类型:") + name);
+	return 0;
 }
 size_t IRGenerator::constSize(const type& A) {
-
+	return getStructureSize(A.typeName);
 }
 size_t IRGenerator::size(const type& A) {
-
+	return getStructureSize(A.typeName) * (A.array ? DimSize(A.dim) : 1);
 }
 bool IRGenerator::getVarType(lstring name, lstring& type, lstring& var) {
-
+	std::vector<lstring> t = split(name, DIVISION);
+	if (t.size() != 2) {
+		error(R("错误的变量名称格式:") + name);
+		return false;
+	}
+	type = t[0];
+	var = t[1];
+	return true;
 }
-size_t IRGenerator::countGlobalSize() {
-
+void IRGenerator::countGlobalSize() {
+	size_t size_{};
+	for (auto& x : globalVars) size_ += size(x);
+	GlobalSize0 = size_;
+	for (auto& x : analyzed_functionSets) {
+		if (x.isClass) continue;
+		size_ += x.size;
+	}
+	GlobalSize = size_;
 }
 size_t IRGenerator::getStructureSize(lstring type) {
-
+	if (type == R(""))return 0;
+	for (auto& x : structures) {
+		if (x.name == type) return x.size;
+	}
+	error(R("未知数据类型:") + type);
+	return 0;
 }
 bool IRGenerator::analyze(
 	std::vector<lstring> libs_,
