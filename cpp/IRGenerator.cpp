@@ -571,7 +571,7 @@ void IRGenerator::destroySetVars(std::vector<type>& vars, size_t tmp, size_t off
 	}
 }
 bool IRGenerator::handleBuiltInFunctions(analyzed_functionSet& functionSet, analyzed_function& func, Tree<node>& EX, lstring name, type& ret) {
-
+	return false;
 }
 bool IRGenerator::cmpTK(const lstring& tk1, const std::vector<lstring>& tk2) {
 	for (const auto& x : tk2) {
@@ -912,11 +912,11 @@ analyzed_function IRGenerator::getFunction(const analyzed_functionSet& functionS
 }
 bool IRGenerator::cmpArgNum(const std::vector<type>& A, const std::vector<type>& B) {
 	size_t j{}, k{};
-	for (size_t i = B.size() - 1; i >= 0; i--) {
+	for (intptr_t i = B.size() - 1; i >= 0; i--) {
 		if (!B[i].can_be_ignored) break;
 		j++;
 	}
-	for (size_t i = A.size() - 1; i >= 0; i--) {
+	for (intptr_t i = A.size() - 1; i >= 0; i--) {
 		if (!A[i].can_be_ignored) break;
 		k++;
 	}
