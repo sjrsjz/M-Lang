@@ -56,7 +56,7 @@ namespace MLang {
 		void generateFunctionSet(analyzed_functionSet& functionSet);
 		void generateFunction(analyzed_functionSet& functionSet, analyzed_function& func);
 		void generateLine(analyzed_functionSet& functionSet, analyzed_function& func,Tree<node>& EX);
-		void compileTree(analyzed_functionSet& functionSet, analyzed_function& func, Tree<node>& EX, std::optional<lstring> ExtraInfo);
+		type compileTree(analyzed_functionSet& functionSet, analyzed_function& func, Tree<node>& EX, std::optional<lstring> ExtraInfo);
 		bool ifMethod(lstring FullName);
 		size_t allocStr(lstring text);
 		type getElement(analyzed_functionSet& functionSet, lstring struct_, lstring element);
@@ -81,7 +81,7 @@ namespace MLang {
 		type getConstType(lstring name);
 		type getArgType(const analyzed_functionSet& functionSet, lstring name, const analyzed_function& func);
 		structure getStructure(lstring name);
-		type getSetVarType(lstring name, const analyzed_function& functionSet);
+		type getSetVarType(lstring name, const analyzed_functionSet& functionSet);
 		type getGlobalVarType(lstring name);
 		analyzed_function getFunction(const analyzed_functionSet& functionSet, lstring fullName, std::vector<type>& args, std::optional<bool> variable);
 		bool cmpArgNum(const std::vector<type>& A, const std::vector<type>& B);
