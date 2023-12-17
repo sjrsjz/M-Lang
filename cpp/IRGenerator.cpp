@@ -415,6 +415,293 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 		error(R("未知变量:") + tk);
 		return ret;
 	}
+	else if (type_ == R("Call")) {
+		if (handleBuiltInFunctions(functionSet, func, EX, tk, ret)) return ret;
+		lstring arg_T{};
+		if (ifMethod(tk)) {
+			size_t id1 = allocTmpID(Type_N);
+			ins(R("address &") + to_lstring(id1) + R(" !") + to_lstring(getVarOffset(functionSet, func, R("Local") + DIVISION + R("[this]"))));
+			ins(R("load %") + to_lstring(id1) + R(" %") + to_lstring(id1) + R(" ") + to_lstring(getStructureSize(R("N"))));
+			arg_T = R(" %") + to_lstring(id1);
+		}
+		std::vector<type> args{};
+		analyzed_function func0;
+		if(EX.child()){
+			do {
+				args.push_back(compileTree(functionSet, func, EX, {}));
+			} while (EX.next());
+			func0 = getFunction(functionSet, tk, args, {});
+			for (size_t i = 0; i < func0.args.size(); i++) {
+				generateImplictConversion(func0.args[i], args[i], functionSet, func, EX);
+				arg_T += R(" %") + to_lstring(func0.args[i].id);
+			}
+			EX.parent();
+		}
+		else {
+			func0 = getFunction(functionSet, tk, args, {});
+		}
+		ret = func0.ret;
+		ret.id = allocTmpID(func0.ret);
+		lstring tk2 = func0.call_type == R("cdecl") ? R("_cdecl") : R("");
+		size_t argSize_ID{};lstring argSize_T{};
+		if (func0.use_arg_size) {
+			argSize_ID = allocTmpID(Type_N);
+			ins(R("num %") + to_lstring(argSize_ID) + R(" ?I") + to_lstring(args.size()));
+			argSize_T = R(" %") + to_lstring(argSize_ID);
+		}
+		if (ifNotRef(ret)) {
+			ins(R("Call ") + tk2 + R(" #label_function_") + tk + R(" null % ") + to_lstring(ret.id) + argSize_T + arg_T);
+		}
+		else
+		{
+			ins(R("CallA ") + tk2 + R(" #label_function_") + tk + R(" null &%") + to_lstring(ret.id) + argSize_T + arg_T);
+			size_t id1 = allocTmpID(Type_N);
+			ins(R("address %") + to_lstring(id1) + R(" &%") + to_lstring(ret.id));
+			ret.id = id1;
+			ret.address = true;
+		}
+		return ret;
+	}
+	else if (type_ == R("thisCall")) {
+		std::vector<type> args{};lstring arg_T{};
+		analyzed_function func0{}; lstring tk1{};
+		type A{};
+		if (EX.child()) {
+			A = compileTree(functionSet, func, EX, {});
+			if (A.array) {
+				error(R("方法的被引用结构不能为数组"));
+				return ret;
+			}
+			if (!A.address) {
+				error(R("方法的被引用结构必须为指针"));
+				return ret;
+			}
+			while (EX.next()) {
+				args.push_back(compileTree(functionSet, func, EX, {}));
+			} 
+			tk1 = R("Local") + DIVISION + A.typeName + DIVISION + tk;
+			func0 = getFunction(functionSet, tk1, args, {});
+			for (size_t i = 0; i < func0.args.size(); i++) {
+				generateImplictConversion(func0.args[i], args[i], functionSet, func, EX);
+				arg_T += R(" %") + to_lstring(func0.args[i].id);
+			}
+			EX.parent();
+		}
+		else {
+			error(R("方法引用必须提供被引用结构"));
+			return ret;
+		}
+		ret = func0.ret;
+		ret.id = allocTmpID(func0.ret);
+		lstring tk2 = func0.call_type == R("cdecl") ? R("_cdecl") : R("");
+		size_t argSize_ID{}; lstring argSize_T{};
+		if (func0.use_arg_size) {
+			argSize_ID = allocTmpID(Type_N);
+			ins(R("num %") + to_lstring(argSize_ID) + R(" ?I") + to_lstring(args.size()));
+			argSize_T = R(" %") + to_lstring(argSize_ID);
+		}
+		if (ifNotRef(ret)) {
+			ins(R("Call ") + tk2 + R(" #label_function_") + tk1 + R(" % ") + to_lstring(ret.id) + R(" %") + to_lstring(A.id) + argSize_T + arg_T);
+		}
+		else {
+			ins(R("CallA ") + tk2 + R(" #label_function_") + tk1 + R(" &%") + to_lstring(ret.id) + R(" %") + to_lstring(A.id) + argSize_T + arg_T);
+			size_t id1 = allocTmpID(Type_N);
+			ins(R("address %") + to_lstring(id1) + R(" &%") + to_lstring(ret.id));
+			ret.id = id1;
+			ret.address = true;
+		}
+		return ret;
+	}
+	else if(type_==R("Const")) {
+		type A{};
+		if (!ExtraInfo.has_value() || ExtraInfo.value() != R("STRING")) {
+			A.typeName = R("B");
+			tk = process_quotation_mark(tk);
+			A.dim.push_back(tk.size());
+			A.id = allocTmpID(Type_Boolen);
+			A.array = true;
+			A.address = true;
+			ins(R("address %") + to_lstring(A.id) + R(" ?T") + to_lstring(allocStr(tk)));
+		}
+		else {
+			A.typeName = R("[STRING]");
+			A.name = process_quotation_mark(tk);
+		}
+		return A;
+	}
+	else if (type_ == R("Int")) {
+		type A{};
+		A.typeName = R("Z");
+		A.address = false;
+		A.array = false;
+		A.id = allocTmpID(Type_Z);
+		ins(R("num %") + to_lstring(A.id) + R(" ?I") + tk);
+		return A;
+	}
+	else if (type_ == R("Double")) {
+		type A{};
+		A.typeName = R("R");
+		A.address = false;
+		A.array = false;
+		A.id = allocTmpID(Type_R);
+		ins(R("num %") + to_lstring(A.id) + R(" ?D") + tk);
+		return A;
+	}
+	else if (type_ == R("Array")) {
+		EX.child();
+		type ret0 = compileTree(functionSet, func, EX, {});
+		if (!ret0.array) {
+			error(R("下标的作用对象必须为数组"));
+			return ret;
+		}
+		type C = ret0;
+		ret = ret0;
+		ret.array = false;
+		std::vector<type> args{};
+		while (EX.next())
+		{
+			ret0 = compileTree(functionSet, func, EX, {});
+			args.push_back(ret0);
+		}
+		lstring tk1 = R("Local") + DIVISION + C.typeName + DIVISION + R("[]");
+		lstring arg_T{};
+		if (haveFunction(tk1)) {
+			analyzed_function func0 = getFunction(functionSet, tk1, args, true);
+			for (auto& x : args) {
+				type Ntype; Ntype.typeName = R("N");
+				generateImplictConversion(Ntype, x, functionSet, func, EX);
+				arg_T += R(" %") + to_lstring(Ntype.id);
+			}
+			ret = func0.ret;
+			ret.id = allocTmpID(Type_N);
+			type B{};
+			B.typeName = R("N");
+			B.id = allocTmpID(Type_N);
+			ins(R("num %") + to_lstring(B.id) + R(" ?uI") + to_lstring(args.size()));
+			arg_T = R(" %") + to_lstring(B.id) + arg_T;
+			if (func0.call_type != R("cdecl")) {
+				error(R("不支持的调用方式:") + func0.call_type);
+			}
+			else if (!func0.use_arg_size) {
+				error(R("未声明传入参数个数"));
+			}
+			if (ifNotRef(ret)) {
+				ins(R("Call_cdecl #label_function_") + tk1 + R(" null % ") + to_lstring(ret.id) + R(" %") + to_lstring(C.id) + arg_T);
+			}
+			else {
+				ins(R("CallA_cdecl #label_function_") + tk1 + R(" null &%") + to_lstring(ret.id) + R(" %") + to_lstring(C.id) + arg_T);
+			}
+		}
+		else {
+			type B{};
+			B.typeName = R("N");
+			B.id = allocTmpID(Type_N);
+			ins(R("num %") + to_lstring(B.id) + R(" ?uI0"));
+			type Ntype{};
+			Ntype.typeName = R("N");
+			type C{};
+
+			if (args.size()) {
+				generateImplictConversion(Ntype, args[0], functionSet, func, EX);
+				ins(R("opN + %") + to_lstring(B.id) + R(" %") + to_lstring(B.id) + R(" %") + to_lstring(Ntype.id));
+				C.typeName = R("N");
+				C.id = allocTmpID(Type_N);
+				for (size_t i = args.size() - 2; i >= 0; i++) {
+					ins(R("num %") + to_lstring(C.id) + R(" ?uI") + to_lstring(ret.dim[i]));
+					generateImplictConversion(Ntype, args[i + 1], functionSet, func, EX);
+					ins(R("opN * %") + to_lstring(B.id) + R(" %") + to_lstring(B.id) + R(" %") + to_lstring(C.id));
+					C.typeName = R("N");
+					C.id = allocTmpID(Type_N);
+					ins(R("opN + %") + to_lstring(B.id) + R(" %") + to_lstring(B.id) + R(" %") + to_lstring(Ntype.id));
+				}
+			}
+			C.typeName = R("N");
+			C.id = allocTmpID(Type_N);
+			ins(R("num %") + to_lstring(C.id) + R(" ?uI") + to_lstring(getStructureSize(ret.typeName)));
+			ins(R("opN * %") + to_lstring(B.id) + R(" %") + to_lstring(B.id) + R(" %") + to_lstring(C.id));
+			type A{};
+			A.typeName = R("N");
+			A.id = allocTmpID(Type_N);
+			ins(R("opN + %") + to_lstring(A.id) + R(" %") + to_lstring(ret.id) + R(" %") + to_lstring(B.id));
+			ret.id = A.id;
+			ret.address = true;
+		}
+		EX.parent();
+		return ret;
+	}
+	else if (type_ == R("ad_v")) {
+		if (!EX.child()) {
+			error(R("错误的指针用法")); return ret;
+		}
+		type A = compileTree(functionSet, func, EX, {});
+		type C = Type_N;
+		generateImplictConversion(C, A, functionSet, func, EX);
+		C.address = true;
+		C.typeName = process_quotation_mark(tk);
+		ret = C;
+		EX.parent();
+		return ret;
+	}
+	else if (type_ == R("Block")) {
+		if (EX.child()) {
+			if(ExtraInfo.has_value())
+				do
+				{
+					ret = compileTree(functionSet, func, EX, ExtraInfo);
+				} while (EX.next());
+			else
+				do
+				{
+					ret = compileTree(functionSet, func, EX, {});
+				} while (EX.next());
+			EX.parent();
+		}
+		return ret;
+	}
+	else if (type_==R("Element")) {
+		if (EX.child()) {
+			type A = compileTree(functionSet, func, EX, {});
+			if (A.array) {
+				error(R("被引用的对象不能为数组"));
+			}
+			else if (!A.address) {
+				error(R("被引用的对象必须为指针"));
+			}
+			else {
+				ins(R("offset %") + to_lstring(A.id) + R(" ") + to_lstring(getElementOffset(functionSet, A.typeName, tk)));
+				ret = getElement(functionSet, A.typeName, tk);
+				ret.id = A.id;
+				ret.address = true;
+			}
+			EX.parent();
+		}
+		else {
+			error(R("引用的对象不能为空"));
+		}
+		return ret;
+	}
+	else if (type_==R("FunctionAddress")) {
+		ret.typeName = R("N");
+		ret.array = false;
+		ret.address = false;
+		ret.id = allocTmpID(ret);
+		ins(R("ExactlyAddress %") + to_lstring(ret.id) + R(" #label_function_") + getFullName(tk,functionSet));
+		return ret;
+	}else if(type_==R("ExactlyAddress")) {
+		ret.typeName = R("N");
+		ret.array = false;
+		ret.address = false;
+		ret.id = allocTmpID(ret);
+		ins(R("ExactlyAddress %") + to_lstring(ret.id));
+		return ret;
+	}
+	else if (type_ == R("")) return ret;
+	else
+	{
+		error(R("不支持的结构:Type = ") + type_ + R(" Token = ") + tk);
+		ret.can_be_ignored = false;
+		return ret;
+	}
 }
 bool IRGenerator::ifMethod(lstring FullName) {
 	lstring type, className, name;

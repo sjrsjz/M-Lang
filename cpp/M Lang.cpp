@@ -4,6 +4,7 @@
 #include "../header/SectionManager.h"
 #include "../header/AST.h"
 #include "../header/Lexer.h"
+#include "../header/IRGenerator.h"
 using namespace MLang;
 int main()
 {
@@ -17,7 +18,7 @@ int main()
     lex.analyze(R(R"(
 
 Class:Array{
-	//N:ptr;N:DimSize;N:DimPtr;N:typeSize;N:init;N:destroy;N:TotalSize;
+	N:ptr;N:DimSize;N:DimPtr;N:typeSize;N:init;N:destroy;N:TotalSize;
 	_init_()->N:={
 		init=0;destroy=0;TotalSize=0;
 		DimSize=0;typeSize=0;DimPtr=0;ptr=0;
@@ -96,7 +97,12 @@ Main{
 )"));
     AST ast{};
     ast.analyze(lex.importedLibs, lex.globals, lex.functionSets, lex.structures, lex.ExternFunctions, lex.constants);
-    /*SectionManager s;
+
+	IRGenerator ir{};
+	ir.analyze(ast.libs,ast.globalVars,ast.analyzed_functionSets,ast.sets,ast.structures,ast.ExtraFunctions,ast.constants);
+
+	std_lcout << ir.IR << std::endl;
+	/*SectionManager s;
     Tree<int> t;
     t = 1;
     t.insert(2);
