@@ -323,7 +323,7 @@ intptr_t Lexer::analyze_globalVars(std::vector<lstring> tks, size_t ip) {
     return ip;
 }
 
-void cut_tokens(lstring code,std::vector<lstring>& tks){
+extern void cut_tokens(lstring code,std::vector<lstring>& tks){
     intptr_t currentPos{}, length{}, i{};
     bool forbid{}, annotation{}, annotation_line{};
     lstring tmp_tk{}, curr_tk{}, tk{}, tmp_tk2{};
@@ -404,6 +404,8 @@ void cut_tokens(lstring code,std::vector<lstring>& tks){
         }
     }
 }
+
+
 bool Lexer::analyze(lstring code) {
     Error = false;
     std::vector<lstring> tks{};

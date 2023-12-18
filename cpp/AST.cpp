@@ -427,7 +427,7 @@ bool AST::haveVar(functionSet functionSet_, function func, lstring name) {
 	return false;
 }
 lstring AST::getVarFullName(functionSet functionSet_, function func, lstring name) {
-	if (name == R("this")) return R("Arg") + DIVISION + R("[this]");
+	if (name == R("this")) return R("Local") + DIVISION + R("[this]");
 	if (name == R("true") || name == R("false")) return R("Const") + DIVISION + R("[") + name + R("]");
 	if (name.substr(0, 1) == R("#")) return R("Const") + DIVISION + name.substr(1, name.length() - 1);
 	for (size_t i = 0; i < func.local.size(); i++) if (func.local[i].name == name) return R("Local") + DIVISION + name;
@@ -447,7 +447,7 @@ bool AST::analyzeArg(functionSet& functionSet_, function& func, Tree<node>& EX, 
 	if (pos != -1) {
 		while (pos != -1) {
 			SubTokens(tk, t1, pos2, pos - 1);
-			if (!t1.size()) {
+			if (false&&!t1.size()) {//<------------------------------------
 				node p;
 				p.token = R("");
 				p.type = R("Blank");
@@ -461,7 +461,7 @@ bool AST::analyzeArg(functionSet& functionSet_, function& func, Tree<node>& EX, 
 		}
 	}
 	SubTokens(tk, t1, pos2, tk.size());
-	if (!t1.size()) {
+	if (false&&!t1.size()) {
 		node p;
 		p.token = R("");
 		p.type = R("Blank");
@@ -559,12 +559,12 @@ void AST::error(lstring err) {
 	Error = true;
 }
 bool AST::analyze(
-	std::vector<lstring> libs_,
-	std::vector < type> globalVars_,
-	std::vector <functionSet> functionSets_,
-	std::vector <structure> structures_,
-	functionSet ExtraFunctions_,
-	std::vector <type> constants_) {
+	const std::vector<lstring>& libs_,
+	const std::vector < type>& globalVars_,
+	const std::vector <functionSet>& functionSets_,
+	const std::vector <structure>& structures_,
+	const functionSet& ExtraFunctions_,
+	const std::vector <type>& constants_) {
 	op[0].op = { R("*"),R("/"),R("<<"),R(">>") };
 	op[1].op = { R("%"),R("\\") };
 	op[2].op = { R("+"),R("-") };
@@ -573,19 +573,14 @@ bool AST::analyze(
 	op[5].op = { R("xor"),R("or"),R("|"),R("||") };
 	op[6].op = { R("=") };
 
-	NewType(structures_, R("N"), false, 4);
-	NewType(structures_, R("Z"), false, 4);
-	NewType(structures_, R("R"), false, 8);
-	NewType(structures_, R("B"), false, 1);
-	NewType(structures_, R("Boolen"), false, 4);
-
-
 	libs = libs_;
 	globalVars = globalVars_;
 	constants = constants_;
 	structures = structures_;
 	sets = functionSets_;
 	ExtraFunctions = ExtraFunctions_;
+
+
 	Error = false;
 	error_type = R("Struct");
 	analyzeStructureSize();
@@ -606,13 +601,4 @@ bool AST::getFunctionType(lstring fullname, lstring& type, lstring& super, lstri
 		type = t[0]; super = t[1]; name = t[2]; return true;
 	}
 	return false;
-}
-void AST::NewType(std::vector<structure>& structure_, lstring name, bool publiced, size_t size) {
-	structure tmp;
-	tmp.elements.clear();
-	tmp.isClass = false;
-	tmp.name = name;
-	tmp.publiced = publiced;
-	tmp.size = size;
-	structure_.push_back(tmp);
 }

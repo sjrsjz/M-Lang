@@ -6,6 +6,27 @@
 #include "../header/Lexer.h"
 #include "../header/IRGenerator.h"
 using namespace MLang;
+
+void NewType(std::vector<structure>& structure_, lstring name, bool publiced, size_t size) {
+    structure tmp;
+    tmp.elements.clear();
+    tmp.isClass = false;
+    tmp.name = name;
+    tmp.publiced = publiced;
+    tmp.size = size;
+    structure_.push_back(tmp);
+}
+void NewBuiltInFunction(functionSet& functionSet, const lstring name, const std::vector<type>& args, const type& ret) {
+    function func;
+    func.name = name;
+    func.args = args;
+    func.ret = ret;
+    func.local.clear();
+    func.codes.clear();
+    func.publiced = true;
+    functionSet.func.push_back(func);
+}
+extern void cut_tokens(lstring code, std::vector<lstring>& tks);
 int main()
 {
     Tree<int> t;
@@ -95,13 +116,105 @@ Main{
 }
 
 )"));
+
+    NewType(lex.structures, R("N"), false, 4);
+    NewType(lex.structures, R("Z"), false, 4);
+    NewType(lex.structures, R("R"), false, 8);
+    NewType(lex.structures, R("B"), false, 1);
+    NewType(lex.structures, R("Boolen"), false, 4);
+
+    std::vector<type> args{};
+    type ret{};
+    functionSet builtIn{};
+    ret.typeName = R("N");
+    NewBuiltInFunction(builtIn, R("break"), args, ret);
+    NewBuiltInFunction(builtIn, R("continue"), args, ret);
+    NewBuiltInFunction(builtIn, R("Pause"), args, ret);
+    NewBuiltInFunction(builtIn, R("_IR_"), args, ret);
+
+    args.resize(1);
+    args[0].typeName = R("Boolen");
+    NewBuiltInFunction(builtIn, R("if"), args, ret);
+    NewBuiltInFunction(builtIn, R("while"), args, ret);
+    NewBuiltInFunction(builtIn, R("do_while"), args, ret);
+    NewBuiltInFunction(builtIn, R("switch"), args, ret);
+    args[0].typeName = R("N");
+    NewBuiltInFunction(builtIn, R("return"), args, ret);
+    NewBuiltInFunction(builtIn, R("print"), args, ret);
+    NewBuiltInFunction(builtIn, R("printN"), args, ret);
+    NewBuiltInFunction(builtIn, R("new"), args, ret);
+    NewBuiltInFunction(builtIn, R("free"), args, ret);
+    NewBuiltInFunction(builtIn, R("DebugOutput"), args, ret);
+    NewBuiltInFunction(builtIn, R("ErrMark"), args, ret);
+
+    args[0].typeName = R("R");
+    NewBuiltInFunction(builtIn, R("printR"), args, ret);
+    args[0].typeName = R("Z");
+    NewBuiltInFunction(builtIn, R("printZ"), args, ret);
+    args[0].typeName = R("B");
+    NewBuiltInFunction(builtIn, R("printB"), args, ret);
+    args[0].typeName = R("Boolen");
+    NewBuiltInFunction(builtIn, R("printBoolen"), args, ret);
+
+    ret.typeName = R("R");
+    args[0].typeName = R("N");
+    NewBuiltInFunction(builtIn, R("T2R"), args, ret);
+    ret.typeName = R("N");
+    NewBuiltInFunction(builtIn, R("N"), args, ret);
+    ret.typeName = R("R");
+    NewBuiltInFunction(builtIn, R("R"), args, ret);
+    ret.typeName = R("B");
+    NewBuiltInFunction(builtIn, R("B"), args, ret);
+    ret.typeName = R("Z");
+    NewBuiltInFunction(builtIn, R("Z"), args, ret);
+    ret.typeName = R("Boolen");
+    NewBuiltInFunction(builtIn, R("Boolen"), args, ret);
+
+    args.resize(2);
+    args[0].typeName = R("N");
+    args[1].typeName = R("N");
+    ret.typeName = R("Boolen");
+    NewBuiltInFunction(builtIn, R("CmpStr"), args, ret);
+    args[0].typeName = R("R");
+    args[1].typeName = R("N");
+    ret.typeName = R("N");
+    NewBuiltInFunction(builtIn, R("R2T"), args, ret);
+    args[0].typeName = R("N");
+    args[1].typeName = R("N");
+    ret.typeName = R("N");
+    NewBuiltInFunction(builtIn, R("input"), args, ret);
+
+    args.resize(3);
+    args[0].typeName = R("N");
+    args[1].typeName = R("N");
+    args[2].typeName = R("N");
+    ret.typeName = R("N");
+    NewBuiltInFunction(builtIn, R("memcopy"), args, ret);
+    ret.typeName = R("Boolen");
+    NewBuiltInFunction(builtIn, R("CmpMem"), args, ret);
+
+
+
+    Lexer lex2{};
+    std::vector<lstring> lines = split(R(""), R("\n"));
+    for (auto& x : lines) {
+        std::vector<lstring> tk{};
+        cut_tokens(x, tk);
+        lex2.analyze_function(builtIn, R(""), tk, 1);
+    }
+    builtIn.local.clear();
+    builtIn.name = R("[System]");
+    lex.functionSets.push_back(builtIn);
+
     AST ast{};
+	
     ast.analyze(lex.importedLibs, lex.globals, lex.functionSets, lex.structures, lex.ExternFunctions, lex.constants);
 
 	IRGenerator ir{};
-	ir.analyze(ast.libs,ast.globalVars,ast.analyzed_functionSets,ast.sets,ast.structures,ast.ExtraFunctions,ast.constants);
+    if (!ir.analyze(ast.libs, ast.globalVars, ast.analyzed_functionSets, ast.sets, ast.structures, ast.ExtraFunctions, ast.constants)) {
+        std_lcout << ir.IR << std::endl;
+    }
 
-	std_lcout << ir.IR << std::endl;
 	/*SectionManager s;
     Tree<int> t;
     t = 1;

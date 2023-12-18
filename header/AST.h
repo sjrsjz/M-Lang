@@ -16,7 +16,13 @@ namespace MLang {
 		lstring error_functionSet{};
 		lstring error_function{};
 		lstring error_type{};
-		bool analyze(std::vector<lstring> libs_, std::vector < type> globalVars_, std::vector <functionSet> functionSets_, std::vector <structure> structures_, functionSet ExtraFunctions_, std::vector <type> constants_);
+		bool analyze(
+			const std::vector<lstring>& libs_,
+			const std::vector < type>& globalVars_,
+			const std::vector <functionSet>& functionSets_,
+			const std::vector <structure>& structures_,
+			const functionSet& ExtraFunctions_,
+			const std::vector <type>& constants_);
 		bool getFunctionType(lstring fullname, lstring& type, lstring& super, lstring& name);
 
 	private:
@@ -41,7 +47,5 @@ namespace MLang {
 		bool bracketIsMatched(lstring tk1, lstring tk2);
 		lstring getFunctionFullName(lstring name, functionSet functionSet_);
 		void error(lstring err);
-		void NewType(std::vector<structure>& structure_,lstring name,bool publiced,size_t size);
-
 	};
 }

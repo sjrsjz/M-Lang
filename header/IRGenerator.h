@@ -49,6 +49,10 @@ namespace MLang {
 		size_t currLocalSize{};
 		std::vector<size_t> tmpStack{};
 		std::vector<lstring> destroyCode{};
+		intptr_t label{};
+
+		std::vector<lstring> loopStartStack{};
+		std::vector<lstring> loopEndStack{};
 
 		void error(lstring err);
 		bool getFunctionType(lstring fullName,lstring& type,lstring& super,lstring& name);
