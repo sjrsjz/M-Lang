@@ -33,6 +33,7 @@ struct function {
     bool externed;
     lstring call_type;
     bool transit;
+    lstring transitArg;
     bool use_arg_size;
 };
 struct structure {
@@ -71,6 +72,7 @@ struct analyzed_function {
     bool externed;
     lstring call_type;
     bool transit;
+    lstring transitArg;
     bool use_arg_size;
 };
 struct analyzed_functionSet {

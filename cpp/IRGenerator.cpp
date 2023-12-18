@@ -5,7 +5,7 @@ inline bool IRGenerator::ins(lstring tk) {
 }
 
 void IRGenerator::error(lstring err) {
-	std_lcout << RED << R("[错误][中间代码生成]") << RESET << R("[程序集/类:") << error_functionSet << R("][函数/方法:") << error_function << R("][行:") << error_line + 1 << R("]") << err << std::endl;
+	std_lcout << RED << R("[错误]") << YELLOW << R("[中间代码生成]") << RESET << R("[程序集/类:") << error_functionSet << R("][函数/方法:") << error_function << R("][行:") << error_line + 1 << R("]") << err << std::endl;
 	Error = true;
 }
 bool IRGenerator::getFunctionType(lstring fullName, lstring& type, lstring& super, lstring& name) {
@@ -51,7 +51,10 @@ void IRGenerator::generateFunction(analyzed_functionSet& functionSet, analyzed_f
 	ins(R("enter"));
 	ins(R("local ") + to_lstring(local_size));
 	if (functionSet.isClass) {
-		ins(R("storeThis ") + to_lstring(getVarOffset(functionSet, func, R("Local") + DIVISION + R("[this]"))));
+		ins(R("storeThis &") + to_lstring(getVarOffset(functionSet, func, R("Local") + DIVISION + R("[this]"))));
+	}
+	if (func.transit) {
+		ins(R("storeThisArg &") + to_lstring(getVarOffset(functionSet, func, R("Local") + DIVISION + R("[thisArg]"))) + R(" !") + to_lstring(getVarOffset(functionSet, func, R("Arg") + DIVISION + func.transitArg)));
 	}
 	tmpStack.clear();
 	ins(R("tmpBegin"));
@@ -71,8 +74,10 @@ void IRGenerator::generateFunction(analyzed_functionSet& functionSet, analyzed_f
 	destroySetVars(func.local, tmp, 0, R("&"), true);
 	ins(R("loadQ %") + to_lstring(tmp2));
 	ins(R("tmpEnd"));
-	if (func.transit)
+	if (func.transit) {
+		ins(R("loadThisArg &") + to_lstring(getVarOffset(functionSet, func, R("Local") + DIVISION + R("[thisArg]"))));
 		ins(R("jmp_address"));
+	}
 	else
 		ins(R("return ") + to_lstring(countArgSize(functionSet, func)));
 
@@ -554,10 +559,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 	else if (type_ == R("Array")) {
 		EX.child();
 		type ret0 = compileTree(functionSet, func, EX, {});
-		if (!ret0.array) {
-			error(R("下标的作用对象必须为数组"));
-			return ret;
-		}
+
 		type C = ret0;
 		ret = ret0;
 		ret.array = false;
@@ -572,7 +574,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 		if (haveFunction(tk1)) {
 			analyzed_function func0 = getFunction(functionSet, tk1, args, true);
 			for (auto& x : args) {
-				type Ntype; Ntype.typeName = R("N");
+				type Ntype{}; Ntype.typeName = R("N");
 				generateImplictConversion(Ntype, x, functionSet, func, EX);
 				arg_T += R(" %") + to_lstring(Ntype.id);
 			}
@@ -597,6 +599,10 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 			}
 		}
 		else {
+			if (!ret0.array) {
+				error(R("下标的作用对象必须为数组"));
+				return ret;
+			}
 			type B{};
 			B.typeName = R("N");
 			B.id = allocTmpID(Type_N);
@@ -1690,25 +1696,7 @@ bool IRGenerator::analyze(
 	constants = constants_;
 	Error = false;
 	strings.clear();
-	
-	type This{};
-	This = Type_N;
-	This.address = true;
-	This.name = R("[this]");
-	for (auto& x : functionSets) {
-		if (!x.isClass) continue;
-		This.typeName = x.name;
-		for (auto& y : x.func) {
-			y.local.insert(y.local.begin(), This);
-		}
-	}
-	for (auto& x : analyzed_functionSets) {
-		if (!x.isClass) continue;
-		This.typeName = x.name;
-		for (auto& y : x.func) {
-			y.local.insert(y.local.begin(), This);
-		}
-	}
+
 	Type_N.typeName = R("N");
 	Type_N.array = false;
 	Type_N.address = false;
@@ -1724,6 +1712,30 @@ bool IRGenerator::analyze(
 	Type_Boolen.typeName = R("N");
 	Type_Boolen.array = false;
 	Type_Boolen.address = false;
+
+	type This{}, ThisArg{};
+	This = Type_N;
+	This.address = true;
+	This.name = R("[this]");
+	ThisArg = Type_N;
+	ThisArg.address = true;
+	ThisArg.name = R("[thisArg]");
+	for (auto& x : functionSets) {
+		if (!x.isClass) continue;
+		This.typeName = x.name;
+		for (auto& y : x.func) {
+			y.local.insert(y.local.begin(), This);
+			if (y.transit) y.local.insert(y.local.begin(), ThisArg);
+		}
+	}
+	for (auto& x : analyzed_functionSets) {
+		if (!x.isClass) continue;
+		This.typeName = x.name;
+		for (auto& y : x.func) {
+			y.local.insert(y.local.begin(), This);
+			if (y.transit) y.local.insert(y.local.begin(), ThisArg);
+		}
+	}
 
 
 

@@ -72,8 +72,8 @@ Class:Array{
 		
 		return(true)
 	}
-	[Transit]data_init(N:ptr)->N:={return(init)}
-	[Transit]data_destroy(N:ptr)->N:={return(destroy)}
+	[Transit][ptr]data_init(N:ptr)->N:={return(init)}
+	[Transit][ptr]data_destroy(N:ptr)->N:={return(destroy)}
 	[Public][cdecl][ArgSize]"[]"(N:ArgSize)->N:={
 		N:i=0;N:offset=0;
 		while(i<ArgSize){

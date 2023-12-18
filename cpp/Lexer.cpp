@@ -4,7 +4,7 @@ using namespace MLang;
 bool Error{};
 
 void error(std::vector<lstring>& tks, lstring err, size_t ip) {
-    std_lcout << RED << R("[错误]") << RESET << R("[词法分析]") << err << std::endl;
+    std_lcout << RED << R("[错误]") << YELLOW << R("[词法分析]") << RESET << err << std::endl;
 }
 
 bool Lexer::lexical_analyze(functionSet& set, lstring space, std::vector<lstring> tks) {
@@ -134,8 +134,16 @@ intptr_t Lexer::analyze_function(functionSet& set, lstring space, std::vector<ls
         else if (head[i] == R("Private")) func.publiced = false;
         else if (head[i] == R("cdecl")) func.call_type = R("cdecl");
         else if (head[i] == R("stdcall")) func.call_type = R("stdcall");
-        else if (head[i] == R("Transit")) func.transit = true;
-        else if (head[i] == R("ArgSize")) func.use_arg_size = false;
+        else if (head[i] == R("Transit")) { 
+            func.transit = true; 
+            if (i >= head.size() - 1) {
+                error(tks, R("transit标识后必须具有用于传递this指针的参数名"), ip);
+                return -1;
+            }
+            func.transitArg = head[i + 1];
+            i++;
+        }
+        else if (head[i] == R("ArgSize")) func.use_arg_size = true;
         else { error(tks, R("非法前缀:") + head[i], ip); return -1; }
     }
     set.func.push_back(func);

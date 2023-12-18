@@ -125,6 +125,7 @@ analyzed_function AST::analyzeFunction(functionSet& functionSet_, function& func
 	func0.call_type = func.call_type;
 	func0.externed = func.externed;
 	func0.transit = func.transit;
+	func0.transitArg = func.transitArg;
 	func0.use_arg_size = func.use_arg_size;
 	return func0;
 }
@@ -555,7 +556,7 @@ lstring AST::getFunctionFullName(lstring name, functionSet functionSet_) {
 }
 
 void AST::error(lstring err) {
-	std_lcout << RED << R("[错误][语法分析]") << RESET << R("[程序集/类:") << error_functionSet << R("][函数/方法:") << error_function << R("][行:") << error_line + 1 << R("]") << err << std::endl;
+	std_lcout << RED << R("[错误]") << YELLOW << R("[语法分析]") << RESET << R("[程序集/类:") << error_functionSet << R("][函数/方法:") << error_function << R("][行:") << error_line + 1 << R("]") << err << std::endl;
 	Error = true;
 }
 bool AST::analyze(
