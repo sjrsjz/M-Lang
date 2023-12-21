@@ -28,6 +28,8 @@
     <ClInclude Include="header\SectionManager.h" />
     <ClInclude Include="header\Struct.h" />
     <ClInclude Include="header\Tree.h" />
+    <ClInclude Include="header\x86.h" />
+    <ClInclude Include="x64.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cpp\AST.cpp" />
@@ -38,6 +40,8 @@
     <ClCompile Include="cpp\Lexer.cpp" />
     <ClCompile Include="cpp\M Lang.cpp" />
     <ClCompile Include="cpp\SectionManager.cpp" />
+    <ClCompile Include="cpp\x64.cpp" />
+    <ClCompile Include="cpp\x86.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

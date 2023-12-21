@@ -29,6 +29,7 @@ void NewBuiltInFunction(functionSet& functionSet, const lstring name, const std:
 extern void cut_tokens(lstring code, std::vector<lstring>& tks);
 int main()
 {
+
     Tree<int> t;
     Lexer lex{};
 
@@ -117,7 +118,7 @@ Main{
 
 )"));
 
-    NewType(lex.structures, R("N"), false, 4);
+    NewType(lex.structures, R("N"), false, 8);
     NewType(lex.structures, R("Z"), false, 4);
     NewType(lex.structures, R("R"), false, 8);
     NewType(lex.structures, R("B"), false, 1);
@@ -214,52 +215,5 @@ Main{
     if (!ir.analyze(ast.libs, ast.globalVars, ast.analyzed_functionSets, ast.sets, ast.structures, ast.ExtraFunctions, ast.constants)) {
         std_lcout << ir.IR << std::endl;
     }
-
-	/*SectionManager s;
-    Tree<int> t;
-    t = 1;
-    t.insert(2);
-    t.insert(3);
-    t.insert(4);
-
-    lstring a = RemoveSpaceLR(R("  A B  c "));
-    std::cout << t.Get() << " " << t[0] << " " << t[1] << std::endl;
-
-    t.child();
-    t.insert(10);
-    std::cout << t.Get() << std::endl;
-    t.child();
-    std::cout << t.Get() << std::endl;
-    t.parent();
-
-    t.next();
-    std::cout << t.Get() << std::endl;
-    t.next();
-    std::cout << t.Get() << std::endl;
-    t.parent();
-    std::cout << t.Get() << std::endl;
-    t.parent();
-    std::cout << t.Get() << std::endl << std::endl;
-
-
-    ByteArray<> A, B;
-    A = A + R("TestA") + R("TestA");
-    B = B + R("TestB");
-    //B = A;
-
-//    B.Get<double>(0) = 2.1;
-
-
-    s.Ins(R("A"), A, {});
-    s.Ins(R("B"), B, {});
-    B = s.Get(R("B"));
-    s.translate(s.build());
-    A = s.Get(R("A"));
-    B = s.Get(R("B"));
-
-    std::cout << A.ToString() << " " << B.ToString() << std::endl;
-
-    //std::cout <<B.Get<double>(0) << " " << B.Get<double>(8) << " " << A.Get<double>(0) << " " << A.Get<double>(8) ;
-    */
 
 }

@@ -9,6 +9,7 @@
 #include <fstream>
 #include <codecvt>
 
+#define G_X64_ _WIN64
 #define G_UNICODE_ UNICODE
 
 #ifdef G_UNICODE_
@@ -27,6 +28,15 @@ typedef std::stringstream lstringstream;
 #define to_lstring(x) std::to_string(x)
 #define std_lcout std::cout
 #endif //
+
+#if G_X64_
+#define st_size_t(x) std::stoull(x)
+#define st_intptr_t(x) std::stoll(x)
+#else
+#define st_size_t(x) std::stoul(x)
+#define st_intptr_t(x) std::stol(x)
+#endif // X64
+
 
 #define foreach(x, y) for(auto y=x.begin();y<x.end();y++)
 

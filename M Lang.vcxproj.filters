@@ -39,6 +39,12 @@
     <ClCompile Include="cpp\IRGenerator.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="cpp\x64.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="cpp\x86.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="header\AST.h">
@@ -62,10 +68,16 @@
     <ClInclude Include="header\Struct.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="header\IRGenerator.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="x64.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClInclude Include="header\Tree.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="header\IRGenerator.h">
+    <ClInclude Include="header\x86.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

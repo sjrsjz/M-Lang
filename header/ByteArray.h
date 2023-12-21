@@ -36,6 +36,7 @@ namespace MLang {
             o.size = 0;
             o.ptr = nullptr;
         }
+
         ByteArray() {
             ptr = nullptr;
             size = 0;
@@ -66,6 +67,9 @@ namespace MLang {
             if (o.c_str()) memcpy((void*)((size_t)t.ptr + size), o.c_str(), o.size() * sizeof(wchar_t));
             return t;
         }
+        template<typename T>void push_back(const T& o) {
+            *this = Attach(o);
+        }
         template<typename T>ByteArray Attach(const T& o) {
             ByteArray t(size + sizeof(T));
             if (ptr) memcpy(t.ptr, ptr, size);
@@ -74,6 +78,13 @@ namespace MLang {
         }
         template<typename T>ByteArray operator +(const T& o) {
             return Attach(o);
+        }
+        template<typename T>void operator +=(const T& o) {
+            push_back(o);
+        }
+        ByteArray& operator <<(unsigned char t) {
+            push_back(t);
+            return &(*this);
         }
         template<typename T> T& Get(size_t index) {
             return *((T*)((size_t)ptr + index));
@@ -116,6 +127,25 @@ namespace MLang {
             t.resize(size);
             memcpy((void*)t.data(), (void*)ptr, size);
             return t;
+        }
+        ByteArray insert(size_t offset, const ByteArray& o) {
+			ByteArray t(size + o.size);
+            if (ptr) {
+                memcpy(t.ptr, ptr, offset);
+                memcpy(t.ptr + o.size, ptr + offset, size - offset);
+            }
+			if (o.ptr) memcpy(t.ptr + offset, o.ptr, o.size);
+			return t;
+		}
+        bool selfInsert(size_t offset, const ByteArray& o) {
+            ByteArray t(size + o.size);
+            if (ptr) {
+                memcpy(t.ptr, ptr, offset);
+                memcpy(t.ptr + o.size, ptr + offset, size - offset);
+            }
+            if (o.ptr) memcpy(t.ptr + offset, o.ptr, o.size);
+            std::swap(*this, t);
+            return true;
         }
     };
 }
