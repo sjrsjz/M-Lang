@@ -561,6 +561,382 @@ SectionManager x86Generator::generate(lstring IR) {
 				codes << 153 << 247 << 189;
 				codes += (int)offset3;
 			}
+			else if (tk[1] == R(">")) {
+				codes << 57 << 216 << 184 << 0 << 0 << 128 << 63 << 119 << 2 << 49 << 192;
+			}
+			else if (tk[1] == R("<")) {
+				codes << 57 << 216 << 184 << 0 << 0 << 128 << 63 << 114 << 2 << 49 << 192;
+			}
+			else if (tk[1] == R(">=")) {
+				codes << 57 << 216 << 184 << 0 << 0 << 128 << 63 << 115 << 2 << 49 << 192;
+			}
+			else if (tk[1] == R("<=")) {
+				codes << 57 << 216 << 184 << 0 << 0 << 128 << 63 << 118 << 2 << 49 << 192;
+			}
+			else if (tk[1] == R("!=")) {
+				codes << 57 << 216 << 184 << 0 << 0 << 128 << 63 << 117 << 2 << 49 << 192;
+			}
+			else if (tk[1] == R("==")) {
+				codes << 57 << 216 << 184 << 0 << 0 << 128 << 63 << 116 << 2 << 49 << 192;
+			}
+			else if (tk[1] == R("%")) {
+				codes << 153 << 247 << 243 << 137 << 216;
+			}
+			else {
+				error(R("不支持的运算符"));
+				continue;
+			}
+			codes << 137 << 133;
+			codes += (int)offset;
+		}
+		else if (op == R("opD")) {
+			if (arg_size != 4) {
+				error(R("参数个数不符"));
+				continue;
+			}
+			if (args[1].typeName != R("tmp") || args[2].typeName != R("tmp") || args[3].typeName != R("tmp")) {
+				error(R("参数必须提供临时变量"));
+				continue;
+			}
+			intptr_t offset = -localSize - tmpOffset(st_size_t(args[1].name), tmp_stack);
+			intptr_t offset2 = -localSize - tmpOffset(st_size_t(args[2].name), tmp_stack);
+			intptr_t offset3 = -localSize - tmpOffset(st_size_t(args[3].name), tmp_stack);
+			if (tk[1] == R("+")) {
+				codes << 221 << 133;
+				codes += (int)offset2;
+				codes << 220 << 133;
+				codes += (int)offset3;
+				codes << 221 << 157;
+				codes += (int)offset;
+			}
+			else if (tk[1] == R("-")) {
+				codes << 221 << 133;
+				codes += (int)offset2;
+				codes << 220 << 165;
+				codes += (int)offset3;
+				codes << 221 << 157;
+				codes += (int)offset;
+			}
+			else if (tk[1] == R("*")) {
+				codes << 221 << 133;
+				codes += (int)offset2;
+				codes << 220 << 141;
+				codes += (int)offset3;
+				codes << 221 << 157;
+				codes += (int)offset;
+			}
+			else if (tk[1] == R("/")) {
+				codes << 221 << 133;
+				codes += (int)offset2;
+				codes << 220 << 181;
+				codes += (int)offset3;
+				codes << 221 << 157;
+				codes += (int)offset;
+			}
+			else if (tk[1] == R(">")) {
+				codes << 141 << 133;
+				codes += (int)offset;
+				codes << 242 << 15 << 16 << 133;
+				codes += (int)offset2;
+				codes << 102 << 15 << 47 << 133;
+				codes += (int)offset3;
+				codes << 199 << 0 << 0 << 0 << 0 << 0 << 118 << 6 << 199 << 0 << 0 << 0 << 128 << 63;
+			}
+			else if (tk[1] == R("<")) {
+				codes << 141 << 133;
+				codes += (int)offset;
+				codes << 242 << 15 << 16 << 133;
+				codes += (int)offset3;
+				codes << 102 << 15 << 47 << 133;
+				codes += (int)offset2;
+				codes << 199 << 0 << 0 << 0 << 0 << 0 << 115 << 6 << 199 << 0 << 0 << 0 << 128 << 63;
+			}
+			else if (tk[1] == R(">=")) {
+				codes << 141 << 133;
+				codes += (int)offset;
+				codes << 242 << 15 << 16 << 133;
+				codes += (int)offset2;
+				codes << 102 << 15 << 47 << 133;
+				codes += (int)offset3;
+				codes << 199 << 0 << 0 << 0 << 0 << 0 << 114 << 6 << 199 << 0 << 0 << 0 << 128 << 63;
+			}
+			else if (tk[1] == R("<=")) {
+				codes << 141 << 133;
+				codes += (int)offset;
+				codes << 242 << 15 << 16 << 133;
+				codes += (int)offset3;
+				codes << 102 << 15 << 47 << 133;
+				codes += (int)offset2;
+				codes << 199 << 0 << 0 << 0 << 0 << 0 << 119 << 6 << 199 << 0 << 0 << 0 << 128 << 63;
+			}
+			else if (tk[1] == R("==")) {
+				codes << 141 << 133;
+				codes += (int)offset;
+				codes << 242 << 15 << 16 << 133;
+				codes += (int)offset2;
+				codes << 102 << 15 << 47 << 133;
+				codes += (int)offset3;
+				codes << 199 << 0 << 0 << 0 << 0 << 0 << 117 << 6 << 199 << 0 << 0 << 0 << 128 << 63;
+			}
+			else if (tk[1] == R("!=")) {
+				codes << 141 << 133;
+				codes += (int)offset;
+				codes << 242 << 15 << 16 << 133;
+				codes += (int)offset2;
+				codes << 102 << 15 << 47 << 133;
+				codes += (int)offset3;
+				codes << 199 << 0 << 0 << 0 << 0 << 0 << 116 << 6 << 199 << 0 << 0 << 0 << 128 << 63;
+			}
+			else if (tk[1] == R("Minus")) {
+				codes << 221 << 133;
+				codes += (int)offset2;
+				codes << 217 << 224;
+				codes << 221 << 157;
+				codes += (int)offset;
+			}
+			else if (tk[1] == R("Abs")) {
+				codes << 221 << 133;
+				codes += (int)offset2;
+				codes << 217 << 225;
+				codes << 221 << 157;
+				codes += (int)offset;
+			}
+			else {
+				error(R("不支持的运算符"));
+				continue;
+			}
+		}
+		else if (op == R("opB")) {
+			if (arg_size != 4) {
+				error(R("参数个数不符"));
+				continue;
+			}
+			if (args[1].typeName != R("tmp") || args[2].typeName != R("tmp") || args[3].typeName != R("tmp")) {
+				error(R("参数必须提供临时变量"));
+				continue;
+			}
+			intptr_t offset = -localSize - tmpOffset(st_size_t(args[1].name), tmp_stack);
+			intptr_t offset2 = -localSize - tmpOffset(st_size_t(args[2].name), tmp_stack);
+			intptr_t offset3 = -localSize - tmpOffset(st_size_t(args[3].name), tmp_stack);
+			codes << 139 << 133;
+			codes += (int)offset2;
+			codes << 139 << 157;
+			codes += (int)offset3;
+			bool cmp = true;
+			if (tk[1] == R("+")) {
+				codes << 0 << 216;
+				cmp = false;
+			}
+			else if (tk[1] == R("-")) {
+				codes << 40 << 216;
+				cmp = false;
+			}
+			else if (tk[1] == R("*")) {
+				codes << 246 << 227;
+				cmp = false;
+			}
+			else if (tk[1] == R("/") || tk[1] == R("\\")) {
+				codes << 102 << 152 << 246 << 243;
+				cmp = false;
+			}
+			else if (tk[1] == R(">")) {
+				codes << 56 << 216 << 184 << 0 << 0 << 128 << 63 << 119 << 2 << 49 << 192;
+			}
+			else if (tk[1] == R("<")) {
+				codes << 56 << 216 << 184 << 0 << 0 << 128 << 63 << 114 << 2 << 49 << 192;
+			}
+			else if (tk[1] == R(">=")) {
+				codes << 56 << 216 << 184 << 0 << 0 << 128 << 63 << 115 << 2 << 49 << 192;
+			}
+			else if (tk[1] == R("<=")) {
+				codes << 56 << 216 << 184 << 0 << 0 << 128 << 63 << 118 << 2 << 49 << 192;
+			}
+			else if (tk[1] == R("!=")) {
+				codes << 56 << 216 << 184 << 0 << 0 << 128 << 63 << 117 << 2 << 49 << 192;
+			}
+			else if (tk[1] == R("==")) {
+				codes << 56 << 216 << 184 << 0 << 0 << 128 << 63 << 116 << 2 << 49 << 192;
+			}
+			else if (tk[1] == R("%")) {
+				codes << 102 << 152 << 246 << 243 << 136 << 216;
+				cmp = false;
+			}
+			else if (tk[1] == R("Minus")) {
+				codes << 246 << 216;
+				cmp = false;
+			}
+			else {
+				error(R("不支持的运算符"));
+				continue;
+			}
+			if (cmp)
+				codes << 137 << 133;
+			else
+				codes << 136 << 133;
+			codes += (int)offset;
+
+		}
+		else if (op == R("opBoolen")) {
+			if (arg_size != 4) {
+				error(R("参数个数不符"));
+				continue;
+			}
+			if (args[1].typeName != R("tmp") || args[2].typeName != R("tmp") || args[3].typeName != R("tmp")) {
+				error(R("参数必须提供临时变量"));
+				continue;
+			}
+			intptr_t offset = -localSize - tmpOffset(st_size_t(args[1].name), tmp_stack);
+			intptr_t offset2 = -localSize - tmpOffset(st_size_t(args[2].name), tmp_stack);
+			intptr_t offset3 = -localSize - tmpOffset(st_size_t(args[3].name), tmp_stack);
+			if (tk[1] == R("!=")) {
+				codes << 139 << 133;
+				codes += (int)offset2;
+				codes << 59 << 133;
+				codes += (int)offset3;
+				codes << 15 << 149 << 192 << 37 << 255 << 0 << 0 << 0;
+				codes << 137 << 133;
+				codes += (int)offset;
+			}
+			else if (tk[1] == R("==")) {
+				codes << 139 << 133;
+				codes += (int)offset2;
+				codes << 59 << 133;
+				codes += (int)offset3;
+				codes << 15 << 148 << 192 << 37 << 255 << 0 << 0 << 0;
+				codes << 137 << 133;
+				codes += (int)offset;
+			}
+			else if (tk[1] == R("and")) {
+				codes << 243 << 15 << 16 << 133;
+				codes += (int)offset2;
+				codes << 243 << 15 << 89 << 133;
+				codes += (int)offset3;
+				codes << 243 << 15 << 17 << 133;
+				codes += (int)offset;
+			}
+			else if (tk[1] == R("xor")) {
+				codes << 104;
+				codes += (float)1;
+				codes << 141 << 133;
+				codes += (int)offset2;
+				codes << 141 << 157;
+				codes += (int)offset3;
+				codes << 243 << 15 << 16 << 0 << 243 << 15 << 89 << 3 << 243 << 15 << 16 << 12 << 36 << 243 << 15
+					<< 92 << 200 << 243 << 15 << 16 << 0 << 243 << 15 << 88 << 3 << 243 << 15 << 16 << 16 << 243
+					<< 15 << 89 << 19 << 243 << 15 << 92 << 194 << 243 << 15 << 89 << 200 << 243 << 15 << 17
+					<< 140 << 36;
+			}
+			else if (tk[1] == R("or")) {
+				codes << 243 << 15 << 16 << 133;
+				codes += (int)offset2;
+				codes << 243 << 15 << 88 << 133;
+				codes += (int)offset3;
+				codes << 243 << 15 << 16 << 141;
+				codes += (int)offset2;
+				codes << 243 << 15 << 89 << 141;
+				codes += (int)offset3;
+				codes << 243 << 15 << 92 << 193 << 243 << 15 << 17 << 133;
+				codes += (int)offset3;
+			}
+			else if (tk[1] == R("not")) {
+				codes << 104;
+				codes += (float)1;
+				codes << 243 << 15 << 16 << 4 << 36 << 243 << 15 << 92 << 133;
+				codes += (int)offset2;
+				codes << 243 << 15 << 17 << 133;
+				codes += (int)offset;
+				codes << 88;
+			}
+			else {
+				error(R("不支持的运算符"));
+				continue;
+			}
+		}
+		else if (op == R("I2D")) {
+			if (arg_size != 2) {
+				error(R("参数个数不符"));
+				continue;
+			}
+			if (args[0].typeName != R("tmp") || args[1].typeName != R("tmp")) {
+				error(R("参数必须提供临时变量"));
+				continue;
+			}
+			intptr_t offset = -localSize - tmpOffset(st_size_t(args[0].name), tmp_stack);
+			intptr_t offset2 = -localSize - tmpOffset(st_size_t(args[1].name), tmp_stack);
+			codes << 219 << 133;
+			codes += (int)offset2;
+			codes << 221 << 157;
+			codes += (int)offset;
+		}
+		else if (op == R("D2I")) {
+			if (arg_size != 2) {
+				error(R("参数个数不符"));
+				continue;
+			}
+			if (args[0].typeName != R("tmp") || args[1].typeName != R("tmp")) {
+				error(R("参数必须提供临时变量"));
+				continue;
+			}
+			intptr_t offset = -localSize - tmpOffset(st_size_t(args[0].name), tmp_stack);
+			intptr_t offset2 = -localSize - tmpOffset(st_size_t(args[1].name), tmp_stack);
+			codes << 221 << 133;
+			codes += (int)offset2;
+			codes << 219 << 157;
+			codes += (int)offset;
+		}
+		else if (op == R("I2B")) {
+			if (arg_size != 2) {
+				error(R("参数个数不符"));
+				continue;
+			}
+			if (args[0].typeName != R("tmp") || args[1].typeName != R("tmp")) {
+				error(R("参数必须提供临时变量"));
+				continue;
+			}
+			intptr_t offset = -localSize - tmpOffset(st_size_t(args[0].name), tmp_stack);
+			intptr_t offset2 = -localSize - tmpOffset(st_size_t(args[1].name), tmp_stack);
+			codes << 139 << 133;
+			codes += (int)offset2;
+			codes << 136 << 133;
+			codes += (int)offset;
+		}
+		else if (op == R("B2I")) {
+			if (arg_size != 2) {
+				error(R("参数个数不符"));
+				continue;
+			}
+			if (args[0].typeName != R("tmp") || args[1].typeName != R("tmp")) {
+				error(R("参数必须提供临时变量"));
+				continue;
+			}
+			intptr_t offset = -localSize - tmpOffset(st_size_t(args[0].name), tmp_stack);
+			intptr_t offset2 = -localSize - tmpOffset(st_size_t(args[1].name), tmp_stack);
+			codes << 138 << 133;
+			codes += (int)offset2;
+			codes << 37 << 255 << 0 << 0 << 0;
+			codes << 137 << 133;
+			codes += (int)offset;
+		}
+		else if (op == R("uI2I") || op == R("I2uI")) {
+			if (arg_size != 2) {
+				error(R("参数个数不符"));
+				continue;
+			}
+			if (args[0].typeName != R("tmp") || args[1].typeName != R("tmp")) {
+				error(R("参数必须提供临时变量"));
+				continue;
+			}
+			intptr_t offset = -localSize - tmpOffset(st_size_t(args[0].name), tmp_stack);
+			intptr_t offset2 = -localSize - tmpOffset(st_size_t(args[1].name), tmp_stack);
+			if (offset2 != offset) {
+				codes << 139 << 133;
+				codes += (int)offset2;
+			}
+			else
+			{
+				codes << 137 << 133;
+				codes += (int)offset;
+			}
 		}
 	}
 
