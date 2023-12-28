@@ -1,4 +1,5 @@
 #include "../header/x86.h"
+#include "../header/base64.h"
 using namespace MLang;
 namespace MLang {
 	type analyzeArg(lstring tk) {
@@ -71,6 +72,15 @@ void x86Generator::error(lstring err) {
 	Error = true;
 	std_lcout << ErrorType << R(" Error at line ") << ErrorLine << R(": ") << err << std::endl;
 
+}
+size_t x86Generator::tmpSize(size_t id, const std::vector<size_t>& stack) {
+	if (id >= stack.size()) {
+		error(R("临时变量不存在"));
+		return 0;
+	}
+	else {
+		return stack[id];
+	}
 }
 size_t x86Generator::tmpOffset(size_t id,const std::vector<size_t>& stack) {
 	if (stack.size() <= id) {
@@ -938,7 +948,346 @@ SectionManager x86Generator::generate(lstring IR) {
 				codes += (int)offset;
 			}
 		}
+		else if (op == R("Call") || op == R("Call_cdecl")) {
+			size_t size{},size2{};
+			if (arg_size < 2) {
+				error(R("参数个数不符"));
+				continue;
+			}
+			if (args[0].typeName != R("label")) {
+				error(R("第一个参数必须提供标签"));
+				continue;
+			}
+			for (size_t j = arg_size - 1; j >= 3; j--) {
+				size_t id = st_size_t(args[j].name);
+				if (args[j].typeName == R("&tmp")) {
+					size = tmpSize(id, tmp_stack);
+					codes << 141 << 133;
+					codes += (int)( - localSize - tmpOffset(id, tmp_stack));
+					codes << 80;
+					size2 += 4;
+				}
+				else if (args[j].typeName == R("tmp")) {
+					size = tmpSize(id, tmp_stack);
+					size_t offset2 = -localSize - tmpOffset(id, tmp_stack);
+					switch (size)
+					{
+					case 1:
+						codes << 139 << 133;
+						codes += (int)offset2;
+						codes << 102 << 37 << 255 << 0;
+						codes << 102 << 80;
+						size2 += 2;
+						break;
+					case 2:
+						codes << 139 << 133;
+						codes += (int)offset2;
+						codes << 102 << 80;
+						size2 += 2;
+						break;
+					case 4:
+						codes << 255 << 181;
+						codes += (int)offset2;
+						size2 += 4;
+						break;
+					case 8:
+						codes << 139 << 133;
+						codes += (int)offset2;
+						codes << 139 << 149;
+						codes += (int)offset2 + 4;
+						codes << 82 << 80;
+						size2 += 8;
+						break;
+					default:
+						error(R("不支持的数据大小"));
+						break;
+					}
+				}
+			}
+			codes << 232 << 0 << 0 << 0 << 0;
+			redirection tmp{};
+			tmp.ip = codes.size;
+			tmp.name = R("[Label]") + args[0].name;
+			redirections.push_back(tmp);
+			if (op == R("Call_cdecl")) {
+				codes << 129 << 196;
+				codes += (int)size2;
+			}
+			else if (args[1].name != R("null")) {
+				size_t id = st_size_t(args[1].name);
+				size = tmpSize(id, tmp_stack);
+				size_t offset2 = -localSize - tmpOffset(id, tmp_stack);
+				switch (size)
+				{
+				case 1:
+					codes << 136 << 133;
+					codes += (int)offset2;
+					break;
+				case 2:
+					codes << 102 << 137 << 133;
+					codes += (int)offset2;
+					break;
+				case 4:
+					codes << 137 << 133;
+					codes += (int)offset2;
+					break;
+				case 8:
+					codes << 137 << 133;
+					codes += (int)offset2;
+					codes << 137 << 149;
+					codes += (int)offset2 + 4;
+					break;
+				default:
+					error(R("不支持的数据大小"));
+					break;
+				}
+			}
+		}
+		else if (op == R("CallA") || op == R("CallA_cdecl")) {
+			size_t size{}, size2{};
+			if (arg_size < 2) {
+				error(R("参数个数不符"));
+				continue;
+			}
+			if (args[0].typeName != R("label")) {
+				error(R("第一个参数必须提供标签"));
+				continue;
+			}
+			for (size_t j = arg_size - 1; j >= 3; j--) {
+				size_t id = st_size_t(args[j].name);
+				if (args[j].typeName == R("&tmp")) {
+					size = tmpSize(id, tmp_stack);
+					codes << 141 << 133;
+					codes += (int)(-localSize - tmpOffset(id, tmp_stack));
+					codes << 80;
+					size2 += 4;
+				}
+				else if (args[j].typeName == R("tmp")) {
+					size = tmpSize(id, tmp_stack);
+					size_t offset2 = -localSize - tmpOffset(id, tmp_stack);
+					switch (size)
+					{
+					case 1:
+						codes << 139 << 133;
+						codes += (int)offset2;
+						codes << 102 << 37 << 255 << 0;
+						codes << 102 << 80;
+						size2 += 2;
+						break;
+					case 2:
+						codes << 139 << 133;
+						codes += (int)offset2;
+						codes << 102 << 80;
+						size2 += 2;
+						break;
+					case 4:
+						codes << 255 << 181;
+						codes += (int)offset2;
+						size2 += 4;
+						break;
+					case 8:
+						codes << 139 << 133;
+						codes += (int)offset2;
+						codes << 139 << 149;
+						codes += (int)offset2 + 4;
+						codes << 82 << 80;
+						size2 += 8;
+						break;
+					default:
+						error(R("不支持的数据大小"));
+						break;
+					}
+				}
+			}
+			codes << 232 << 0 << 0 << 0 << 0;
+			redirection tmp{};
+			tmp.ip = codes.size;
+			tmp.name = R("[Label]") + args[0].name;
+			redirections.push_back(tmp);
+			if (op == R("CallA_cdecl")) {
+				codes<< 129 << 196;
+				codes += (int)size2;
+			}
+		}
+		else if (op == R("[string]")) {
+			if (arg_size < 2) {
+				error(R("参数个数不符"));
+				continue;
+			}
+			if (args[0].typeName != R("I")) {
+				error(R("第一个参数必须提供整数"));
+				continue;
+			}
+			if (args[1].typeName != R("T")) {
+				error(R("第二个参数必须提供Base64编码的文本"));
+				continue;
+			}
+			size_t size = st_size_t(args[0].name);
+			std::vector<lstring> tmp;
+			tmp.resize(max_(size, constStr.size()));
+			for (size_t i = 0; i < size; i++) {
+				tmp[i] = constStr[i];
+			}
+			std::swap(tmp, constStr);
+			*constStr.end() = base64_decode(args[1].name);
+		}
+		else if (op == R("[GlobalSize]")) {
+			if (!arg_size) {
+				error(R("参数个数不符"));
+				continue;
+			}
+			if (args[0].typeName != R("I")) {
+				error(R("第一个参数必须提供整数"));
+				continue;
+			}
+			globalSize = st_size_t(args[0].name);
+		}
+		else if (op == R("offset")) {
+			if (arg_size < 2) {
+				error(R("参数个数不符"));
+				continue;
+			}
+			if (args[0].typeName != R("tmp")) {
+				error(R("第一个参数必须提供临时变量"));
+				continue;
+			}
+			if (args[1].typeName != R("I")) {
+				error(R("第二个参数必须提供整数"));
+				continue;
+			}
+			intptr_t offset = -localSize - tmpOffset(st_size_t(args[0].name), tmp_stack);
+			size_t size = st_size_t(args[1].name);
+			if (size) {
+				codes << 129 << 133;
+				codes += (int)offset;
+				codes += (int)size;
+			}
+		}
+		else if (op==R("[API]")) {
+			if (arg_size < 2) {
+				error(R("参数个数不符"));
+				continue;
+			}
+			apiTable.push_back(args[0].name + R(" ") + args[1].name);
+			addBuiltInFunction(R("[API]") + args[0].name + R(" ") + args[1].name, redirections_label);
+		}
+		else if (op == R("[System]")) {
+			if (!arg_size) {
+				error(R("参数个数不符"));
+				continue;
+			}
+			builtInFunction.push_back(args[0].name);
+		}
+		else if (op == R("storeQ")) {
+			if (arg_size != 1) {
+				error(R("参数个数不符"));
+				continue;
+			}
+			if (args[0].typeName != R("tmp")) {
+				error(R("第一个参数必须提供临时变量"));
+				continue;
+			}
+			intptr_t offset = -localSize - tmpOffset(st_size_t(args[0].name), tmp_stack);
+			codes << 137 << 149;
+			codes += (int)offset + 4;
+			codes << 137 << 133;
+			codes += (int)offset;
+
+		}
+		else if (op == R("loadQ")) {
+			if (arg_size != 1) {
+				error(R("参数个数不符"));
+				continue;
+			}
+			if (args[0].typeName != R("tmp")) {
+				error(R("第一个参数必须提供临时变量"));
+				continue;
+			}
+			intptr_t offset = -localSize - tmpOffset(st_size_t(args[0].name), tmp_stack);
+			codes << 139 << 133;
+			codes += (int)offset;
+			codes << 139 << 149;
+			codes += (int)offset + 4;
+		}
+		else if (op == R("ExactlyAddress")) {
+			if (arg_size > 2 || arg_size < 1) {
+				error(R("参数个数不符"));
+				continue;
+			}
+			if (args[0].typeName != R("tmp")) {
+				error(R("第一个参数必须提供临时变量"));
+				continue;
+			}
+			if (arg_size == 2 && args[1].typeName != R("label")) {
+				error(R("第二个参数必须提供标签"));
+				continue;
+			}
+			codes << 232 << 0 << 0 << 0 << 0 << 88 << 131 << 192 << 9 << 5 << 0 << 0 << 0 << 0;
+			if (arg_size == 2) {
+				redirection tmp{};
+				tmp.ip = codes.size;
+				tmp.name = R("[Label]") + args[1].name;
+				redirections.push_back(tmp);
+			}
+			intptr_t offset = -localSize - tmpOffset(st_size_t(args[0].name), tmp_stack);
+			codes << 137 << 133;
+			codes += (int)offset;
+		}
+		else if (op == R("pause")) {
+			codes << 204;
+		}
+		else if (op == R("Boolen2I")) {
+			if (arg_size != 2) {
+				error(R("参数个数不符"));
+				continue;
+			}
+			if (args[0].typeName != R("tmp") || args[1].typeName != R("tmp")) {
+				error(R("参数必须提供临时变量"));
+				continue;
+			}
+			intptr_t offset = -localSize - tmpOffset(st_size_t(args[0].name), tmp_stack);
+			intptr_t offset2 = -localSize - tmpOffset(st_size_t(args[1].name), tmp_stack);
+			codes << 104;
+			codes += (float)0.5;
+			codes << 243 << 15 << 16 << 133;
+			codes += (int)offset2;
+			codes << 15 << 47 << 4 << 36 << 118 << 12 << 199 << 133;
+			codes += (int)offset;
+			codes << 1 << 0 << 0 << 0 << 235 << 10 << 199 << 133;
+			codes += (int)offset;
+			codes << 0 << 0 << 0 << 0;
+		}
+		else if (op == R("I2Boolen")) {
+			if (arg_size != 2) {
+				error(R("参数个数不符"));
+				continue;
+			}
+			if (args[0].typeName != R("tmp") || args[1].typeName != R("tmp")) {
+				error(R("参数必须提供临时变量"));
+				continue;
+			}
+
+			intptr_t offset = -localSize - tmpOffset(st_size_t(args[0].name), tmp_stack);
+			intptr_t offset2 = -localSize - tmpOffset(st_size_t(args[1].name), tmp_stack);
+			codes << 131 << 189;
+			codes += (int)offset2;
+			codes << 0 << 199 << 133;
+			codes += (int)offset;
+			codes += float(1);
+
+		}
 	}
 
 	return tmp;
+}
+void x86Generator::addBuiltInFunction(const lstring& name, std::vector<redirection>& redirections) {
+	redirection tmp{};
+	tmp.ip = codes.size;
+	tmp.name = name;
+	redirections.push_back(tmp);
+	codes << 184;
+	tmp.ip = (int)name.size() + 1;
+	tmp.name = name;
+	linkTable.push_back(tmp);
+	codes << 0 << 0 << 0 << 0 << 255 << 224;
 }
