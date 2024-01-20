@@ -4,14 +4,19 @@ using namespace MLang;
 namespace MLang {
 	type analyzeArg(lstring tk) {
 		lstring left = tk.substr(0, 1);
-		lstring right = tk.substr(1, tk.size() - 1);
+		lstring right = tk.size()>=2?tk.substr(1, max_(tk.size() - 1, 0)):R("");
 		type ret{};
 		if (tk.substr(0, 2) == R("&%")) {
 			ret.typeName = R("&%");
 			ret.name = tk.substr(2, tk.size() - 2);
 		}
-		else if(left==R("#")) {
+		else if (left == R("#")) {
 			ret.typeName = R("label");
+			ret.name = right;
+		}
+		else if (left == R("&"))
+		{
+			ret.typeName = R("local");
 			ret.name = right;
 		}
 		else if (left == R("$")) {
@@ -192,7 +197,7 @@ SectionManager x86Generator::generate(lstring IR) {
 				error(R("第一个参数必须提供临时变量"));
 				continue;
 			}
-			intptr_t offset = -localSize - tmpOffset(st_size_t(args[0].name), tmp_stack);
+			intptr_t offset = -intptr_t(localSize + tmpOffset(st_size_t(args[0].name), tmp_stack));
 			if (args[1].typeName == R("I")) {
 				codes << 199 << 133;
 				codes += (int)offset;
@@ -232,7 +237,7 @@ SectionManager x86Generator::generate(lstring IR) {
 				error(R("第一个参数必须提供临时变量"));
 				continue;
 			}
-			intptr_t offset = -localSize - tmpOffset(st_size_t(args[1].name), tmp_stack);
+			intptr_t offset = -intptr_t(localSize + tmpOffset(st_size_t(args[0].name), tmp_stack));
 			if (args[1].typeName == R("local")) {
 				codes << 141 << 133;
 				codes += -(int)st_intptr_t(args[1].name);
@@ -241,7 +246,7 @@ SectionManager x86Generator::generate(lstring IR) {
 			}
 			else if (args[1].typeName == R("global")) {
 				codes << 104;
-				codes += (int)st_intptr_t(args[2].name);
+				codes += (int)st_intptr_t(args[1].name);
 				codes << 232 << 0 << 0 << 0 << 0;
 				redirection tmp{};
 				tmp.ip = codes.size;
@@ -258,7 +263,7 @@ SectionManager x86Generator::generate(lstring IR) {
 			}
 			else if (args[1].typeName == R("T")) {
 				codes << 104;
-				codes += (int)st_intptr_t(args[2].name);
+				codes += (int)st_intptr_t(args[1].name);
 				codes << 232 << 0 << 0 << 0 << 0;
 				redirection tmp{};
 				tmp.ip = codes.size;
@@ -268,7 +273,7 @@ SectionManager x86Generator::generate(lstring IR) {
 				codes += (int)offset;
 			}
 			else if (args[1].typeName == R("&tmp")) {
-				intptr_t offset2 = -localSize - tmpOffset(st_size_t(args[2].name), tmp_stack);
+				intptr_t offset2 = -intptr_t(localSize + tmpOffset(st_size_t(args[1].name), tmp_stack));
 				codes << 141 << 133;
 				codes += (int)offset2;
 				codes << 137 << 133;
@@ -306,7 +311,7 @@ SectionManager x86Generator::generate(lstring IR) {
 				error(R("第二个参数必须提供标签"));
 				continue;
 			}
-			intptr_t offset = -localSize - tmpOffset(st_size_t(args[0].name), tmp_stack);
+			intptr_t offset = -intptr_t(localSize + tmpOffset(st_size_t(args[0].name), tmp_stack));
 			codes << 155 << 219 << 227 << 131 << 189;
 			codes += (int)offset;
 			codes << 0 << 15 << 132 << 0 << 0 << 0 << 0;
@@ -348,8 +353,8 @@ SectionManager x86Generator::generate(lstring IR) {
 				continue;
 			}
 			size_t size = st_size_t(args[2].name);
-			intptr_t offset = -localSize - tmpOffset(st_size_t(args[0].name), tmp_stack);
-			intptr_t offset2 = -localSize - tmpOffset(st_size_t(args[1].name), tmp_stack);
+			intptr_t offset = -intptr_t(localSize + tmpOffset(st_size_t(args[0].name), tmp_stack));
+			intptr_t offset2 = -intptr_t(localSize + tmpOffset(st_size_t(args[1].name), tmp_stack));
 			switch (size)
 			{
 			case 1:
@@ -400,7 +405,7 @@ SectionManager x86Generator::generate(lstring IR) {
 				error(R("第二个参数必须提供整数"));
 				continue;
 			}
-			intptr_t offset = -localSize - tmpOffset(st_size_t(args[0].name), tmp_stack);
+			intptr_t offset = -intptr_t(localSize + tmpOffset(st_size_t(args[0].name), tmp_stack));
 			size_t size = st_size_t(args[1].name);
 			switch (size)
 			{
@@ -445,8 +450,8 @@ SectionManager x86Generator::generate(lstring IR) {
 				continue;
 			}
 			size_t size = st_size_t(args[2].name);
-			intptr_t offset = -localSize - tmpOffset(st_size_t(args[0].name), tmp_stack);
-			intptr_t offset2 = -localSize - tmpOffset(st_size_t(args[1].name), tmp_stack);
+			intptr_t offset = -intptr_t(localSize + tmpOffset(st_size_t(args[0].name), tmp_stack));
+			intptr_t offset2 = -intptr_t(localSize + tmpOffset(st_size_t(args[1].name), tmp_stack));
 			switch (size)
 			{
 			case 1:
@@ -502,8 +507,8 @@ SectionManager x86Generator::generate(lstring IR) {
 				continue;
 			}
 			size_t size = st_size_t(args[2].name);
-			intptr_t offset = -localSize - tmpOffset(st_size_t(args[0].name), tmp_stack);
-			intptr_t offset2 = -localSize - tmpOffset(st_size_t(args[1].name), tmp_stack);
+			intptr_t offset = -intptr_t(localSize + tmpOffset(st_size_t(args[0].name), tmp_stack));
+			intptr_t offset2 = -intptr_t(localSize + tmpOffset(st_size_t(args[1].name), tmp_stack));
 			codes << 139 << 189;
 			codes += (int)offset;
 			codes << 139 << 181;
@@ -534,10 +539,6 @@ SectionManager x86Generator::generate(lstring IR) {
 				error(R("参数个数不符"));
 				continue;
 			}
-			if (args[0].typeName != R("tmp")) {
-				error(R("第一个参数必须提供临时变量"));
-				continue;
-			}
 			if (args[1].typeName != R("tmp")) {
 				error(R("第二个参数必须提供临时变量"));
 				continue;
@@ -550,9 +551,9 @@ SectionManager x86Generator::generate(lstring IR) {
 				error(R("第四个参数必须提供临时变量"));
 				continue;
 			}
-			intptr_t offset = -localSize - tmpOffset(st_size_t(args[1].name), tmp_stack);
-			intptr_t offset2 = -localSize - tmpOffset(st_size_t(args[2].name), tmp_stack);
-			intptr_t offset3 = -localSize - tmpOffset(st_size_t(args[3].name), tmp_stack);
+			intptr_t offset = -intptr_t(localSize + tmpOffset(st_size_t(args[1].name), tmp_stack));
+			intptr_t offset2 = -intptr_t(localSize + tmpOffset(st_size_t(args[2].name), tmp_stack));
+			intptr_t offset3 = -intptr_t(localSize + tmpOffset(st_size_t(args[3].name), tmp_stack));
 			codes << 139 << 133;
 			codes += (int)offset2;
 			if (tk[1] == R("+")) {
@@ -608,9 +609,9 @@ SectionManager x86Generator::generate(lstring IR) {
 				error(R("参数必须提供临时变量"));
 				continue;
 			}
-			intptr_t offset = -localSize - tmpOffset(st_size_t(args[1].name), tmp_stack);
-			intptr_t offset2 = -localSize - tmpOffset(st_size_t(args[2].name), tmp_stack);
-			intptr_t offset3 = -localSize - tmpOffset(st_size_t(args[3].name), tmp_stack);
+			intptr_t offset = -intptr_t(localSize + tmpOffset(st_size_t(args[1].name), tmp_stack));
+			intptr_t offset2 = -intptr_t(localSize + tmpOffset(st_size_t(args[2].name), tmp_stack));
+			intptr_t offset3 = -intptr_t(localSize + tmpOffset(st_size_t(args[3].name), tmp_stack));
 			if (tk[1] == R("+")) {
 				codes << 221 << 133;
 				codes += (int)offset2;
@@ -725,9 +726,9 @@ SectionManager x86Generator::generate(lstring IR) {
 				error(R("参数必须提供临时变量"));
 				continue;
 			}
-			intptr_t offset = -localSize - tmpOffset(st_size_t(args[1].name), tmp_stack);
-			intptr_t offset2 = -localSize - tmpOffset(st_size_t(args[2].name), tmp_stack);
-			intptr_t offset3 = -localSize - tmpOffset(st_size_t(args[3].name), tmp_stack);
+			intptr_t offset = -intptr_t(localSize + tmpOffset(st_size_t(args[1].name), tmp_stack));
+			intptr_t offset2 = -intptr_t(localSize + tmpOffset(st_size_t(args[2].name), tmp_stack));
+			intptr_t offset3 = -intptr_t(localSize + tmpOffset(st_size_t(args[3].name), tmp_stack));
 			codes << 139 << 133;
 			codes += (int)offset2;
 			codes << 139 << 157;
@@ -795,9 +796,9 @@ SectionManager x86Generator::generate(lstring IR) {
 				error(R("参数必须提供临时变量"));
 				continue;
 			}
-			intptr_t offset = -localSize - tmpOffset(st_size_t(args[1].name), tmp_stack);
-			intptr_t offset2 = -localSize - tmpOffset(st_size_t(args[2].name), tmp_stack);
-			intptr_t offset3 = -localSize - tmpOffset(st_size_t(args[3].name), tmp_stack);
+			intptr_t offset = -intptr_t(localSize + tmpOffset(st_size_t(args[1].name), tmp_stack));
+			intptr_t offset2 = -intptr_t(localSize + tmpOffset(st_size_t(args[2].name), tmp_stack));
+			intptr_t offset3 = -intptr_t(localSize + tmpOffset(st_size_t(args[3].name), tmp_stack));
 			if (tk[1] == R("!=")) {
 				codes << 139 << 133;
 				codes += (int)offset2;
@@ -871,8 +872,8 @@ SectionManager x86Generator::generate(lstring IR) {
 				error(R("参数必须提供临时变量"));
 				continue;
 			}
-			intptr_t offset = -localSize - tmpOffset(st_size_t(args[0].name), tmp_stack);
-			intptr_t offset2 = -localSize - tmpOffset(st_size_t(args[1].name), tmp_stack);
+			intptr_t offset = -intptr_t(localSize + tmpOffset(st_size_t(args[0].name), tmp_stack));
+			intptr_t offset2 = -intptr_t(localSize + tmpOffset(st_size_t(args[1].name), tmp_stack));
 			codes << 219 << 133;
 			codes += (int)offset2;
 			codes << 221 << 157;
@@ -887,8 +888,8 @@ SectionManager x86Generator::generate(lstring IR) {
 				error(R("参数必须提供临时变量"));
 				continue;
 			}
-			intptr_t offset = -localSize - tmpOffset(st_size_t(args[0].name), tmp_stack);
-			intptr_t offset2 = -localSize - tmpOffset(st_size_t(args[1].name), tmp_stack);
+			intptr_t offset = -intptr_t(localSize + tmpOffset(st_size_t(args[0].name), tmp_stack));
+			intptr_t offset2 = -intptr_t(localSize + tmpOffset(st_size_t(args[1].name), tmp_stack));
 			codes << 221 << 133;
 			codes += (int)offset2;
 			codes << 219 << 157;
@@ -903,8 +904,8 @@ SectionManager x86Generator::generate(lstring IR) {
 				error(R("参数必须提供临时变量"));
 				continue;
 			}
-			intptr_t offset = -localSize - tmpOffset(st_size_t(args[0].name), tmp_stack);
-			intptr_t offset2 = -localSize - tmpOffset(st_size_t(args[1].name), tmp_stack);
+			intptr_t offset = -intptr_t(localSize + tmpOffset(st_size_t(args[0].name), tmp_stack));
+			intptr_t offset2 = -intptr_t(localSize + tmpOffset(st_size_t(args[1].name), tmp_stack));
 			codes << 139 << 133;
 			codes += (int)offset2;
 			codes << 136 << 133;
@@ -919,8 +920,8 @@ SectionManager x86Generator::generate(lstring IR) {
 				error(R("参数必须提供临时变量"));
 				continue;
 			}
-			intptr_t offset = -localSize - tmpOffset(st_size_t(args[0].name), tmp_stack);
-			intptr_t offset2 = -localSize - tmpOffset(st_size_t(args[1].name), tmp_stack);
+			intptr_t offset = -intptr_t(localSize + tmpOffset(st_size_t(args[0].name), tmp_stack));
+			intptr_t offset2 = -intptr_t(localSize + tmpOffset(st_size_t(args[1].name), tmp_stack));
 			codes << 138 << 133;
 			codes += (int)offset2;
 			codes << 37 << 255 << 0 << 0 << 0;
@@ -936,8 +937,8 @@ SectionManager x86Generator::generate(lstring IR) {
 				error(R("参数必须提供临时变量"));
 				continue;
 			}
-			intptr_t offset = -localSize - tmpOffset(st_size_t(args[0].name), tmp_stack);
-			intptr_t offset2 = -localSize - tmpOffset(st_size_t(args[1].name), tmp_stack);
+			intptr_t offset = -intptr_t(localSize + tmpOffset(st_size_t(args[0].name), tmp_stack));
+			intptr_t offset2 = -intptr_t(localSize + tmpOffset(st_size_t(args[1].name), tmp_stack));
 			if (offset2 != offset) {
 				codes << 139 << 133;
 				codes += (int)offset2;
@@ -963,13 +964,13 @@ SectionManager x86Generator::generate(lstring IR) {
 				if (args[j].typeName == R("&tmp")) {
 					size = tmpSize(id, tmp_stack);
 					codes << 141 << 133;
-					codes += (int)( - localSize - tmpOffset(id, tmp_stack));
+					codes += (int)( -intptr_t(localSize + tmpOffset(id, tmp_stack)));
 					codes << 80;
 					size2 += 4;
 				}
 				else if (args[j].typeName == R("tmp")) {
 					size = tmpSize(id, tmp_stack);
-					size_t offset2 = -localSize - tmpOffset(id, tmp_stack);
+				    intptr_t offset2 = -intptr_t(localSize + tmpOffset(id, tmp_stack));
 					switch (size)
 					{
 					case 1:
@@ -1016,7 +1017,7 @@ SectionManager x86Generator::generate(lstring IR) {
 			else if (args[1].name != R("null")) {
 				size_t id = st_size_t(args[1].name);
 				size = tmpSize(id, tmp_stack);
-				size_t offset2 = -localSize - tmpOffset(id, tmp_stack);
+				intptr_t offset2 = -intptr_t(localSize + tmpOffset(id, tmp_stack));
 				switch (size)
 				{
 				case 1:
@@ -1058,13 +1059,13 @@ SectionManager x86Generator::generate(lstring IR) {
 				if (args[j].typeName == R("&tmp")) {
 					size = tmpSize(id, tmp_stack);
 					codes << 141 << 133;
-					codes += (int)(-localSize - tmpOffset(id, tmp_stack));
+					codes += (int)(-intptr_t(localSize + tmpOffset(id, tmp_stack)));
 					codes << 80;
 					size2 += 4;
 				}
 				else if (args[j].typeName == R("tmp")) {
 					size = tmpSize(id, tmp_stack);
-					size_t offset2 = -localSize - tmpOffset(id, tmp_stack);
+					intptr_t offset2 = -intptr_t(localSize + tmpOffset(id, tmp_stack));
 					switch (size)
 					{
 					case 1:
@@ -1155,7 +1156,7 @@ SectionManager x86Generator::generate(lstring IR) {
 				error(R("第二个参数必须提供整数"));
 				continue;
 			}
-			intptr_t offset = -localSize - tmpOffset(st_size_t(args[0].name), tmp_stack);
+			intptr_t offset = -intptr_t(localSize + tmpOffset(st_size_t(args[0].name), tmp_stack));
 			size_t size = st_size_t(args[1].name);
 			if (size) {
 				codes << 129 << 133;
@@ -1187,7 +1188,7 @@ SectionManager x86Generator::generate(lstring IR) {
 				error(R("第一个参数必须提供临时变量"));
 				continue;
 			}
-			intptr_t offset = -localSize - tmpOffset(st_size_t(args[0].name), tmp_stack);
+			intptr_t offset = -intptr_t(localSize + tmpOffset(st_size_t(args[0].name), tmp_stack));
 			codes << 137 << 149;
 			codes += (int)offset + 4;
 			codes << 137 << 133;
@@ -1203,7 +1204,7 @@ SectionManager x86Generator::generate(lstring IR) {
 				error(R("第一个参数必须提供临时变量"));
 				continue;
 			}
-			intptr_t offset = -localSize - tmpOffset(st_size_t(args[0].name), tmp_stack);
+			intptr_t offset = -intptr_t(localSize + tmpOffset(st_size_t(args[0].name), tmp_stack));
 			codes << 139 << 133;
 			codes += (int)offset;
 			codes << 139 << 149;
@@ -1229,7 +1230,7 @@ SectionManager x86Generator::generate(lstring IR) {
 				tmp.name = R("[Label]") + args[1].name;
 				redirections.push_back(tmp);
 			}
-			intptr_t offset = -localSize - tmpOffset(st_size_t(args[0].name), tmp_stack);
+			intptr_t offset = -intptr_t(localSize + tmpOffset(st_size_t(args[0].name), tmp_stack));
 			codes << 137 << 133;
 			codes += (int)offset;
 		}
@@ -1245,8 +1246,8 @@ SectionManager x86Generator::generate(lstring IR) {
 				error(R("参数必须提供临时变量"));
 				continue;
 			}
-			intptr_t offset = -localSize - tmpOffset(st_size_t(args[0].name), tmp_stack);
-			intptr_t offset2 = -localSize - tmpOffset(st_size_t(args[1].name), tmp_stack);
+			intptr_t offset = -intptr_t(localSize + tmpOffset(st_size_t(args[0].name), tmp_stack));
+			intptr_t offset2 = -intptr_t(localSize + tmpOffset(st_size_t(args[1].name), tmp_stack));
 			codes << 104;
 			codes += (float)0.5;
 			codes << 243 << 15 << 16 << 133;
@@ -1267,14 +1268,92 @@ SectionManager x86Generator::generate(lstring IR) {
 				continue;
 			}
 
-			intptr_t offset = -localSize - tmpOffset(st_size_t(args[0].name), tmp_stack);
-			intptr_t offset2 = -localSize - tmpOffset(st_size_t(args[1].name), tmp_stack);
+			intptr_t offset = -intptr_t(localSize + tmpOffset(st_size_t(args[0].name), tmp_stack));
+			intptr_t offset2 = -intptr_t(localSize + tmpOffset(st_size_t(args[1].name), tmp_stack));
 			codes << 131 << 189;
 			codes += (int)offset2;
 			codes << 0 << 199 << 133;
 			codes += (int)offset;
 			codes += float(1);
+			codes << 117 << 10 << 199 << 133;
+			codes += (int)offset;
+			codes << 0 << 0 << 0 << 0;
 
+		}
+		else if (op == R("D2Boolen")) {
+			if (arg_size != 2) {
+				error(R("参数个数不符"));
+				continue;
+			}
+			if (args[0].typeName != R("tmp") || args[1].typeName != R("tmp")) {
+				error(R("参数必须提供临时变量"));
+				continue;
+			}
+			intptr_t offset = -intptr_t(localSize + tmpOffset(st_size_t(args[0].name), tmp_stack));
+			intptr_t offset2 = -intptr_t(localSize + tmpOffset(st_size_t(args[1].name), tmp_stack));
+			codes << 221 << 133;
+			codes += (int)offset2;
+			codes << 221 << 157;
+			codes += (int)offset;
+		}
+		else if (op == R("Boolen2D")) {
+			if (arg_size != 2) {
+				error(R("参数个数不符"));
+				continue;
+			}
+			if (args[0].typeName != R("tmp") || args[1].typeName != R("tmp")) {
+				error(R("参数必须提供临时变量"));
+				continue;
+			}
+			intptr_t offset = -intptr_t(localSize + tmpOffset(st_size_t(args[0].name), tmp_stack));
+			intptr_t offset2 = -intptr_t(localSize + tmpOffset(st_size_t(args[1].name), tmp_stack));
+			codes << 217 << 133;
+			codes += (int)offset2;
+			codes << 217 << 157;
+			codes += (int)offset;
+		}
+		else if (op == R("jmp_address")) {
+			if (arg_size != 0) {
+				error(R("参数个数不符"));
+				continue;
+			}
+			codes << 201 << 255 << 224;
+		}
+		else {
+			error(R("未知指令:") + lines[i]);
+			continue;
+		}
+	}
+	ErrorType = R("Redirect");
+	addBuiltInFunction(R("[System]string"), redirections_label);
+	addBuiltInFunction(R("[System]global"), redirections_label);
+	addBuiltInFunction(R("[System]random"), redirections_label);
+	for (auto& x : builtInFunction) {
+		addBuiltInFunction(R("[Label]") + x, redirections_label);
+	}
+	size_t size = redirections.size();
+	std::vector<bool> used; used.resize(size);
+	std::vector<bool> used2; used2.resize(redirections_label.size(), true);
+	for (size_t i = 0; i < redirections_label.size(); i++) {
+		for (size_t j = 0; j < size; j++) {
+			if (used[j]) continue;
+			if (redirections_label[i].name == redirections[j].name) {
+				used[j] = true;
+				used2[i] = false;
+				ByteArray<unsigned char> tmp{};
+				tmp += int(redirections_label[i].ip - redirections[i].ip);
+				codes.Replace(redirections[j].ip - 3, tmp, sizeof(int));
+			}
+		}
+	}
+	for (size_t i = 0; i < size; i++) {
+		if (used[i]) {
+			error(R("未知标签:") + redirections[i].name + R(" ip:") + to_lstring(redirections[i].ip));
+		}
+	}
+	for (size_t i = 0; i < redirections_label.size(); i++) {
+		if (used2[i]) {
+			error(R("未被链接的标签:") + redirections_label[i].name + R(" ip:") + to_lstring(redirections_label[i].ip));
 		}
 	}
 

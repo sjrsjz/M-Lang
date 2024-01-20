@@ -109,7 +109,7 @@ analyzed_function AST::analyzeFunction(functionSet& functionSet_, function& func
 		
 		//print AST
 		// 
-		//outputNodes(EX, 0);
+		outputNodes(EX, 0);
 
 		func0.codes.push_back(EX);
 		i++;

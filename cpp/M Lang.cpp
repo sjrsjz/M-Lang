@@ -5,6 +5,12 @@
 #include "../header/AST.h"
 #include "../header/Lexer.h"
 #include "../header/IRGenerator.h"
+
+#ifdef WIN32
+#include "../header/x86.h"
+#endif // WIN32
+
+
 using namespace MLang;
 
 void NewType(std::vector<structure>& structure_, lstring name, bool publiced, size_t size) {
@@ -215,5 +221,10 @@ Main{
     if (!ir.analyze(ast.libs, ast.globalVars, ast.analyzed_functionSets, ast.sets, ast.structures, ast.ExtraFunctions, ast.constants)) {
         std_lcout << ir.IR << std::endl;
     }
+#ifdef WIN32
+    x86Generator x86{};
+    x86.generate(ir.IR);
+
+#endif // WIN32
 
 }

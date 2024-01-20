@@ -134,9 +134,9 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 							argSize_T = R(" %") + to_lstring(argSize_ID);
 						}
 						if (ifNotRef(func0.ret))
-							ins(R("Call ") + tk2 + R(" #label_function_") + tk1 + R(" null % ") + to_lstring(id1) + argSize_T + R(" % ") + to_lstring(A.id) + R(" % ") + to_lstring(C.id));
+							ins(R("Call") + tk2 + R(" #label_function_") + tk1 + R(" null %") + to_lstring(id1) + argSize_T + R(" %") + to_lstring(A.id) + R(" % ") + to_lstring(C.id));
 						else {
-							ins(R("CallA ") + tk2 + R(" #label_function_") + tk1 + R(" null &%") + to_lstring(id1) + argSize_T + R(" %") + to_lstring(A.id) + R(" %") + to_lstring(C.id));
+							ins(R("CallA") + tk2 + R(" #label_function_") + tk1 + R(" null &%") + to_lstring(id1) + argSize_T + R(" %") + to_lstring(A.id) + R(" %") + to_lstring(C.id));
 							size_t id2 = allocTmpID(Type_N);
 							ins(R("address %") + to_lstring(id2) + R(" &%") + to_lstring(id1));
 							ret.id = id2;
@@ -193,9 +193,9 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 							argSize_T = R(" %") + to_lstring(argSize_ID);
 						}
 						if (ifNotRef(func0.ret))
-							ins(R("Call ") + tk2 + R(" #label_function_") + tk1 + R(" null % ") + to_lstring(id1) + argSize_T + R(" % ") + to_lstring(A.id) + R(" % ") + to_lstring(C.id));
+							ins(R("Call") + tk2 + R(" #label_function_") + tk1 + R(" null %") + to_lstring(id1) + argSize_T + R(" %") + to_lstring(A.id) + R(" % ") + to_lstring(C.id));
 						else {
-							ins(R("CallA ") + tk2 + R(" #label_function_") + tk1 + R(" null &%") + to_lstring(id1) + argSize_T + R(" %") + to_lstring(A.id) + R(" %") + to_lstring(C.id));
+							ins(R("CallA") + tk2 + R(" #label_function_") + tk1 + R(" null &%") + to_lstring(id1) + argSize_T + R(" %") + to_lstring(A.id) + R(" %") + to_lstring(C.id));
 							size_t id2 = allocTmpID(Type_N);
 							ins(R("address %") + to_lstring(id2) + R(" &%") + to_lstring(id1));
 							ret.id = id2;
@@ -268,9 +268,9 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 							argSize_T = R(" %") + to_lstring(argSize_ID);
 						}
 						if (ifNotRef(func0.ret))
-							ins(R("Call ") + tk2 + R(" #label_function_") + tk1 + R(" null % ") + to_lstring(id1) + argSize_T + R(" % ") + to_lstring(A.id) + R(" % ") + to_lstring(C.id));
+							ins(R("Call") + tk2 + R(" #label_function_") + tk1 + R(" null %") + to_lstring(id1) + argSize_T + R(" %") + to_lstring(A.id) + R(" % ") + to_lstring(C.id));
 						else {
-							ins(R("CallA ") + tk2 + R(" #label_function_") + tk1 + R(" null &%") + to_lstring(id1) + argSize_T + R(" %") + to_lstring(A.id) + R(" %") + to_lstring(C.id));
+							ins(R("CallA") + tk2 + R(" #label_function_") + tk1 + R(" null &%") + to_lstring(id1) + argSize_T + R(" %") + to_lstring(A.id) + R(" %") + to_lstring(C.id));
 							size_t id2 = allocTmpID(Type_N);
 							ins(R("address %") + to_lstring(id2) + R(" &%") + to_lstring(id1));
 							ret.id = id2;
@@ -429,7 +429,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 		lstring arg_T{};
 		if (ifMethod(tk)) {
 			size_t id1 = allocTmpID(Type_N);
-			ins(R("address &") + to_lstring(id1) + R(" !") + to_lstring(getVarOffset(functionSet, func, R("Local") + DIVISION + R("[this]"))));
+			ins(R("address %") + to_lstring(id1) + R(" !") + to_lstring(getVarOffset(functionSet, func, R("Local") + DIVISION + R("[this]"))));
 			ins(R("load %") + to_lstring(id1) + R(" %") + to_lstring(id1) + R(" ") + to_lstring(getStructureSize(R("N"))));
 			arg_T = R(" %") + to_lstring(id1);
 		}
@@ -459,11 +459,11 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 			argSize_T = R(" %") + to_lstring(argSize_ID);
 		}
 		if (ifNotRef(ret)) {
-			ins(R("Call ") + tk2 + R(" #label_function_") + tk + R(" null % ") + to_lstring(ret.id) + argSize_T + arg_T);
+			ins(R("Call") + tk2 + R(" #label_function_") + tk + R(" null %") + to_lstring(ret.id) + argSize_T + arg_T);
 		}
 		else
 		{
-			ins(R("CallA ") + tk2 + R(" #label_function_") + tk + R(" null &%") + to_lstring(ret.id) + argSize_T + arg_T);
+			ins(R("CallA") + tk2 + R(" #label_function_") + tk + R(" null &%") + to_lstring(ret.id) + argSize_T + arg_T);
 			size_t id1 = allocTmpID(Type_N);
 			ins(R("address %") + to_lstring(id1) + R(" &%") + to_lstring(ret.id));
 			ret.id = id1;
@@ -510,10 +510,10 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 			argSize_T = R(" %") + to_lstring(argSize_ID);
 		}
 		if (ifNotRef(ret)) {
-			ins(R("Call ") + tk2 + R(" #label_function_") + tk1 + R(" % ") + to_lstring(ret.id) + R(" %") + to_lstring(A.id) + argSize_T + arg_T);
+			ins(R("Call") + tk2 + R(" #label_function_") + tk1 + R(" %") + to_lstring(ret.id) + R(" %") + to_lstring(A.id) + argSize_T + arg_T);
 		}
 		else {
-			ins(R("CallA ") + tk2 + R(" #label_function_") + tk1 + R(" &%") + to_lstring(ret.id) + R(" %") + to_lstring(A.id) + argSize_T + arg_T);
+			ins(R("CallA") + tk2 + R(" #label_function_") + tk1 + R(" & %") + to_lstring(ret.id) + R(" % ") + to_lstring(A.id) + argSize_T + arg_T);
 			size_t id1 = allocTmpID(Type_N);
 			ins(R("address %") + to_lstring(id1) + R(" &%") + to_lstring(ret.id));
 			ret.id = id1;
@@ -592,7 +592,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 				error(R("未声明传入参数个数"));
 			}
 			if (ifNotRef(ret)) {
-				ins(R("Call_cdecl #label_function_") + tk1 + R(" null % ") + to_lstring(ret.id) + R(" %") + to_lstring(C.id) + arg_T);
+				ins(R("Call_cdecl #label_function_") + tk1 + R(" null %") + to_lstring(ret.id) + R(" %") + to_lstring(C.id) + arg_T);
 			}
 			else {
 				ins(R("CallA_cdecl #label_function_") + tk1 + R(" null &%") + to_lstring(ret.id) + R(" %") + to_lstring(C.id) + arg_T);
@@ -1177,7 +1177,7 @@ bool IRGenerator::generateImplictConversion(type& A, type& B, analyzed_functionS
 		&& A.typeName == B.typeName 
 		&& A.array && B.array && cmpDim(A.dim, B.dim)
 		|| !A.array && !B.array) {
-		A.address = B.address;
+		A.id = B.id;
 		return true;
 	}
 	if (A.array || B.array) {

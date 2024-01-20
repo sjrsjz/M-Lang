@@ -84,7 +84,7 @@ namespace MLang {
         }
         ByteArray& operator <<(unsigned char t) {
             push_back(t);
-            return &(*this);
+            return *this;
         }
         template<typename T> T& Get(size_t index) {
             return *((T*)((size_t)ptr + index));
@@ -104,11 +104,24 @@ namespace MLang {
             return t;
         }
         ByteArray Replace(size_t offset, const ByteArray& o, std::optional<size_t> length) {
-            size_t length0 = length.has_value() ? min_(o.size, length.value()) : o.size;
-            ByteArray t(length + max_(0, offset + length0 - size));
-            if (ptr) memcpy(t.ptr, ptr, size);
-            if (o.ptr) memcpy(t.ptr + offset, o.ptr, length0);
-            return t;
+            if (length.has_value()) {
+                ByteArray t(size + o.size - length.value());
+                if (ptr) {
+					memcpy(t.ptr, ptr, offset);
+					memcpy(t.ptr + offset, o.ptr, o.size);
+					memcpy(t.ptr + offset + o.size, ptr + offset + length.value(), size - offset - length.value());
+				}
+				return t;
+			}
+			else {
+				ByteArray t(size + o.size);
+                if (ptr) {
+					memcpy(t.ptr, ptr, offset);
+					memcpy(t.ptr + offset, o.ptr, o.size);
+					memcpy(t.ptr + offset + o.size, ptr + offset + o.size, size - offset - o.size);
+				}
+				return t;
+            }
         }
         std::string ToString() {
             std::string t;
