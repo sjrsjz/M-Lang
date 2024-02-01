@@ -78,7 +78,7 @@ public:
         if (!c || !c->size()) return false;
         c->pointer = 0;
         c->located = false;
-        assert(c->pointer >= 0 && c->pointer < c->nodes.size());
+        assert(c->pointer >= 0 && c->pointer < (intptr_t)c->nodes.size());
         c->nodes[c->pointer].located = true;
         return true;
     }

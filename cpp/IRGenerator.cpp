@@ -616,7 +616,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 				ins(R("opN + %") + to_lstring(B.id) + R(" %") + to_lstring(B.id) + R(" %") + to_lstring(Ntype.id));
 				C.typeName = R("N");
 				C.id = allocTmpID(Type_N);
-				for (size_t i = args.size() - 2; i >= 0; i++) {
+				for (size_t i = args.size() - 2; i >= 0; i--) {
 					ins(R("num %") + to_lstring(C.id) + R(" ?uI") + to_lstring(ret.dim[i]));
 					generateImplictConversion(Ntype, args[i + 1], functionSet, func, EX);
 					ins(R("opN * %") + to_lstring(B.id) + R(" %") + to_lstring(B.id) + R(" %") + to_lstring(C.id));

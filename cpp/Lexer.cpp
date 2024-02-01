@@ -129,14 +129,14 @@ intptr_t Lexer::analyze_function(functionSet& set, lstring space, std::vector<ls
     func.call_type = R("stdcall");
     func.transit = false;
     func.use_arg_size = false;
-    for (int i = 0; i < head.size(); i++) {
+    for (size_t i = 0; i < head.size(); i++) {
         if (head[i] == R("Public")) func.publiced = true;
         else if (head[i] == R("Private")) func.publiced = false;
         else if (head[i] == R("cdecl")) func.call_type = R("cdecl");
         else if (head[i] == R("stdcall")) func.call_type = R("stdcall");
         else if (head[i] == R("Transit")) { 
             func.transit = true; 
-            if (i >= head.size() - 1) {
+            if ((intptr_t)i >= (intptr_t)head.size() - 1) {
                 error(tks, R("transit标识后必须具有用于传递this指针的参数名"), ip);
                 return -1;
             }
@@ -186,7 +186,7 @@ intptr_t Lexer::analyze_externedFunction(functionSet& set, lstring DLL, std::vec
 
     ip0 = final + 2;
     final = search(tks, R(":="), 0, ip0, 0);
-    if (final == -1 || final >= tks.size()) {
+    if (final == -1 || final >= (intptr_t)tks.size()) {
         error(tks, R("错误的外部函数定义"), ip0);
         return -1;
     }
@@ -202,7 +202,7 @@ intptr_t Lexer::analyze_externedFunction(functionSet& set, lstring DLL, std::vec
     func.call_type = R("stdcall");
     func.transit = false;
     func.use_arg_size = false;
-    for (int i = 0; i < head.size(); i++) {
+    for (size_t i = 0; i < head.size(); i++) {
         if (head[i] == R("Public")) func.publiced = true;
         else if (head[i] == R("Private")) func.publiced = false;
         else if (head[i] == R("cdecl")) func.call_type = R("cdecl");
@@ -238,7 +238,7 @@ bool Lexer::analyze_vars(std::vector<lstring> tks, type& var) {
         head = process_quotation_mark(tks[1]);
         offset = 3;
     }
-    if (iftk(tks, R(":"), offset + 2) && tks.size() >= offset + 3) {
+    if (iftk(tks, R(":"), offset + 2) && (intptr_t)tks.size() >= offset + 3) {
         var.typeName = process_quotation_mark(tks[offset]);
         var.name = process_quotation_mark(tks[offset + 2]);
         var.array = analyze_dims(tks, dim, offset + 4, final);
@@ -264,7 +264,7 @@ intptr_t Lexer::analyze_externedFunctionSet(std::vector<lstring> tks, size_t ip)
             return -1;
         }
         SubTokens(tks, tk1, ip + 4, final - 1);
-        while (ip1 <= tk1.size()) {
+        while (ip1 <= (intptr_t)tk1.size()) {
             ip0 = ip1;
             ip1 = analyze_externedFunction(ExternFunctions, Extra, tk1, ip1);
             if (ip0 > ip1) {
@@ -289,7 +289,7 @@ intptr_t Lexer::analyze_functionSet(std::vector<lstring> tks, size_t ip) {
         set.isClass = true;
         ip += 2;
     }
-    if (iftk(tks, R("<<"), ip + 1) && ip + 2 <= size) {
+    if (iftk(tks, R("<<"), ip + 1) && ip + 2 <= (size_t)size) {
         set.base = process_quotation_mark(tks[ip + 1]); ip += 2;
     }
     if (iftk(tks, R("{"), ip + 1)) {
@@ -399,13 +399,13 @@ extern void cut_tokens(lstring code,std::vector<lstring>& tks){
     while (i < tks.size())
     {
         i++;
-        if (tks.size() >= i + 2 && tks[i] == R(".") && (isNum(tks[i - 1]) || tks[i - 1] == R("-0"))) {
+        if (tks.size() >= (size_t)i + 2 && tks[i] == R(".") && (isNum(tks[i - 1]) || tks[i - 1] == R("-0"))) {
             tks[i - 1] += R(".") + tks[i + 1];
             tks.erase(tks.begin() + i);
             tks.erase(tks.begin() + i);
             continue;
         }
-        if (tks.size() >= i + 2 && tks[i] == R("-") && IsOperator(tks[i - 1], 1) && isNum(tks[i + 1])) {
+        if (tks.size() >= (size_t)i + 2 && tks[i] == R("-") && IsOperator(tks[i - 1], 1) && isNum(tks[i + 1])) {
             tks[i] = R("-") + tks[i + 1];
             tks.erase(tks.begin() + i + 1);
             continue;
@@ -474,7 +474,7 @@ void Lexer::preprocesser(std::vector<lstring>& tk) {
                 }
                 a = tk[i]; b = tk[i + 1];
                 size = tk.size();
-                for (int j = 0; j < size; j++) {
+                for (size_t j = 0; j < size; j++) {
                     if (tk[j].substr(0, 1) != R("\"") || tk[j].substr(tk.size() - 1, 1) != R("\"")){
                         tk[j] = subreplace(tk[j], a, b);
                     }
