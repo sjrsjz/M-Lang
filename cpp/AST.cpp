@@ -277,7 +277,7 @@ bool AST::analyze_2(functionSet& functionSet_, function& func, Tree<node>& EX, s
 		if (pos == 1) {
 			t1 = tk;
 			t1.erase(t1.begin());
-			t1.erase(t1.end() - 1);
+			t1.pop_back();
 			return analyzeExper(functionSet_, func, EX, t1);
 		}
 		if (pos == 2) {
@@ -287,7 +287,7 @@ bool AST::analyze_2(functionSet& functionSet_, function& func, Tree<node>& EX, s
 			EX.ToChildrenEnd();
 			t1 = tk;
 			t1.erase(t1.begin(), t1.begin() + 2);
-			t1.erase(t1.end() - 1);
+			t1.pop_back();
 			bool p1 = analyzeArg(functionSet_, func, EX, t1);
 			EX.parent();
 			return p1;
@@ -364,7 +364,7 @@ bool AST::analyze_2(functionSet& functionSet_, function& func, Tree<node>& EX, s
 		EX.ToChildrenEnd();
 		t1 = tk;
 		t1.erase(t1.begin(), t1.begin() + pos);
-		t1.erase(t1.end() - 1);
+		t1.pop_back();
 		p1 = analyzeExper(functionSet_, func, EX, t1) && p1;
 		if (p2) EX.parent();
 		EX.parent();
@@ -372,7 +372,7 @@ bool AST::analyze_2(functionSet& functionSet_, function& func, Tree<node>& EX, s
 	}
 	if (tk[tk.size() - 1] == R(".")) {
 		t1 = tk;
-		t1.erase(t1.end() - 1);
+		t1.pop_back();
 		return analyze_2(functionSet_, func, EX, t1);
 	}
 	return false;

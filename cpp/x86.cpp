@@ -78,6 +78,10 @@ void x86Generator::error(lstring err) {
 	std_lcout << ErrorType << R(" Error at line ") << ErrorLine << R(": ") << err << std::endl;
 
 }
+void x86Generator::warning(lstring warn) {
+	std_lcout << ErrorType << R(" Warning at line ") << ErrorLine << R(": ") << warn << std::endl;
+
+}
 size_t x86Generator::tmpSize(size_t id, const std::vector<size_t>& stack) {
 	if (id >= stack.size()) {
 		error(R("临时变量不存在"));
@@ -179,7 +183,7 @@ SectionManager x86Generator::generate(lstring IR) {
 				codes.selfInsert(clear_ip, tmp_codes);
 			}
 		}
-		else if (op == R("Local")) {
+		else if (op == R("local")) {
 			if (arg_size != 1) {
 				error(R("参数个数不符"));
 				continue;
@@ -295,7 +299,7 @@ SectionManager x86Generator::generate(lstring IR) {
 			codes << 233 << 0 << 0 << 0 << 0;
 			redirection tmp{};
 			tmp.ip = codes.size;
-			tmp.name = args[0].name;
+			tmp.name = R("[Label]") + args[0].name;
 			redirections.push_back(tmp);
 		}
 		else if (op == R("jz")) {
@@ -1126,11 +1130,11 @@ SectionManager x86Generator::generate(lstring IR) {
 			size_t size = st_size_t(args[0].name);
 			std::vector<lstring> tmp;
 			tmp.resize(max_(size, constStr.size()));
-			for (size_t i = 0; i < size; i++) {
+			for (size_t i = 0; i < constStr.size(); i++) {
 				tmp[i] = constStr[i];
 			}
 			std::swap(tmp, constStr);
-			*constStr.end() = base64_decode(args[1].name);
+			*(constStr.end()-1) = base64_decode(args[1].name);
 		}
 		else if (op == R("[GlobalSize]")) {
 			if (!arg_size) {
@@ -1319,6 +1323,52 @@ SectionManager x86Generator::generate(lstring IR) {
 			}
 			codes << 201 << 255 << 224;
 		}
+		else if (op == R("storeThis")) {
+			if (arg_size != 1) {
+				error(R("参数个数不符"));
+				continue;
+			}
+			if (args[0].typeName != R("local")) {
+				error(R("第一个参数必须提供局部变量"));
+				continue;
+			}
+			intptr_t offset = -st_intptr_t(args[0].name);
+			codes << 137 << 141;
+			codes += (int)offset;
+		}
+		else if(op == R("storeThisArg")) {
+			if (arg_size != 2) {
+				error(R("参数个数不符"));
+				continue;
+			}
+			if (args[0].typeName != R("local")) {
+				error(R("第一个参数必须提供局部变量"));
+				continue;
+			}
+			if (args[1].typeName != R("arg")) {
+				error(R("第二个参数必须提供参数"));
+				continue;
+			}
+			intptr_t offset = -st_intptr_t(args[0].name);
+			intptr_t offset2= st_intptr_t(args[1].name);
+			codes << 139 << 133;
+			codes += (int)offset;
+			codes << 137 << 133;
+			codes += (int)offset2;
+		}
+		else if (op == R("loadThisArg")) {
+			if (arg_size != 1) {
+				error(R("参数个数不符"));
+				continue;
+			}
+			if (args[0].typeName != R("local")) {
+				error(R("第一个参数必须提供局部变量"));
+				continue;
+			}
+			intptr_t offset = -st_intptr_t(args[0].name);
+			codes << 139 << 141;
+			codes += (int)offset;
+		}
 		else {
 			error(R("未知指令:") + lines[i]);
 			continue;
@@ -1332,7 +1382,7 @@ SectionManager x86Generator::generate(lstring IR) {
 		addBuiltInFunction(R("[Label]") + x, redirections_label);
 	}
 	size_t size = redirections.size();
-	std::vector<bool> used; used.resize(size);
+	std::vector<bool> used; used.resize(size, false);
 	std::vector<bool> used2; used2.resize(redirections_label.size(), true);
 	for (size_t i = 0; i < redirections_label.size(); i++) {
 		for (size_t j = 0; j < size; j++) {
@@ -1347,13 +1397,13 @@ SectionManager x86Generator::generate(lstring IR) {
 		}
 	}
 	for (size_t i = 0; i < size; i++) {
-		if (used[i]) {
+		if (!used[i]) {
 			error(R("未知标签:") + redirections[i].name + R(" ip:") + to_lstring(redirections[i].ip));
 		}
 	}
 	for (size_t i = 0; i < redirections_label.size(); i++) {
 		if (used2[i]) {
-			error(R("未被链接的标签:") + redirections_label[i].name + R(" ip:") + to_lstring(redirections_label[i].ip));
+			warning(R("未被链接的标签:") + redirections_label[i].name + R(" ip:") + to_lstring(redirections_label[i].ip));
 		}
 	}
 

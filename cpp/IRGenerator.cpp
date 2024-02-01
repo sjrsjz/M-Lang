@@ -65,7 +65,7 @@ void IRGenerator::generateFunction(analyzed_functionSet& functionSet, analyzed_f
 		error_line = i;
 		generateLine(functionSet, func, func.codes[i]);
 	}
-	ins(R("#label_function_End_local") + DIVISION + functionSet.name + DIVISION + func.name);
+	ins(R("#label_function_End_Local") + DIVISION + functionSet.name + DIVISION + func.name);
 	tmpStack.clear();
 	ins(R("tmpBegin"));
 	tmp = allocTmpID(Type_N);
@@ -732,7 +732,7 @@ size_t IRGenerator::allocStr(lstring text) {
 		if (strings[i] == text) return i;
 	}
 	strings.push_back(text);
-	ins(R("[string]") + to_lstring(strings.size()) + R(" ?T") + base64_encode(text));
+	ins(R("[string] ") + to_lstring(strings.size()) + R(" ?T") + base64_encode(text));
 	return strings.size();
 }
 type IRGenerator::getElement(analyzed_functionSet& functionSet, lstring struct_, lstring element) {
@@ -1743,7 +1743,7 @@ bool IRGenerator::analyze(
 	for (auto& x : constants) if (x.typeName == R("R")) constantData.Attach<double>(std::stod(x.data));
 	error_type = R("Struct");
 	countGlobalSize();
-	ins(R("[GlobalSize]") + to_lstring(GlobalSize));
+	ins(R("[GlobalSize] ") + to_lstring(GlobalSize));
 	ins(R(";Entry"));
 	ins(R("enter"));
 	ins(R("tmpBegin"));
@@ -1781,7 +1781,7 @@ bool IRGenerator::analyze(
 	for (auto& x : analyzed_functionSets) {
 		if (x.name == R("[System]")) {
 			for (auto& y : x.func) {
-				ins(R("[System]#label_function_Local") + DIVISION + R("[System]") + DIVISION + y.name);
+				ins(R("[System] #label_function_Local") + DIVISION + R("[System]") + DIVISION + y.name);
 			}
 			continue;
 		}

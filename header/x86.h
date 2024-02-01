@@ -18,6 +18,7 @@ namespace MLang {
 		void addBuiltInFunction(const lstring& name, std::vector<redirection>& redirections);
 		void ins(ByteArray<unsigned char> bytes);
 		void error(lstring err);
+		void warning(lstring warn);
 		size_t tmpSize(size_t id, const std::vector<size_t>& stack);
 		size_t tmpOffset(size_t id, const std::vector<size_t>& stack);
 	public:
