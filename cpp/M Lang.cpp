@@ -23,13 +23,14 @@ void NewType(std::vector<structure>& structure_, lstring name, bool publiced, si
     structure_.push_back(tmp);
 }
 void NewBuiltInFunction(functionSet& functionSet, const lstring name, const std::vector<type>& args, const type& ret) {
-    function func;
+    function func{};
     func.name = name;
     func.args = args;
     func.ret = ret;
     func.local.clear();
     func.codes.clear();
     func.publiced = true;
+    func.use_arg_size = false;
     functionSet.func.push_back(func);
 }
 extern void cut_tokens(lstring code, std::vector<lstring>& tks);
@@ -88,7 +89,7 @@ int main()
     lex.analyze(R(R"(
 Main{
 	main()->N:={
-		printN(1);
+		print(&"你好，世界！");
 	}
 }
 

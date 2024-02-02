@@ -209,7 +209,7 @@ intptr_t Lexer::analyze_externedFunction(functionSet& set, lstring DLL, std::vec
         else if (head[i] == R("cdecl")) func.call_type = R("cdecl");
         else if (head[i] == R("stdcall")) func.call_type = R("stdcall");
         else if (head[i] == R("Transit")) func.transit = true;
-        else if (head[i] == R("ArgSize")) func.use_arg_size = false;
+        else if (head[i] == R("ArgSize")) func.use_arg_size = true;
         else { error(tks, R("非法前缀:") + head[i], ip); return -1; }
     }
     set.func.push_back(func);

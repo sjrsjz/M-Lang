@@ -1175,8 +1175,8 @@ bool IRGenerator::generateImplictConversion(type& A, type& B, analyzed_functionS
 	}
 	if ((!ifBaseType(A) || A.address == B.address) 
 		&& A.typeName == B.typeName 
-		&& A.array && B.array && cmpDim(A.dim, B.dim)
-		|| !A.array && !B.array) {
+		&& (A.array && B.array && cmpDim(A.dim, B.dim)
+		|| !A.array && !B.array)) {
 		A.id = B.id;
 		return true;
 	}
@@ -1270,8 +1270,8 @@ bool IRGenerator::generateImplictConversion(type& A, type& B, analyzed_functionS
 		else if (B.typeName == R("R")) {
 			A.id = allocTmpID(A);
 			id = allocTmpID(Type_Z);
-			ins(R("B2Z %") + to_lstring(id) + R(" %") + to_lstring(B.id));
-			ins(R("Z2R %") + to_lstring(A.id) + R(" %") + to_lstring(id));
+			ins(R("R2Z %") + to_lstring(id) + R(" %") + to_lstring(B.id));
+			ins(R("Z2N %") + to_lstring(A.id) + R(" %") + to_lstring(id));
 		}
 		else if (B.typeName == R("Boolen")) {
 			A.id = allocTmpID(A);
@@ -1365,12 +1365,12 @@ type IRGenerator::maxPrecision(const type& A, const type& B) {
 }
 int IRGenerator::precisionLevel(const type& A) {
 	if (A.typeName == R("B")) {
+		return 0;
+	}
+	if (A.typeName == R("Z")) {
 		return 2;
 	}
-	if (A.typeName == R("B")) {
-		return 2;
-	}
-	if (A.typeName == R("B")) {
+	if (A.typeName == R("R")) {
 		return 5;
 	}
 	return 2;

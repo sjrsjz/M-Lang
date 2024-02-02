@@ -210,18 +210,14 @@ void x86Generator::generate(lstring IR) {
 				codes += (int)st_intptr_t(args[1].name);
 			}
 			else if (args[1].typeName == R("D")) {
-				union D2W {
-					double D;
-					int W1;
-					int W2;
-				}tmp;
-				tmp.D = std::stod(args[1].name);
+				
+				double D = std::stod(args[1].name);
 				codes << 199 << 133;
 				codes += (int)offset;
-				codes += (int)tmp.W1;
+				codes += *(int*)&D;
 				codes << 199 << 133;
 				codes += (int)offset + 4;
-				codes += (int)tmp.W2;
+				codes += *((int*)&D + 1);
 
 			}
 			else if (args[1].typeName == R("uI")) {
@@ -364,30 +360,30 @@ void x86Generator::generate(lstring IR) {
 			switch (size)
 			{
 			case 1:
-				codes << 141 << 133;
+				codes << 139 << 133;
 				codes += (int)offset2;
 				codes << 139 << 0;
 				codes << 136 << 133;
 				codes += (int)offset;
 				break;
 			case 2:
-				codes << 141 << 133;
+				codes << 139 << 133;
 				codes += (int)offset2;
 				codes << 139 << 0;
 				codes << 102 << 137 << 133;
 				codes += (int)offset;
 				break;
 			case 4:
-				codes << 141 << 133;
+				codes << 139 << 133;
 				codes += (int)offset2;
 				codes << 139 << 0;
 				codes << 137 << 133;
 				codes += (int)offset;
 				break;
 			case 8:
-				codes << 141 << 133;
+				codes << 139 << 133;
 				codes += (int)offset2;
-				codes << 139 << 0;
+				codes << 139 << 80 << 4 << 139 << 0;
 				codes << 137 << 133;
 				codes += (int)offset;
 				codes << 137 << 149;
@@ -606,7 +602,7 @@ void x86Generator::generate(lstring IR) {
 			codes << 137 << 133;
 			codes += (int)offset;
 		}
-		else if (op == R("opD")) {
+		else if (op == R("opR")) {
 			if (arg_size != 4) {
 				error(R("参数个数不符"));
 				continue;
@@ -869,7 +865,7 @@ void x86Generator::generate(lstring IR) {
 				continue;
 			}
 		}
-		else if (op == R("I2D")) {
+		else if (op == R("Z2R")) {
 			if (arg_size != 2) {
 				error(R("参数个数不符"));
 				continue;
@@ -885,7 +881,7 @@ void x86Generator::generate(lstring IR) {
 			codes << 221 << 157;
 			codes += (int)offset;
 		}
-		else if (op == R("D2I")) {
+		else if (op == R("R2Z")) {
 			if (arg_size != 2) {
 				error(R("参数个数不符"));
 				continue;
@@ -901,7 +897,7 @@ void x86Generator::generate(lstring IR) {
 			codes << 219 << 157;
 			codes += (int)offset;
 		}
-		else if (op == R("I2B")) {
+		else if (op == R("Z2B")) {
 			if (arg_size != 2) {
 				error(R("参数个数不符"));
 				continue;
@@ -917,7 +913,7 @@ void x86Generator::generate(lstring IR) {
 			codes << 136 << 133;
 			codes += (int)offset;
 		}
-		else if (op == R("B2I")) {
+		else if (op == R("B2Z")) {
 			if (arg_size != 2) {
 				error(R("参数个数不符"));
 				continue;
@@ -934,7 +930,7 @@ void x86Generator::generate(lstring IR) {
 			codes << 137 << 133;
 			codes += (int)offset;
 		}
-		else if (op == R("uI2I") || op == R("I2uI")) {
+		else if (op == R("N2Z") || op == R("Z2N")) {
 			if (arg_size != 2) {
 				error(R("参数个数不符"));
 				continue;
@@ -948,9 +944,6 @@ void x86Generator::generate(lstring IR) {
 			if (offset2 != offset) {
 				codes << 139 << 133;
 				codes += (int)offset2;
-			}
-			else
-			{
 				codes << 137 << 133;
 				codes += (int)offset;
 			}
@@ -1243,7 +1236,7 @@ void x86Generator::generate(lstring IR) {
 		else if (op == R("pause")) {
 			codes << 204;
 		}
-		else if (op == R("Boolen2I")) {
+		else if (op == R("Boolen2Z")) {
 			if (arg_size != 2) {
 				error(R("参数个数不符"));
 				continue;
@@ -1264,7 +1257,7 @@ void x86Generator::generate(lstring IR) {
 			codes += (int)offset;
 			codes << 0 << 0 << 0 << 0;
 		}
-		else if (op == R("I2Boolen")) {
+		else if (op == R("Z2Boolen")) {
 			if (arg_size != 2) {
 				error(R("参数个数不符"));
 				continue;
@@ -1286,7 +1279,7 @@ void x86Generator::generate(lstring IR) {
 			codes << 0 << 0 << 0 << 0;
 
 		}
-		else if (op == R("D2Boolen")) {
+		else if (op == R("R2Boolen")) {
 			if (arg_size != 2) {
 				error(R("参数个数不符"));
 				continue;
@@ -1302,7 +1295,7 @@ void x86Generator::generate(lstring IR) {
 			codes << 221 << 157;
 			codes += (int)offset;
 		}
-		else if (op == R("Boolen2D")) {
+		else if (op == R("Boolen2R")) {
 			if (arg_size != 2) {
 				error(R("参数个数不符"));
 				continue;
@@ -1493,8 +1486,8 @@ namespace MLang::x86Runner {
 
 
 	unsigned int __stdcall string(unsigned int id) {
-		if (id >= (int)strings.size()) return 0;
-		return (unsigned int)&strings[id];
+		if (!id || id > (int)strings.size()) return 0;
+		return (unsigned int)strings[id - 1].c_str();
 	}
 	unsigned int __stdcall global(int offset) {
 		return (unsigned int)GlobalAddress + offset;
@@ -1533,7 +1526,7 @@ namespace MLang::x86Runner {
 		free((void*)address);
 	}
 	void __stdcall print(unsigned int str) {
-		printf("%s", (char*)str);
+		 std_lcout << (lstring)(lchar*)str;
 	}
 	void __stdcall printR(double data) {
 		printf("%f", data);
