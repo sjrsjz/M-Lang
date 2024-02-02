@@ -15,7 +15,7 @@
 #define G_X64_ _WIN64
 #define G_UNICODE_ UNICODE
 
-#ifdef _WIN32 || _WIN64
+#if defined(_WIN32) || defined(_WIN64)
 #include <Windows.h>
 #endif // _WIN32 || _WIN64
 
@@ -61,13 +61,13 @@ namespace MLang {
 
         ByteArray(const ByteArray& o) {
             size = o.size;
-            ptr = new class_T[size];
+            ptr = (char*)new class_T[size];
             memcpy(ptr, o.ptr, size);
         }
         void operator =(const ByteArray& o) {
             Destroy();
             size = o.size;
-            ptr = new class_T[size];
+            ptr = (char*)new class_T[size];
             memcpy(ptr, o.ptr, size);
         }
         ByteArray(ByteArray&& o) noexcept {
@@ -89,7 +89,6 @@ namespace MLang {
         }
         ByteArray(const size_t length) {
             size = length;
-            assert((int)(size >= 0));
             ptr = new char[size];
         }
         ~ByteArray() {
@@ -108,7 +107,7 @@ namespace MLang {
             return t;
         }
         ByteArray Attach(const std::wstring& o) {
-            ByteArray t(size + o.length());
+            ByteArray t(size + o.size() * sizeof(wchar_t));
             if (ptr) memcpy(t.ptr, ptr, size);
             if (o.c_str()) memcpy((void*)((size_t)t.ptr + size), o.c_str(), o.size() * sizeof(wchar_t));
             return t;
@@ -205,6 +204,14 @@ namespace MLang {
             if (o.ptr) memcpy(t.ptr + offset, o.ptr, o.size);
             std::swap(*this, t);
             return true;
+        }
+        template<typename T>
+        ByteArray& operator = (const T& o) {
+            Destroy();
+			size = sizeof(T);
+			ptr = new char[size];
+			memcpy(ptr, &o, size);
+			return *this;
         }
     };
 }

@@ -25,16 +25,22 @@ namespace MLang {
 		void generate(lstring IR);
 	};
 	namespace x86Runner {
-		extern std::vector<lstring> strings{};
-		extern unsigned char* GlobalAddress;
-		extern int GlobalSize;
-		extern std::vector<void*> DLL_h{};
-		extern std::vector<lstring> sys_redirectTable{};
-		extern std::vector<void*> sys_redirect{};
+#ifdef INCPP
+		std::vector<lstring> strings{};
+		unsigned char* GlobalAddress;
+		void* ProgramAddress;
+		int GlobalSize;
+		std::vector<void*> lib_h{};
+		std::vector<lstring> sys_redirectTable{};
+		std::vector<void*> sys_redirect{};
+#endif // INCPP
+
+
 		void NewSysFunction();
 		void NewSysFunction(const lstring& name, void* func);
 		void LoadMEXE(const ByteArray<unsigned char>& mexe);
 		void Load(const ByteArray<unsigned char>& mexe, const std::vector<lstring>& constStr, const std::vector<redirection>& redirections, size_t GlobalSize_, const std::vector<lstring> apiTable);
 		void release();
+		void run();
 	}
 }

@@ -1,5 +1,8 @@
+#define INCPP
+#include "../header/Common.h"
 #include "../header/x86.h"
 #include "../header/base64.h"
+
 using namespace MLang;
 namespace MLang {
 	type analyzeArg(lstring tk) {
@@ -1419,7 +1422,9 @@ void x86Generator::addBuiltInFunction(const lstring& name, std::vector<redirecti
 	linkTable.push_back(tmp);
 	codes << 0 << 0 << 0 << 0 << 255 << 224;
 }
-
+void error(lstring err) {
+	std_lcout << err << std::endl;
+}
 namespace MLang::x86Runner {
 	void NewSysFunction() {
 		sys_redirectTable.clear();
@@ -1428,6 +1433,31 @@ namespace MLang::x86Runner {
 	void NewSysFunction(const lstring& name, void* func) {
 		sys_redirectTable.push_back(name);
 		sys_redirect.push_back(func);
+	}
+
+	void* LoadLibrary_(lstring lib) {
+		return (void*)LoadLibrary(lib.c_str());
+	}
+	void* InitApi(lstring lib, lstring api) {
+#ifdef G_UNICODE_
+		return (void*)GetProcAddress((HMODULE)GetModuleHandle(lib.c_str()), to_byte_string(api).c_str());
+#else
+		return (void*)GetProcAddress((HMODULE)GetModuleHandle(lib.c_str()), api.c_str());
+#endif // G_UNICODE_
+
+	}
+	void FreeLibrary_(void* lib) {
+		FreeLibrary((HMODULE)lib);
+	}
+
+	void release() {
+		delete[] GlobalAddress;
+		GlobalAddress = nullptr;
+		GlobalSize = 0;
+		delete ProgramAddress;
+		ProgramAddress = nullptr;
+
+		strings.clear();
 	}
 	void LoadMEXE(const ByteArray<unsigned char>& mexe) {
 		SectionManager sm{}, data{};
@@ -1457,15 +1487,7 @@ namespace MLang::x86Runner {
 			LinkFunction(code, sys_redirectTable[i], sys_redirect[i], redirections);
 		}
 	}
-	void Load(const ByteArray<unsigned char>& code, const std::vector<lstring>& constStr, const std::vector<redirection>& redirections, size_t GlobalSize_, const std::vector<lstring> apiTable) {
-		release();
-		GlobalSize = GlobalSize_;
-		GlobalAddress = new unsigned char[GlobalSize];
-		strings = constStr;
-		auto tcode = code;
-		LinkFunction(tcode, R("[System]string"), string, redirections);
 
-	}
 
 	unsigned int __stdcall string(unsigned int id) {
 		if (id >= (int)strings.size()) return 0;
@@ -1475,11 +1497,11 @@ namespace MLang::x86Runner {
 		return (unsigned int)GlobalAddress + offset;
 	}
 	unsigned int __stdcall input(unsigned int str, unsigned int size) {
-		scanf_s("%s", str, size);
+		scanf_s("%s", (char*)str, size);
 		return str;
 	}
 	float __stdcall CmpStr(unsigned int A, unsigned int B) {
-		return strcmp((char*)A, (char*)B);
+		return (float)strcmp((char*)A, (char*)B);
 	}
 	float __stdcall CmpMem(unsigned int A, unsigned int B, unsigned int size) {
 		for (unsigned int i = 0; i < size; i++) {
@@ -1506,5 +1528,99 @@ namespace MLang::x86Runner {
 	}
 	void __stdcall free_(unsigned int address) {
 		free((void*)address);
+	}
+	void __stdcall print(unsigned int str) {
+		printf("%s", (char*)str);
+	}
+	void __stdcall printR(double data) {
+		printf("%f", data);
+	}
+	void __stdcall printZ(int data) {
+		printf("%d", data);
+	}
+	void __stdcall printN(unsigned int data) {
+		printf("%u", data);
+	}
+	void __stdcall printB(unsigned int data) {
+		printf("%d",(unsigned int)data);
+	}
+	void __stdcall printBoolen(float data) {
+		if (data == 1.0) printf("true");
+		if (data == 0.0) printf("true");
+		else printf("unclear");
+	}
+	float __stdcall random() {
+		return (float)rand() / RAND_MAX;
+	}
+	void Load(const ByteArray<unsigned char>& code, const std::vector<lstring>& constStr, const std::vector<redirection>& redirections, size_t GlobalSize_, const std::vector<lstring> apiTable) {
+		release();
+		GlobalSize = GlobalSize_;
+		GlobalAddress = new unsigned char[GlobalSize];
+		strings = constStr;
+		auto tcode = code;
+		LinkFunction(tcode, R("[System]string"), string, redirections);
+		LinkFunction(tcode, R("[System]global"), global, redirections);
+		LinkFunction(tcode, R("[System]random"), random, redirections);
+
+		LinkFunction(tcode, R("[Local]label_function_Local$[System]$print"), print, redirections);
+		LinkFunction(tcode, R("[Local]label_function_Local$[System]$printN"), printN, redirections);
+		LinkFunction(tcode, R("[Local]label_function_Local$[System]$printZ"), printZ, redirections);
+		LinkFunction(tcode, R("[Local]label_function_Local$[System]$printR"), printR, redirections);
+		LinkFunction(tcode, R("[Local]label_function_Local$[System]$printB"), printB, redirections);
+		LinkFunction(tcode, R("[Local]label_function_Local$[System]$printBoolen"), printBoolen, redirections);
+
+		LinkFunction(tcode, R("[Local]label_function_Local$[System]$memcopy"), memcopy, redirections);
+		LinkFunction(tcode, R("[Local]label_function_Local$[System]$CmpStr"), CmpStr, redirections);
+		LinkFunction(tcode, R("[Local]label_function_Local$[System]$CmpMem"), CmpMem, redirections);
+		LinkFunction(tcode, R("[Local]label_function_Local$[System]$input"), input, redirections);
+		LinkFunction(tcode, R("[Local]label_function_Local$[System]$free"), free_, redirections);
+		LinkFunction(tcode, R("[Local]label_function_Local$[System]$new"), new_, redirections);
+		LinkFunction(tcode, R("[Local]label_function_Local$[System]$T2R"), T2R, redirections);
+		LinkFunction(tcode, R("[Local]label_function_Local$[System]$R2T"), R2T, redirections);
+
+		LinkSysFunction(tcode, redirections);
+
+		for (auto& x : apiTable) {
+			std::vector<lstring> tk = split(x, R(" "));
+			if (tk.size() != 2) {
+				error(R("API表错误"));
+				continue;
+			}
+			lstring lib = base64_decode(tk[0]);
+			lstring api = base64_decode(tk[1]);
+			void* addr = InitApi(lib, api);
+			if (!addr) {
+				void* handle = LoadLibrary_(lib);
+				if (!handle) {
+					error(R("无法加载库:") + lib);
+					continue;
+				}
+				lib_h.push_back(handle);
+				addr = InitApi(lib, api);
+			}
+			if (!addr) {
+				error(R("无法加载API:") + api);
+				continue;
+			}
+			LinkFunction(tcode, R("[API]") + x, addr, redirections);
+		}
+		ProgramAddress = new unsigned char[tcode.size];
+		memcpy(ProgramAddress, tcode.ptr, tcode.size);
+
+	}
+	void run() {
+		try {
+			__asm {
+				mov eax, ProgramAddress
+				call eax
+			}
+		}
+		catch (std::exception e) {
+#ifdef G_UNICODE_
+			error(to_wide_string((std::string)e.what()));
+#else
+			error((std::string)e.what());
+#endif // G_UNICODE_
+		}
 	}
 }

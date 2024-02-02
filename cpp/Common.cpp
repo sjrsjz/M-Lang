@@ -109,23 +109,6 @@ namespace MLang {
         return head;
     }
 
-    //convert string to wstring
-    inline std::wstring to_wide_string(const std::string& input)
-    {
-#pragma warning(suppress : 4996)
-        std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-#pragma warning(suppress : 4996)
-        return converter.from_bytes(input);
-    }
-
-    //convert wstring to string 
-    inline std::string to_byte_string(const std::wstring& input)
-    {
-#pragma warning(suppress : 4996)
-        std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-#pragma warning(suppress : 4996)
-        return converter.to_bytes(input);
-    }
     lstring readFileString(lstring path) {
         std::ifstream fin{};
         fin.open(path, std::ios::in);

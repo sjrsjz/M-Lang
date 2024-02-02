@@ -42,17 +42,17 @@ namespace MLang {
 		ByteArray tbin2;
 		size_t p{}, tlength{};
 		std::vector<size_t> pos;
-		tbin = tbin + names.size();
+		tbin += names.size();
 		for (int i = 0; i < names.size(); i++) {
-			tlength += sizeof(size_t) + names[i].size() + sizeof(lchar);
+			tlength += sizeof(size_t) + names[i].size() * sizeof(lchar) + sizeof(lchar);
 		}
 		for (int i = 0; i < names.size(); i++) {
-			tbin = tbin + (size_t)(p + tlength + sizeof(size_t) + sizeof(lchar));
-			tbin = tbin + names[i];
-			tbin = tbin + (lchar)0;
+			tbin += (size_t)(p + tlength + sizeof(size_t) + sizeof(lchar));
+			tbin += names[i];
+			tbin += (lchar)0;
 			p += sizeof(size_t) + bins[i].size;
-			tbin2 = tbin2 + bins[i].size;
-			tbin2 = tbin2 + bins[i];
+			tbin2 += bins[i].size;
+			tbin2 += bins[i];
 
 		}
 		return tbin + tbin2;
@@ -68,10 +68,10 @@ namespace MLang {
 			lstring t1;
 			size_t k = 0;
 			for (;pos + k < bin.size; k++) {
-				if (bin.Get<lchar>(pos + k) == 0) break;
+				if (bin.Get<lchar>(pos + k * sizeof(lchar)) == 0) break;
 			}
-			t1.resize(k, 0);
-			memcpy((void*)t1.c_str(),&(bin.Get<char>(pos)),k);
+			t1.resize(k * sizeof(lchar), 0);
+			memcpy((void*)t1.c_str(),&(bin.Get<char>(pos)),k * sizeof(lchar));
 			pos += sizeof(lchar) + k;
 			names.push_back(t1);
 			bins.push_back(bin.SubByteArray(tpos+sizeof(size_t),bin.Get<size_t>(tpos)));

@@ -18,6 +18,7 @@ bool Lexer::lexical_analyze(functionSet& set, lstring space, std::vector<lstring
         }
         if (ip0 == ip) ip++;
     }
+    return true;
 }
 intptr_t Lexer::analyze_struct(functionSet& set, lstring space, std::vector<lstring> tks, size_t ip) {
     if (ip + 3 >= tks.size()) return ip;

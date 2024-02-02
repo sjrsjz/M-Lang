@@ -57,10 +57,15 @@ bool IR2MEXE(const lstring& ir,ByteArray<unsigned char>& mexe) {
 		data.Ins(x, ByteArray(), {});
 	}
     sm.Ins(R("Strings"), data.build(), {});
+
     data.Clear();
     for (auto& x : x86.linkTable) {
-        data.Ins(x.name, ByteArray((int)x.ip), {});
+        ByteArray<unsigned char> tmp{};
+        tmp = (int)x.ip;
+        data.Ins(x.name, tmp, {});
     }
+    DebugOutput(data.build());
+    data.translate(data.build());
     sm.Ins(R("Redirect table"), data.build(), {});
     mexe = sm.build();
     return true;
@@ -183,10 +188,10 @@ Main{
     if (!ir.analyze(ast.libs, ast.globalVars, ast.analyzed_functionSets, ast.sets, ast.structures, ast.ExtraFunctions, ast.constants)) {
         std_lcout << ir.IR << std::endl;
     }
-#ifdef WIN32
-    x86Generator x86{};
-    x86.generate(ir.IR);
-
-#endif // WIN32
-
+    ByteArray<unsigned char> mexe;
+    bool err=IR2MEXE(ir.IR, mexe);
+#ifdef _WIN32
+    x86Runner::LoadMEXE(mexe);
+    x86Runner::run();
+#endif // _WIN32
 }
