@@ -1446,13 +1446,65 @@ namespace MLang::x86Runner {
 
 
 	}
+	void LinkFunction(ByteArray<unsigned char>& code, lstring name, void* address,const std::vector<redirection>& redirections) {
+		for (auto& x : redirections) {
+			if (x.name == name)
+				code = code.Replace(x.ip, ByteArray((int)address), 4);
+		}
+	}
+	void LinkSysFunction(ByteArray<unsigned char>& code,const std::vector<redirection>& redirections) {
+		for (size_t i = 0; i < sys_redirectTable.size(); i++) {
+			LinkFunction(code, sys_redirectTable[i], sys_redirect[i], redirections);
+		}
+	}
 	void Load(const ByteArray<unsigned char>& code, const std::vector<lstring>& constStr, const std::vector<redirection>& redirections, size_t GlobalSize_, const std::vector<lstring> apiTable) {
 		release();
 		GlobalSize = GlobalSize_;
 		GlobalAddress = new unsigned char[GlobalSize];
 		strings = constStr;
 		auto tcode = code;
-		
+		LinkFunction(tcode, R("[System]string"), string, redirections);
+
 	}
 
+	unsigned int __stdcall string(unsigned int id) {
+		if (id >= (int)strings.size()) return 0;
+		return (unsigned int)&strings[id];
+	}
+	unsigned int __stdcall global(int offset) {
+		return (unsigned int)GlobalAddress + offset;
+	}
+	unsigned int __stdcall input(unsigned int str, unsigned int size) {
+		scanf_s("%s", str, size);
+		return str;
+	}
+	float __stdcall CmpStr(unsigned int A, unsigned int B) {
+		return strcmp((char*)A, (char*)B);
+	}
+	float __stdcall CmpMem(unsigned int A, unsigned int B, unsigned int size) {
+		for (unsigned int i = 0; i < size; i++) {
+			if ((unsigned char*)(A + i) != (unsigned char*)(B + i)) return 0.0;
+		}
+		return 1.0;
+	}
+	unsigned int __stdcall memcopy(unsigned int from, unsigned int to, unsigned int size) {
+		memcpy((void*)from, (void*)to, size);
+		return from;
+	}
+	void __stdcall DebugOutput_(unsigned int str) {
+		DebugOutput((char*)str);
+	}
+	unsigned int __stdcall R2T(double data, unsigned int str) {
+		sprintf_s((char*)str, 256, "%f", data);
+		return str;
+	}
+	double __stdcall T2R(unsigned int str) {
+		return std::stod((char*)str);
+	}
+	unsigned int __stdcall new_(unsigned int size) {
+		return (unsigned int)malloc(size);
+	}
+	void __stdcall free_(unsigned int address) {
+		free((void*)address);
+	}
 }
