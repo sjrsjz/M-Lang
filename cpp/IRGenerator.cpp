@@ -1700,16 +1700,16 @@ bool IRGenerator::analyze(
 	Type_N.typeName = R("N");
 	Type_N.array = false;
 	Type_N.address = false;
-	Type_R.typeName = R("N");
+	Type_R.typeName = R("R");
 	Type_R.array = false;
 	Type_R.address = false;
-	Type_Z.typeName = R("N");
+	Type_Z.typeName = R("Z");
 	Type_Z.array = false;
 	Type_Z.address = false;
-	Type_B.typeName = R("N");
+	Type_B.typeName = R("B");
 	Type_B.array = false;
 	Type_B.address = false;
-	Type_Boolen.typeName = R("N");
+	Type_Boolen.typeName = R("Boolen");
 	Type_Boolen.array = false;
 	Type_Boolen.address = false;
 

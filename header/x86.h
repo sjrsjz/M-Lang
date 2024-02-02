@@ -30,6 +30,7 @@ namespace MLang {
 		unsigned char* GlobalAddress;
 		void* ProgramAddress;
 		int GlobalSize;
+		ByteArray<unsigned char> Program{};
 		std::vector<void*> lib_h{};
 		std::vector<lstring> sys_redirectTable{};
 		std::vector<void*> sys_redirect{};

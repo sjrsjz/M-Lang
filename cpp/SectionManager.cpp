@@ -30,10 +30,12 @@ namespace MLang {
 	}
 	ByteArray<>& SectionManager::Get(const lstring& name) {
 		for (int i = 0; i < names.size(); i++) {
+			//DebugOutput(names[i], name, names[i] == name);
 			if (names[i] == name) {
 				return bins[i];
 			}
 		}
+		abort();
 		ByteArray<> t = ByteArray(0);
 		return t;
 	}
@@ -63,18 +65,19 @@ namespace MLang {
 		names.clear();
 		bins.clear();
 		for (size_t j = 0; j < i; j++) {
-			size_t tpos = bin.Get<size_t>(pos) - sizeof(lchar);
-			pos += sizeof(size_t);
+			size_t tpos = bin.Get<size_t>(pos) -sizeof(lchar);
+  			pos += sizeof(size_t);
 			lstring t1;
 			size_t k = 0;
 			for (;pos + k < bin.size; k++) {
 				if (bin.Get<lchar>(pos + k * sizeof(lchar)) == 0) break;
 			}
-			t1.resize(k * sizeof(lchar), 0);
+			t1.resize(k, 0);
 			memcpy((void*)t1.c_str(),&(bin.Get<char>(pos)),k * sizeof(lchar));
-			pos += sizeof(lchar) + k;
+			pos += sizeof(lchar) + k * sizeof(lchar);
 			names.push_back(t1);
 			bins.push_back(bin.SubByteArray(tpos+sizeof(size_t),bin.Get<size_t>(tpos)));
+			DebugOutput(t1, bins.back().size);
 		}
 	}
 }

@@ -45,13 +45,15 @@ bool IR2MEXE(const lstring& ir,ByteArray<unsigned char>& mexe) {
 	mexe = x86.codes;
     SectionManager sm{};
     sm.Ins(R("Code"), mexe, {});
-    sm.Ins(R("Global size"), ByteArray((int)x86.globalSize), {});
+    ByteArray tbin{};
+    tbin = (unsigned int)x86.globalSize;
+    sm.Ins(R("Global size"), tbin, {});
     SectionManager data{};
     data.Clear();
     for (auto& x : x86.apiTable) {
         data.Ins(x, ByteArray(), {});
     }
-    sm.Ins(R("Api table"), data.build(), {});
+    sm.Ins(R("API table"), data.build(), {});
     data.Clear();
     for (auto& x : x86.constStr) {
 		data.Ins(x, ByteArray(), {});
@@ -62,10 +64,11 @@ bool IR2MEXE(const lstring& ir,ByteArray<unsigned char>& mexe) {
     for (auto& x : x86.linkTable) {
         ByteArray<unsigned char> tmp{};
         tmp = (int)x.ip;
+        DebugOutput(x.ip);
         data.Ins(x.name, tmp, {});
     }
     DebugOutput(data.build());
-    data.translate(data.build());
+    //data.translate(data.build());
     sm.Ins(R("Redirect table"), data.build(), {});
     mexe = sm.build();
     return true;
@@ -91,11 +94,11 @@ Main{
 
 )"));
 
-    NewType(lex.structures, R("N"), false, 8);
-    NewType(lex.structures, R("Z"), false, 4);
-    NewType(lex.structures, R("R"), false, 8);
-    NewType(lex.structures, R("B"), false, 1);
-    NewType(lex.structures, R("Boolen"), false, 4);
+    NewType(lex.structures, R("N"), false, sizeof(size_t));
+    NewType(lex.structures, R("Z"), false, sizeof(int));
+    NewType(lex.structures, R("R"), false, sizeof(double));
+    NewType(lex.structures, R("B"), false, sizeof(unsigned char));
+    NewType(lex.structures, R("Boolen"), false, sizeof(float));
 
     std::vector<type> args{};
     type ret{};

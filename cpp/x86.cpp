@@ -91,7 +91,7 @@ size_t x86Generator::tmpSize(size_t id, const std::vector<size_t>& stack) {
 		return 0;
 	}
 	else {
-		return stack[id];
+		return stack[id - 1];
 	}
 }
 size_t x86Generator::tmpOffset(size_t id,const std::vector<size_t>& stack) {
@@ -160,7 +160,7 @@ void x86Generator::generate(lstring IR) {
 			}
 			validCode = false;
 			std::swap(tmp_stack2, tmp_stack);
-			tmp_stack[st_size_t(args[0].name)] = st_size_t(args[1].name);
+			tmp_stack[st_size_t(args[0].name) - 1] = st_size_t(args[1].name);
 		}
 		else if (op == R("tmpBegin")) {
 			tmp_stack.clear();
@@ -1395,7 +1395,7 @@ void x86Generator::generate(lstring IR) {
 				used2[i] = false;
 				ByteArray<unsigned char> tmp{};
 				tmp += int(redirections_label[i].ip - redirections[j].ip);
-				codes.Replace(redirections[j].ip - 3, tmp, sizeof(int));
+				codes = codes.Replace(redirections[j].ip - 4, tmp, sizeof(int));
 			}
 		}
 	}
@@ -1417,7 +1417,7 @@ void x86Generator::addBuiltInFunction(const lstring& name, std::vector<redirecti
 	tmp.name = name;
 	redirections.push_back(tmp);
 	codes << 184;
-	tmp.ip = (int)name.size() + 1;
+	tmp.ip = (int)codes.size;
 	tmp.name = name;
 	linkTable.push_back(tmp);
 	codes << 0 << 0 << 0 << 0 << 255 << 224;
@@ -1454,7 +1454,7 @@ namespace MLang::x86Runner {
 		delete[] GlobalAddress;
 		GlobalAddress = nullptr;
 		GlobalSize = 0;
-		delete ProgramAddress;
+		VirtualFree(ProgramAddress,0, MEM_RELEASE);
 		ProgramAddress = nullptr;
 
 		strings.clear();
@@ -1468,18 +1468,21 @@ namespace MLang::x86Runner {
 		std::vector<lstring> constStr = data.names;
 		data.translate(sm.Get(R("Redirect table")));
 		std::vector<redirection> redirections{};
+		redirections.resize(data.names.size());
 		for (size_t i = 0; i < data.names.size(); i++)
 		{
 			redirections[i].name = data.names[i];
 			redirections[i].ip = data.bins[i].Get<int>(0);
 		}
-
-
+		Load(sm.Get(R("Code")), constStr, redirections, sm.Get(R("Global size")).Get<int>(0), apiTable);
 	}
 	void LinkFunction(ByteArray<unsigned char>& code, lstring name, void* address,const std::vector<redirection>& redirections) {
 		for (auto& x : redirections) {
-			if (x.name == name)
-				code = code.Replace(x.ip, ByteArray((int)address), 4);
+			if (x.name == name) {
+				ByteArray<unsigned char> tmp{};
+				tmp = (int)address;
+				code = code.Replace(x.ip, tmp, 4);
+			}
 		}
 	}
 	void LinkSysFunction(ByteArray<unsigned char>& code,const std::vector<redirection>& redirections) {
@@ -1558,25 +1561,26 @@ namespace MLang::x86Runner {
 		GlobalAddress = new unsigned char[GlobalSize];
 		strings = constStr;
 		auto tcode = code;
+		DebugOutput(tcode);
 		LinkFunction(tcode, R("[System]string"), string, redirections);
 		LinkFunction(tcode, R("[System]global"), global, redirections);
 		LinkFunction(tcode, R("[System]random"), random, redirections);
+		
+		LinkFunction(tcode, R("[Label]label_function_Local$[System]$print"), print, redirections);
+		LinkFunction(tcode, R("[Label]label_function_Local$[System]$printN"), printN, redirections);
+		LinkFunction(tcode, R("[Label]label_function_Local$[System]$printZ"), printZ, redirections);
+		LinkFunction(tcode, R("[Label]label_function_Local$[System]$printR"), printR, redirections);
+		LinkFunction(tcode, R("[Label]label_function_Local$[System]$printB"), printB, redirections);
+		LinkFunction(tcode, R("[Label]label_function_Local$[System]$printBoolen"), printBoolen, redirections);
 
-		LinkFunction(tcode, R("[Local]label_function_Local$[System]$print"), print, redirections);
-		LinkFunction(tcode, R("[Local]label_function_Local$[System]$printN"), printN, redirections);
-		LinkFunction(tcode, R("[Local]label_function_Local$[System]$printZ"), printZ, redirections);
-		LinkFunction(tcode, R("[Local]label_function_Local$[System]$printR"), printR, redirections);
-		LinkFunction(tcode, R("[Local]label_function_Local$[System]$printB"), printB, redirections);
-		LinkFunction(tcode, R("[Local]label_function_Local$[System]$printBoolen"), printBoolen, redirections);
-
-		LinkFunction(tcode, R("[Local]label_function_Local$[System]$memcopy"), memcopy, redirections);
-		LinkFunction(tcode, R("[Local]label_function_Local$[System]$CmpStr"), CmpStr, redirections);
-		LinkFunction(tcode, R("[Local]label_function_Local$[System]$CmpMem"), CmpMem, redirections);
-		LinkFunction(tcode, R("[Local]label_function_Local$[System]$input"), input, redirections);
-		LinkFunction(tcode, R("[Local]label_function_Local$[System]$free"), free_, redirections);
-		LinkFunction(tcode, R("[Local]label_function_Local$[System]$new"), new_, redirections);
-		LinkFunction(tcode, R("[Local]label_function_Local$[System]$T2R"), T2R, redirections);
-		LinkFunction(tcode, R("[Local]label_function_Local$[System]$R2T"), R2T, redirections);
+		LinkFunction(tcode, R("[Label]label_function_Local$[System]$memcopy"), memcopy, redirections);
+		LinkFunction(tcode, R("[Label]label_function_Local$[System]$CmpStr"), CmpStr, redirections);
+		LinkFunction(tcode, R("[Label]label_function_Local$[System]$CmpMem"), CmpMem, redirections);
+		LinkFunction(tcode, R("[Label]label_function_Local$[System]$input"), input, redirections);
+		LinkFunction(tcode, R("[Label]label_function_Local$[System]$free"), free_, redirections);
+		LinkFunction(tcode, R("[Label]label_function_Local$[System]$new"), new_, redirections);
+		LinkFunction(tcode, R("[Label]label_function_Local$[System]$T2R"), T2R, redirections);
+		LinkFunction(tcode, R("[Label]label_function_Local$[System]$R2T"), R2T, redirections);
 
 		LinkSysFunction(tcode, redirections);
 
@@ -1604,16 +1608,14 @@ namespace MLang::x86Runner {
 			}
 			LinkFunction(tcode, R("[API]") + x, addr, redirections);
 		}
-		ProgramAddress = new unsigned char[tcode.size];
+		ProgramAddress = VirtualAlloc(NULL, tcode.size, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 		memcpy(ProgramAddress, tcode.ptr, tcode.size);
-
+		DebugOutput(tcode, ProgramAddress);
 	}
 	void run() {
 		try {
-			__asm {
-				mov eax, ProgramAddress
-				call eax
-			}
+			void (__stdcall *func)() = (void(__stdcall *)())ProgramAddress;
+			func();
 		}
 		catch (std::exception e) {
 #ifdef G_UNICODE_
