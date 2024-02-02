@@ -1757,6 +1757,7 @@ bool IRGenerator::analyze(
 			j += x.size;
 		}
 	}
+	ins(R("Call #label_function_Local$Main$main null"));
 
 	ins(R("loadQ %") + to_lstring(tmp2));
 	ins(R("tmpEnd"));

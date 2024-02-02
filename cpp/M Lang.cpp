@@ -33,6 +33,40 @@ void NewBuiltInFunction(functionSet& functionSet, const lstring name, const std:
     functionSet.func.push_back(func);
 }
 extern void cut_tokens(lstring code, std::vector<lstring>& tks);
+
+bool IR2MEXE(const lstring& ir,ByteArray<unsigned char>& mexe) {
+#ifdef WIN32
+    x86Generator x86{};
+    x86.generate(ir);
+    if (x86.Error) {
+		std_lcout << x86.ErrorType << R(" at line ") << x86.ErrorLine << std::endl;
+		return false;
+	}
+	mexe = x86.codes;
+    SectionManager sm{};
+    sm.Ins(R("Code"), mexe, {});
+    sm.Ins(R("Global size"), ByteArray((int)x86.globalSize), {});
+    SectionManager data{};
+    data.Clear();
+    for (auto& x : x86.apiTable) {
+        data.Ins(x, ByteArray(), {});
+    }
+    sm.Ins(R("Api table"), data.build(), {});
+    data.Clear();
+    for (auto& x : x86.constStr) {
+		data.Ins(x, ByteArray(), {});
+	}
+    sm.Ins(R("Strings"), data.build(), {});
+    data.Clear();
+    for (auto& x : x86.linkTable) {
+        data.Ins(x.name, ByteArray((int)x.ip), {});
+    }
+    sm.Ins(R("Redirect table"), data.build(), {});
+    mexe = sm.build();
+    return true;
+#endif
+}
+
 int main()
 {
 
@@ -44,81 +78,9 @@ int main()
 #endif 
 
     lex.analyze(R(R"(
-
-Class:Array{
-	N:ptr;N:DimSize;N:DimPtr;N:typeSize;N:init;N:destroy;N:TotalSize;
-	_init_()->N:={
-		init=0;destroy=0;TotalSize=0;
-		DimSize=0;typeSize=0;DimPtr=0;ptr=0;
-	}.
-	_destroy_()->N:={
-		Destroy()
-	}
-	[Public]set_init_destroy(N:I,N:D)->N:={
-		init=I;destroy=D
-	}
-	[Public][cdecl][ArgSize]ReDim(N:ArgSize,N:size)->Boolen:={
-		Destroy();
-		typeSize=size;
-		DimPtr=new((ArgSize-1)*sizeof:N);
-		N:i=0;N:size0=1;
-		while(i<ArgSize-1){
-			N:dim=(&size+(i+1)*sizeof:N)->N;
-			(DimPtr+i*sizeof:N)->N=dim;
-			size0=size0*dim;
-			i=i+1;
-		};
-		TotalSize=size0;
-		ptr=new(size0*size);
-		i=0;
-		if(init!=0){
-			while(i<size0){
-				data_init(ptr+i*typeSize);i=i+1	
-			}
-		};
-		
-		return(true)
-	}
-	[Transit][ptr]data_init(N:ptr)->N:={return(init)}
-	[Transit][ptr]data_destroy(N:ptr)->N:={return(destroy)}
-	[Public][cdecl][ArgSize]"[]"(N:ArgSize)->N:={
-		N:i=0;N:offset=0;
-		while(i<ArgSize){
-			N:index=(&ArgSize+(i+1)*sizeof:N)->N;
-			offset=offset*(DimPtr+i*sizeof:N)->N+index;
-			i=i+1;
-		};printN(ptr);
-		return(ptr+offset*typeSize);
-	}
-	Destroy()->N:={
-		N:i=0;
-		if(init!=0){
-			while(i<TotalSize){
-				data_destroy(ptr+i*typeSize);i=i+1		
-			}
-		};
-		DimSize=0;typeSize=0;
-		if(DimPtr!=0){free(DimPtr)};
-		if(ptr!=0){free(ptr)};
-		DimPtr=0;ptr=0;
-	}
-}
-Class:A{
-	[Public]N:a;
-	[Public]_init_()->N:={
-		print(&"init ");printN(&this);a=0;
-	}
-	[Public]_destroy_()->N:={
-		print(&"destroy ");printN(&this);
-	}
-}
 Main{
-	
 	main()->N:={
-		Array:A.set_init_destroy(~A$_init_,~A$_destroy_);
-		A.ReDim(sizeof:A,2,3);print(&"mmmmmmmm");
-		A[1][2]->A.a=1;
-		printN(A[1][2]->A.a);
+		printN(1);
 	}
 }
 

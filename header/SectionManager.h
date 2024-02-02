@@ -3,9 +3,9 @@
 #include "ByteArray.h"
 namespace MLang {
 	class SectionManager {
+	public:
 		std::vector<lstring> names;
 		std::vector<ByteArray<>> bins;
-	public:
 		SectionManager();
 		~SectionManager();
 		void Clear();

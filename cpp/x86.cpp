@@ -102,8 +102,7 @@ size_t x86Generator::tmpOffset(size_t id,const std::vector<size_t>& stack) {
 	}
 	return ret;
 }
-SectionManager x86Generator::generate(lstring IR) {
-	SectionManager tmp{};
+void x86Generator::generate(lstring IR) {
 
 	constStr.clear();
 	constStr2.clear();
@@ -180,7 +179,7 @@ SectionManager x86Generator::generate(lstring IR) {
 				for (auto& x : redirections_label) {
 					if (x.ip >= clear_ip) x.ip += size;
 				}
-				codes.selfInsert(clear_ip, tmp_codes);
+				codes.selfInsert(clear_ip - 1, tmp_codes);
 			}
 		}
 		else if (op == R("local")) {
@@ -1373,6 +1372,7 @@ SectionManager x86Generator::generate(lstring IR) {
 			error(R("未知指令:") + lines[i]);
 			continue;
 		}
+		haveValidCode = validCode;
 	}
 	ErrorType = R("Redirect");
 	addBuiltInFunction(R("[System]string"), redirections_label);
@@ -1391,7 +1391,7 @@ SectionManager x86Generator::generate(lstring IR) {
 				used[j] = true;
 				used2[i] = false;
 				ByteArray<unsigned char> tmp{};
-				tmp += int(redirections_label[i].ip - redirections[i].ip);
+				tmp += int(redirections_label[i].ip - redirections[j].ip);
 				codes.Replace(redirections[j].ip - 3, tmp, sizeof(int));
 			}
 		}
@@ -1406,8 +1406,7 @@ SectionManager x86Generator::generate(lstring IR) {
 			warning(R("未被链接的标签:") + redirections_label[i].name + R(" ip:") + to_lstring(redirections_label[i].ip));
 		}
 	}
-
-	return tmp;
+	DebugOutput(codes);
 }
 void x86Generator::addBuiltInFunction(const lstring& name, std::vector<redirection>& redirections) {
 	redirection tmp{};
@@ -1419,4 +1418,41 @@ void x86Generator::addBuiltInFunction(const lstring& name, std::vector<redirecti
 	tmp.name = name;
 	linkTable.push_back(tmp);
 	codes << 0 << 0 << 0 << 0 << 255 << 224;
+}
+
+namespace MLang::x86Runner {
+	void NewSysFunction() {
+		sys_redirectTable.clear();
+		sys_redirect.clear();
+	}
+	void NewSysFunction(const lstring& name, void* func) {
+		sys_redirectTable.push_back(name);
+		sys_redirect.push_back(func);
+	}
+	void LoadMEXE(const ByteArray<unsigned char>& mexe) {
+		SectionManager sm{}, data{};
+		sm.translate(mexe);
+		data.translate(sm.Get(R("API table")));
+		std::vector<lstring> apiTable = data.names;
+		data.translate(sm.Get(R("Strings")));
+		std::vector<lstring> constStr = data.names;
+		data.translate(sm.Get(R("Redirect table")));
+		std::vector<redirection> redirections{};
+		for (size_t i = 0; i < data.names.size(); i++)
+		{
+			redirections[i].name = data.names[i];
+			redirections[i].ip = data.bins[i].Get<int>(0);
+		}
+
+
+	}
+	void Load(const ByteArray<unsigned char>& code, const std::vector<lstring>& constStr, const std::vector<redirection>& redirections, size_t GlobalSize_, const std::vector<lstring> apiTable) {
+		release();
+		GlobalSize = GlobalSize_;
+		GlobalAddress = new unsigned char[GlobalSize];
+		strings = constStr;
+		auto tcode = code;
+		
+	}
+
 }

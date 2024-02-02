@@ -1,4 +1,6 @@
 ﻿#pragma once
+#ifndef _COMMON_HEAD_
+#define _COMMON_HEAD_
 #include <iostream>
 #include <stdlib.h>
 #include <assert.h>
@@ -11,6 +13,11 @@
 
 #define G_X64_ _WIN64
 #define G_UNICODE_ UNICODE
+
+#if defined(_WIN32) || defined(_WIN64)
+#include <Windows.h>
+#endif // _WIN32 || _WIN64
+
 
 #ifdef G_UNICODE_
 typedef std::wstring lstring;
@@ -36,7 +43,9 @@ typedef std::stringstream lstringstream;
 #define st_size_t(x) std::stoul(x)
 #define st_intptr_t(x) std::stol(x)
 #endif // X64
+#endif // !_COMMON_HEAD_
 
+#include "ByteArray.h"
 
 #define foreach(x, y) for(auto y=x.begin();y<x.end();y++)
 
@@ -77,4 +86,50 @@ namespace MLang {
     lstring readFileString(lstring path);
     size_t DimSize(std::vector<size_t> dim);
     std::vector<lstring> split(lstring str, lstring str_0);
+    
+    template<typename T,typename... Types>
+    void DebugOutput(const T& data, const Types&... args) {
+#if defined(_WIN32) || defined(_WIN64)
+        lstringstream ss;
+        //ss << "Type:" << typeid(data).name();
+        if constexpr (std::is_same<decltype(data), const ByteArray<unsigned char>&>::value) {
+            ss << "size:" << data.size << "{";
+            for (size_t i = 0; i < data.size; i++) {
+                ss << (i ? R(", ") : R("")) << to_lstring((unsigned char)data.ptr[i]);
+            }
+            ss << "}";
+        }
+        else {
+            ss << data;
+        }
+        OutputDebugString(ss.str().c_str());
+        if constexpr (sizeof...(args)) {
+            OutputDebugString(R(" | "));
+            DebugOutput(args...);
+        }
+        else {
+            OutputDebugString(R("\n"));
+        }
+#else
+        lstringstream ss;
+        if constexpr (std::is_same<decltype(data), const ByteArray<unsigned char>&>::value) {
+            ss << "size:" << data.size << "{";
+            for (size_t i = 0; i < data.size; i++) {
+                ss << (i ? R(", ") : R("")) << to_lstring((unsigned char)data.ptr[i]);
+            }
+            ss << "}";
+        }
+        else {
+            ss << data;
+        }
+        std_lcout << ss.str();
+        if constexpr (sizeof...(args)) {
+			std::cout << " | ";
+			DebugOutput(args...);
+		}
+		else {
+			std::cout << std::endl;
+		}
+#endif
+    }
 }

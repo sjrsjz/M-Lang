@@ -1,7 +1,53 @@
 ﻿#pragma once
-#include "Common.h"
+//#include "Common.h"
+#ifndef _COMMON_HEAD_
+#define _COMMON_HEAD_
+#include <iostream>
+#include <stdlib.h>
+#include <assert.h>
+#include <string>
+#include <optional>
+#include <vector>
+#include <sstream>
+#include <fstream>
+#include <codecvt>
+
+#define G_X64_ _WIN64
+#define G_UNICODE_ UNICODE
+
+#ifdef _WIN32 || _WIN64
+#include <Windows.h>
+#endif // _WIN32 || _WIN64
+
+
+#ifdef G_UNICODE_
+typedef std::wstring lstring;
+typedef std::wstringstream lstringstream;
+typedef wchar_t lchar;
+#define R(x) L##x
+#define to_lstring(x) std::to_wstring(x)
+#define std_lcout std::wcout
+
+#else
+typedef std::string lstring;
+typedef char lchar;
+typedef std::stringstream lstringstream;
+#define R(x) x
+#define to_lstring(x) std::to_string(x)
+#define std_lcout std::cout
+#endif //
+
+#if G_X64_
+#define st_size_t(x) std::stoull(x)
+#define st_intptr_t(x) std::stoll(x)
+#else
+#define st_size_t(x) std::stoul(x)
+#define st_intptr_t(x) std::stol(x)
+#endif // X64
+#endif // !_COMMON_HEAD_
+
 namespace MLang {
-    template<typename class_T = char>
+    template<typename class_T = unsigned char>
     class ByteArray {
     private:
         void Destroy() {
@@ -154,7 +200,7 @@ namespace MLang {
             ByteArray t(size + o.size);
             if (ptr) {
                 memcpy(t.ptr, ptr, offset);
-                memcpy(t.ptr + o.size, ptr + offset, size - offset);
+                memcpy(t.ptr + o.size + offset, ptr + offset, size - offset);
             }
             if (o.ptr) memcpy(t.ptr + offset, o.ptr, o.size);
             std::swap(*this, t);
