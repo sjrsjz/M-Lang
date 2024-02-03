@@ -86,5 +86,6 @@ struct analyzed_functionSet {
 };
 struct redirection {
     size_t ip;
+    intptr_t line;
     lstring name;
 };

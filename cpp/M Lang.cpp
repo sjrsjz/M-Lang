@@ -40,7 +40,6 @@ bool IR2MEXE(const lstring& ir,ByteArray<unsigned char>& mexe) {
     x86Generator x86{};
     x86.generate(ir);
     if (x86.Error) {
-		std_lcout << x86.ErrorType << R(" at line ") << x86.ErrorLine << std::endl;
 		return false;
 	}
 	mexe = x86.codes;
@@ -78,7 +77,7 @@ bool IR2MEXE(const lstring& ir,ByteArray<unsigned char>& mexe) {
 
 int main()
 {
-
+    DebugOutput(base64_decode(base64_encode(R("我"))));
     Tree<int> t;
     Lexer lex{};
 
@@ -86,15 +85,23 @@ int main()
 	std::wcout.imbue(std::locale("zh_CN"));
 #endif 
 
-    lex.analyze(R(R"(
+    bool err = lex.analyze(R(R"(
 Main{
 	main()->N:={
-		print(&"你好，世界！");
+        N:i=0;
+        while(i<10){
+            printN(i);
+            print(&"
+");
+            //if(0.5){print(&"SS")}{print(&"BB")};
+			i=i+1;
+		};
+        return(0);
 	}
 }
 
 )"));
-
+    if (err) return 0;
     NewType(lex.structures, R("N"), false, sizeof(size_t));
     NewType(lex.structures, R("Z"), false, sizeof(int));
     NewType(lex.structures, R("R"), false, sizeof(double));
@@ -189,11 +196,11 @@ Main{
     ast.analyze(lex.importedLibs, lex.globals, lex.functionSets, lex.structures, lex.ExternFunctions, lex.constants);
 
 	IRGenerator ir{};
-    if (!ir.analyze(ast.libs, ast.globalVars, ast.analyzed_functionSets, ast.sets, ast.structures, ast.ExtraFunctions, ast.constants)) {
-        std_lcout << ir.IR << std::endl;
-    }
+    err = ir.analyze(ast.libs, ast.globalVars, ast.analyzed_functionSets, ast.sets, ast.structures, ast.ExtraFunctions, ast.constants);
+    if (err) return 0;
     ByteArray<unsigned char> mexe;
-    bool err=IR2MEXE(ir.IR, mexe);
+    err = !IR2MEXE(ir.IR, mexe);
+    if (err) return 0;
 #ifdef _WIN32
     x86Runner::LoadMEXE(mexe);
     x86Runner::run();

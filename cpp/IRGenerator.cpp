@@ -5,7 +5,7 @@ inline bool IRGenerator::ins(lstring tk) {
 }
 
 void IRGenerator::error(lstring err) {
-	std_lcout << RED << R("[错误]") << YELLOW << R("[中间代码生成]") << RESET << R("[程序集/类:") << error_functionSet << R("][函数/方法:") << error_function << R("][行:") << error_line + 1 << R("]") << err << std::endl;
+	std_lcout << RED << R("[错误]") << CYAN << R("[中间代码生成]") << R("[程序集/类:") << error_functionSet << R("][函数/方法:") << error_function << R("][行:") << error_line + 1 << R("]") << RESET << err << std::endl;
 	Error = true;
 }
 bool IRGenerator::getFunctionType(lstring fullName, lstring& type, lstring& super, lstring& name) {
@@ -889,13 +889,14 @@ label_handleBuiltInFunctions_1:
 			label++;
 			intptr_t label1 = label;
 			size_t id1{};
+			id1 = A.id;
 			if (A.address) {
 				id1 = allocTmpID(Type_Boolen);
 				ins(R("load %") + to_lstring(id1) + R(" %") + to_lstring(A.id) + R(" ") + to_lstring(getStructureSize(R("Boolen"))));
 				A.id = id1;
 			}
 			ins(R("jz %") + to_lstring(id1) + R(" #label_if_B_") + to_lstring(label1));
-			ins(R("#label_if_A_") + to_lstring(label1));
+			//ins(R("#label_if_A_") + to_lstring(label1));
 			if (EX.next()) {
 				compileTree(functionSet, func, EX, {});
 				ins(R("jmp #label_if_End_") + to_lstring(label1));
@@ -903,7 +904,7 @@ label_handleBuiltInFunctions_1:
 			ins(R("#label_if_B_") + to_lstring(label1));
 			if (EX.next()) {
 				compileTree(functionSet, func, EX, {});
-				ins(R("jmp #label_if_End_") + to_lstring(label1));
+				//ins(R("jmp #label_if_End_") + to_lstring(label1));
 			}
 			ins(R("#label_if_End_") + to_lstring(label1));
 			EX.parent();

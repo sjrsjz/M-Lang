@@ -78,15 +78,15 @@ void x86Generator::ins(ByteArray<unsigned char> bytes) {
 }
 void x86Generator::error(lstring err) {
 	Error = true;
-	std_lcout << ErrorType << R(" Error at line ") << ErrorLine << R(": ") << err << std::endl;
+	std_lcout << RED << R("[错误]") << CYAN << R("[") << ErrorType << R("]")  << (ErrorLine != -1 ? (R("[行:") + to_lstring(ErrorLine) + R("]")) : R("")) << RESET << err << std::endl;
 
 }
 void x86Generator::warning(lstring warn) {
-	std_lcout << ErrorType << R(" Warning at line ") << ErrorLine << R(": ") << warn << std::endl;
-
+	if (!enableWarings) return;
+	std_lcout << YELLOW << R("[警告]") << CYAN << R("[") << ErrorType << R("]")  << (ErrorLine != -1 ? (R("[行:") + to_lstring(ErrorLine) + R("]")) : R("")) << RESET << warn << std::endl;
 }
 size_t x86Generator::tmpSize(size_t id, const std::vector<size_t>& stack) {
-	if (id >= stack.size()) {
+	if (!id || id >= stack.size()) {
 		error(R("临时变量不存在"));
 		return 0;
 	}
@@ -112,7 +112,7 @@ void x86Generator::generate(lstring IR) {
 	linkTable.clear();
 	apiTable.clear();
 	builtInFunction.clear();
-	ErrorType = R("Translate_x86");
+	ErrorType = R("x86生成");
 	std::vector<lstring> lines = split(IR, R("\n"));
 	Error = false;
 	codes.~ByteArray();
@@ -253,6 +253,7 @@ void x86Generator::generate(lstring IR) {
 				redirection tmp{};
 				tmp.ip = codes.size;
 				tmp.name = R("[System]global");
+				tmp.line = i;
 				redirections.push_back(tmp);
 				codes << 137 << 133;
 				codes += (int)offset;
@@ -270,6 +271,7 @@ void x86Generator::generate(lstring IR) {
 				redirection tmp{};
 				tmp.ip = codes.size;
 				tmp.name = R("[System]string");
+				tmp.line = i;
 				redirections.push_back(tmp);
 				codes << 137 << 133;
 				codes += (int)offset;
@@ -298,6 +300,7 @@ void x86Generator::generate(lstring IR) {
 			redirection tmp{};
 			tmp.ip = codes.size;
 			tmp.name = R("[Label]") + args[0].name;
+			tmp.line = i;
 			redirections.push_back(tmp);
 		}
 		else if (op == R("jz")) {
@@ -320,6 +323,7 @@ void x86Generator::generate(lstring IR) {
 			redirection tmp{};
 			tmp.ip = codes.size;
 			tmp.name = R("[Label]") + args[1].name;
+			tmp.line = i;
 			redirections.push_back(tmp);
 
 			codes << 129 << 189;
@@ -327,6 +331,7 @@ void x86Generator::generate(lstring IR) {
 			codes << 0 << 0 << 128 << 63 << 116 << 26 << 232 << 0 << 0 << 0 << 0;
 			tmp.ip = codes.size;
 			tmp.name = R("[System]random");
+			tmp.line = i;
 			redirections.push_back(tmp);
 
 			codes << 80 << 217 << 133;
@@ -334,6 +339,7 @@ void x86Generator::generate(lstring IR) {
 			codes << 216 << 28 << 36 << 155 << 223 << 224 << 158 << 88 << 15 << 134 << 0 << 0 << 0 << 0;
 			tmp.ip = codes.size;
 			tmp.name = R("[Label]") + args[1].name;
+			tmp.line = i;
 			redirections.push_back(tmp);
 
 		}
@@ -558,6 +564,8 @@ void x86Generator::generate(lstring IR) {
 			intptr_t offset3 = -intptr_t(localSize + tmpOffset(st_size_t(args[3].name), tmp_stack));
 			codes << 139 << 133;
 			codes += (int)offset2;
+			codes << 139 << 157;
+			codes += (int)offset3;
 			if (tk[1] == R("+")) {
 				codes << 3 << 133;
 				codes += (int)offset3;
@@ -1008,6 +1016,7 @@ void x86Generator::generate(lstring IR) {
 			redirection tmp{};
 			tmp.ip = codes.size;
 			tmp.name = R("[Label]") + args[0].name;
+			tmp.line = i;
 			redirections.push_back(tmp);
 			if (op == R("Call_cdecl")) {
 				codes << 129 << 196;
@@ -1103,6 +1112,7 @@ void x86Generator::generate(lstring IR) {
 			redirection tmp{};
 			tmp.ip = codes.size;
 			tmp.name = R("[Label]") + args[0].name;
+			tmp.line = i;
 			redirections.push_back(tmp);
 			if (op == R("CallA_cdecl")) {
 				codes<< 129 << 196;
@@ -1227,6 +1237,7 @@ void x86Generator::generate(lstring IR) {
 				redirection tmp{};
 				tmp.ip = codes.size;
 				tmp.name = R("[Label]") + args[1].name;
+				tmp.line = i;
 				redirections.push_back(tmp);
 			}
 			intptr_t offset = -intptr_t(localSize + tmpOffset(st_size_t(args[0].name), tmp_stack));
@@ -1292,7 +1303,7 @@ void x86Generator::generate(lstring IR) {
 			intptr_t offset2 = -intptr_t(localSize + tmpOffset(st_size_t(args[1].name), tmp_stack));
 			codes << 221 << 133;
 			codes += (int)offset2;
-			codes << 221 << 157;
+			codes << 217 << 157;
 			codes += (int)offset;
 		}
 		else if (op == R("Boolen2R")) {
@@ -1308,7 +1319,7 @@ void x86Generator::generate(lstring IR) {
 			intptr_t offset2 = -intptr_t(localSize + tmpOffset(st_size_t(args[1].name), tmp_stack));
 			codes << 217 << 133;
 			codes += (int)offset2;
-			codes << 217 << 157;
+			codes << 221 << 157;
 			codes += (int)offset;
 		}
 		else if (op == R("jmp_address")) {
@@ -1370,7 +1381,7 @@ void x86Generator::generate(lstring IR) {
 		}
 		haveValidCode = validCode;
 	}
-	ErrorType = R("Redirect");
+	ErrorType = R("重定位");
 	addBuiltInFunction(R("[System]string"), redirections_label);
 	addBuiltInFunction(R("[System]global"), redirections_label);
 	addBuiltInFunction(R("[System]random"), redirections_label);
@@ -1394,11 +1405,13 @@ void x86Generator::generate(lstring IR) {
 	}
 	for (size_t i = 0; i < size; i++) {
 		if (!used[i]) {
+			ErrorLine = redirections[i].line;
 			error(R("未知标签:") + redirections[i].name + R(" ip:") + to_lstring(redirections[i].ip));
 		}
 	}
 	for (size_t i = 0; i < redirections_label.size(); i++) {
 		if (used2[i]) {
+			ErrorLine = redirections_label[i].line;
 			warning(R("未被链接的标签:") + redirections_label[i].name + R(" ip:") + to_lstring(redirections_label[i].ip));
 		}
 	}
@@ -1408,6 +1421,7 @@ void x86Generator::addBuiltInFunction(const lstring& name, std::vector<redirecti
 	redirection tmp{};
 	tmp.ip = codes.size;
 	tmp.name = name;
+	tmp.line = -1;
 	redirections.push_back(tmp);
 	codes << 184;
 	tmp.ip = (int)codes.size;
@@ -1541,8 +1555,12 @@ namespace MLang::x86Runner {
 		printf("%d",(unsigned int)data);
 	}
 	void __stdcall printBoolen(float data) {
-		if (data == 1.0) printf("true");
-		if (data == 0.0) printf("true");
+		if (data == 1.0) {
+			printf("true"); return; 
+		}
+		if (data == 0.0) {
+			printf("false"); return;
+		}
 		else printf("unclear");
 	}
 	float __stdcall random() {

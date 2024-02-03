@@ -109,7 +109,7 @@ analyzed_function AST::analyzeFunction(functionSet& functionSet_, function& func
 		
 		//print AST
 		// 
-		outputNodes(EX, 0);
+		//outputNodes(EX, 0);
 
 		func0.codes.push_back(EX);
 		i++;
@@ -556,7 +556,7 @@ lstring AST::getFunctionFullName(lstring name, functionSet functionSet_) {
 }
 
 void AST::error(lstring err) {
-	std_lcout << RED << R("[错误]") << YELLOW << R("[语法分析]") << RESET << R("[程序集/类:") << error_functionSet << R("][函数/方法:") << error_function << R("][行:") << error_line + 1 << R("]") << err << std::endl;
+	std_lcout << RED << R("[错误]") << CYAN << R("[语法分析]")  << R("[程序集/类:") << error_functionSet << R("][函数/方法:") << error_function << R("][行:") << error_line + 1 << R("]") << RESET << err << std::endl;
 	Error = true;
 }
 bool AST::analyze(

@@ -4,8 +4,8 @@ static const std::string base64_chars =
 "abcdefghijklmnopqrstuvwxyz"
 "0123456789+/";
 
-lstring base64_encode(const lstring& input) {
-    lstring encoded;
+std::string base64_encode(const std::string& input) {
+    std::string encoded;
     int i = 0;
     int j = 0;
     unsigned char char_array_3[3];
@@ -43,13 +43,13 @@ lstring base64_encode(const lstring& input) {
     return encoded;
 }
 
-lstring base64_decode(const lstring& input) {
+std::string base64_decode(const std::string& input) {
     int in_len = input.size();
     int i = 0;
     int j = 0;
     int in_ = 0;
     unsigned char char_array_4[4], char_array_3[3];
-    lstring decoded;
+    std::string decoded;
 
     while (in_len-- && (input[in_] != '=') && (is_base64(input[in_]))) {
         char_array_4[i++] = input[in_]; in_++;
@@ -85,4 +85,18 @@ lstring base64_decode(const lstring& input) {
 
 bool is_base64(lchar c) {
     return (isalnum(c) || (c == '+') || (c == '/'));
+}
+lstring base64_encode(const lstring& input) {
+#if G_UNICODE_
+	return MLang::to_wide_string(base64_encode(MLang::to_byte_string(input)));
+#else
+    return base64_encode(lstring);
+#endif
+}
+lstring base64_decode(const lstring& input) {
+#if G_UNICODE_
+    return MLang::to_wide_string(base64_decode(MLang::to_byte_string(input)));
+#else
+    return base64_decode(lstring);
+#endif
 }
