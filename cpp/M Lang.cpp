@@ -83,36 +83,59 @@ int main()
 #endif 
     bool err = lex.analyze(R(R"(
 
-Class:Array{
-	N:DimPtr;
-	_init_()->N:={
-        printN(&DimPtr);print(&"
-")
-	}
-	_destroy_()->N:={
-		Destroy()
-	}
 
-	[Public][cdecl][ArgSize]ReDim(N:ArgSize,N:size)->Boolen:={
-        printN(&DimPtr);print(&"
-");
-		Destroy();
-	}
-    [Public]A()->N:={
-        printN(&DimPtr);print(&"<-
-");
-        Destroy();
-	}
-	Destroy()->N:={
-        printN(&DimPtr);print(&"
-")
-    }
-}
+
 
 Main{
+A:={
+    N:a,N:b,N:c
+}
+    f()->A:={
+        A:tmp;tmp.a=666;tmp.b=666;tmp.c=666;
+        return(tmp)
+    }
 	main()->N:={
-		//Array:A.ReDim(sizeof:N,2,3);
-        Array:A.A();
+        N:a[3];
+        a[0]=0;
+		a[1]=0;
+		a[2]=0;
+        A:A;
+        A.a=100;
+        A.b=100;
+        A.c=100;
+        N:b[3];
+        b[0]=1;
+		b[1]=1;
+		b[2]=1;
+        A=f();
+		printN(A.a);
+        print(&"
+");
+		printN(A.b);
+		print(&"
+");
+		printN(A.c);
+		print(&"
+");
+		printN(a[0]);
+		print(&"
+");
+		printN(a[1]);
+		print(&"
+");
+        printN(a[2]);
+		print(&"
+");
+        printN(b[0]);
+		print(&"
+");
+        printN(b[1]);
+		print(&"
+");
+        printN(b[2]);
+		print(&"
+");
+
 	}
 }
 
@@ -218,12 +241,12 @@ Main{
 	IRGenerator ir{};
     err = ir.analyze(ast.libs, ast.globalVars, ast.analyzed_functionSets, ast.sets, ast.structures, ast.ExtraFunctions, ast.constants);
     if (err) return 0;
+    std_lcout << ir.IR;
     ByteArray<unsigned char> mexe;
     err = !IR2MEXE(ir.IR, mexe);
     if (err) return 0;
 #ifdef _WIN32
     x86Runner::LoadMEXE(mexe);
-    std_lcout << ir.IR;
     x86Runner::run();
 #endif // _WIN32
 }

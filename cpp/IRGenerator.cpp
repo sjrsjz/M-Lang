@@ -150,7 +150,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 			}
 			C = A;
 			ret = A;
-			if (A.address == B.address && A.typeName == B.typeName && (A.array && B.array && cmpDim(A.dim, B.dim) || !A.array && B.array)) {
+			if (A.address == B.address && A.typeName == B.typeName && (A.array && B.array && cmpDim(A.dim, B.dim) || !A.array && !B.array)) {
 				ins(R("mov %") + to_lstring(ret.id) + R(" %") + to_lstring(B.id) + R(" ") + to_lstring(size(B)));
 			}
 			else {
@@ -532,10 +532,10 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 			argSize_T = R(" %") + to_lstring(argSize_ID);
 		}
 		if (ifNotRef(ret)) {
-			ins(R("Call") + tk2 + R(" #label_function_") + tk1 + R(" %") + to_lstring(ret.id) + R(" %") + to_lstring(A.id) + argSize_T + arg_T);
+			ins(R("Call") + tk2 + R(" #label_function_") + tk1 + R(" %") + to_lstring(A.id) + R(" %") + to_lstring(ret.id) + argSize_T + arg_T);
 		}
 		else {
-			ins(R("CallA") + tk2 + R(" #label_function_") + tk1 + R(" & %") + to_lstring(ret.id) + R(" % ") + to_lstring(A.id) + argSize_T + arg_T);
+			ins(R("CallA") + tk2 + R(" #label_function_") + tk1 + R(" & %") + to_lstring(A.id) + R(" % ") + to_lstring(ret.id) + argSize_T + arg_T);
 			size_t id1 = allocTmpID(Type_N);
 			ins(R("address %") + to_lstring(id1) + R(" &%") + to_lstring(ret.id));
 			ret.id = id1;
@@ -588,8 +588,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 		std::vector<type> args{};
 		while (EX.next())
 		{
-			ret0 = compileTree(functionSet, func, EX, {});
-			args.push_back(ret0);
+			args.push_back(compileTree(functionSet, func, EX, {}));
 		}
 		lstring tk1 = R("Local") + DIVISION + C.typeName + DIVISION + R("[]");
 		lstring arg_T{};
@@ -638,7 +637,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 				ins(R("opN + %") + to_lstring(B.id) + R(" %") + to_lstring(B.id) + R(" %") + to_lstring(Ntype.id));
 				C.typeName = R("N");
 				C.id = allocTmpID(Type_N);
-				for (size_t i = args.size() - 2; i >= 0; i--) {
+				for (intptr_t i = args.size() - 2; i >= 0; i--) {
 					ins(R("num %") + to_lstring(C.id) + R(" ?uI") + to_lstring(ret.dim[i]));
 					generateImplictConversion(Ntype, args[i + 1], functionSet, func, EX);
 					ins(R("opN * %") + to_lstring(B.id) + R(" %") + to_lstring(B.id) + R(" %") + to_lstring(C.id));

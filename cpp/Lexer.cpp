@@ -24,7 +24,7 @@ bool Lexer::lexical_analyze(functionSet& set, lstring space, std::vector<lstring
 intptr_t Lexer::analyze_struct(functionSet& set, lstring space, std::vector<lstring> tks, size_t ip) {
     if (ip + 3 >= tks.size()) return ip;
     if (tks[ip] != R(":=") || tks[ip + 1] != R("{")) return ip;
-    lstring name = space == R("") ? tks[ip] : space + DIVISION + tks[ip];
+    lstring name = space == R("") ? tks[ip - 1] : space + DIVISION + tks[ip - 1];
     intptr_t final = search(tks, R("}"), 0, ip + 3, -1);
     if (final == -1) {
         error(tks, R("括号不匹配"), ip + 2);

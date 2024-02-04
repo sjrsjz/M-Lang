@@ -10,7 +10,7 @@ namespace MLang {
 		lstring right = tk.size()>=2?tk.substr(1, max_(tk.size() - 1, 0)):R("");
 		type ret{};
 		if (tk.substr(0, 2) == R("&%")) {
-			ret.typeName = R("&%");
+			ret.typeName = R("&tmp");
 			ret.name = tk.substr(2, tk.size() - 2);
 		}
 		else if (left == R("#")) {
@@ -536,11 +536,11 @@ void x86Generator::generate(lstring IR) {
 				continue;
 			}
 			size_t size = st_size_t(args[0].name);
-			codes << 201 << 194;
+			codes << 201 << 95 << 94 << 194;
 			codes += (short)size;
 		}
 		else if (op == R("enter")) {
-			codes << 85 << 137 << 229;
+			codes << 86 << 87 << 85 <<  137 << 229;
 		}
 		else if (op == R("opI")) {
 			if (arg_size != 4) {
@@ -1149,7 +1149,7 @@ void x86Generator::generate(lstring IR) {
 				error(R("第一个参数必须提供标签"));
 				continue;
 			}
-			for (size_t j = arg_size - 1; j >= 3; j--) {
+			for (size_t j = arg_size - 1; j >= 2; j--) {
 				size_t id = st_size_t(args[j].name);
 				if (args[j].typeName == R("&tmp")) {
 					size = tmpSize(id, tmp_stack);
