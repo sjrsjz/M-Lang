@@ -564,6 +564,89 @@ void x86Generator::generate(lstring IR) {
 			intptr_t offset3 = -intptr_t(localSize + tmpOffset(st_size_t(args[3].name), tmp_stack));
 			codes << 139 << 133;
 			codes += (int)offset2;
+			if (tk[1] == R("+")) {
+				codes << 3 << 133;
+				codes += (int)offset3;
+			}
+			else if (tk[1] == R("-")) {
+				codes << 43 << 133;
+				codes += (int)offset3;
+			}
+			else if (tk[1] == R("*")) {
+				codes << 247 << 173;
+				codes += (int)offset3;
+			}
+			else if (tk[1] == R("/") || tk[1] == R("\\")) {
+				codes << 153 << 247 << 189;
+				codes += (int)offset3;
+			}
+			else if (tk[1] == R(">")) {
+				codes << 139 << 157;
+				codes += (int)offset3;
+				codes << 57 << 216 << 184 << 0 << 0 << 128 << 63 << 127 << 2 << 49 << 192;
+			}
+			else if (tk[1] == R("<")) {
+				codes << 139 << 157;
+				codes += (int)offset3;
+				codes << 57 << 216 << 184 << 0 << 0 << 128 << 63 << 124 << 2 << 49 << 192;
+			}
+			else if (tk[1] == R(">=")) {
+				codes << 139 << 157;
+				codes += (int)offset3;
+				codes << 57 << 216 << 184 << 0 << 0 << 128 << 63 << 125 << 2 << 49 << 192;
+			}
+			else if (tk[1] == R("<=")) {
+				codes << 139 << 157;
+				codes += (int)offset3;
+				codes << 57 << 216 << 184 << 0 << 0 << 128 << 63 << 126 << 2 << 49 << 192;
+			}
+			else if (tk[1] == R("!=")) {
+				codes << 139 << 157;
+				codes += (int)offset3;
+				codes << 57 << 216 << 184 << 0 << 0 << 128 << 63 << 117 << 2 << 49 << 192;
+			}
+			else if (tk[1] == R("==")) {
+				codes << 139 << 157;
+				codes += (int)offset3;
+				codes << 57 << 216 << 184 << 0 << 0 << 128 << 63 << 116 << 2 << 49 << 192;
+			}
+			else if (tk[1] == R("%")) {
+				codes << 139 << 157;
+				codes += (int)offset3;
+				codes << 153 << 247 << 243 << 137 << 216;
+			}
+			else if (tk[1] == R("Minus")) {
+				codes << 247 << 216;
+			}
+			else {
+				error(R("不支持的运算符"));
+				continue;
+			}
+			codes << 137 << 133;
+			codes += (int)offset;
+		}
+		else if (op == R("opN")) {
+			if (arg_size != 4) {
+				error(R("参数个数不符"));
+				continue;
+			}
+			if (args[1].typeName != R("tmp")) {
+				error(R("第二个参数必须提供临时变量"));
+				continue;
+			}
+			if (args[2].typeName != R("tmp")) {
+				error(R("第三个参数必须提供临时变量"));
+				continue;
+			}
+			if (args[3].typeName != R("tmp")) {
+				error(R("第四个参数必须提供临时变量"));
+				continue;
+			}
+			intptr_t offset = -intptr_t(localSize + tmpOffset(st_size_t(args[1].name), tmp_stack));
+			intptr_t offset2 = -intptr_t(localSize + tmpOffset(st_size_t(args[2].name), tmp_stack));
+			intptr_t offset3 = -intptr_t(localSize + tmpOffset(st_size_t(args[3].name), tmp_stack));
+			codes << 139 << 133;
+			codes += (int)offset2;
 			codes << 139 << 157;
 			codes += (int)offset3;
 			if (tk[1] == R("+")) {
@@ -609,7 +692,7 @@ void x86Generator::generate(lstring IR) {
 			}
 			codes << 137 << 133;
 			codes += (int)offset;
-		}
+			}
 		else if (op == R("opR")) {
 			if (arg_size != 4) {
 				error(R("参数个数不符"));
@@ -1012,6 +1095,10 @@ void x86Generator::generate(lstring IR) {
 					}
 				}
 			}
+			if (args[1].name != R("null")) {
+				codes << 139 << 141;
+				codes += (int)-intptr_t(localSize + tmpOffset(st_size_t(args[1].name), tmp_stack));
+			}
 			codes << 232 << 0 << 0 << 0 << 0;
 			redirection tmp{};
 			tmp.ip = codes.size;
@@ -1022,8 +1109,8 @@ void x86Generator::generate(lstring IR) {
 				codes << 129 << 196;
 				codes += (int)size2;
 			}
-			else if (args[1].name != R("null")) {
-				size_t id = st_size_t(args[1].name);
+			else if (args[2].name != R("null")) {
+				size_t id = st_size_t(args[2].name);
 				size = tmpSize(id, tmp_stack);
 				intptr_t offset2 = -intptr_t(localSize + tmpOffset(id, tmp_stack));
 				switch (size)
@@ -1107,6 +1194,10 @@ void x86Generator::generate(lstring IR) {
 						break;
 					}
 				}
+			}
+			if (args[1].name != R("null")) {
+				codes << 139 << 141;
+				codes += (int)-intptr_t(localSize + tmpOffset(st_size_t(args[1].name), tmp_stack));
 			}
 			codes << 232 << 0 << 0 << 0 << 0;
 			redirection tmp{};
@@ -1415,7 +1506,6 @@ void x86Generator::generate(lstring IR) {
 			warning(R("未被链接的标签:") + redirections_label[i].name + R(" ip:") + to_lstring(redirections_label[i].ip));
 		}
 	}
-	DebugOutput(codes);
 }
 void x86Generator::addBuiltInFunction(const lstring& name, std::vector<redirection>& redirections) {
 	redirection tmp{};
@@ -1500,7 +1590,7 @@ namespace MLang::x86Runner {
 
 
 	unsigned int __stdcall string(unsigned int id) {
-		if (!id || id > (int)strings.size()) return 0;
+		if (!id || id > (int)strings.size()) { abort(); return 0; }
 		return (unsigned int)strings[id - 1].c_str();
 	}
 	unsigned int __stdcall global(int offset) {
@@ -1527,11 +1617,15 @@ namespace MLang::x86Runner {
 		DebugOutput((char*)str);
 	}
 	unsigned int __stdcall R2T(double data, unsigned int str) {
-		sprintf_s((char*)str, 256, "%f", data);
+#ifdef G_UNICODE_
+		swprintf_s((lchar*)str, 256, R("%lf"), data);
+#else
+		sprintf_s((lchar*)str, 256, R("%lf"), data);
+#endif // 
 		return str;
 	}
 	double __stdcall T2R(unsigned int str) {
-		return std::stod((char*)str);
+		return std::stod((lchar*)str);
 	}
 	unsigned int __stdcall new_(unsigned int size) {
 		return (unsigned int)malloc(size);
@@ -1539,8 +1633,11 @@ namespace MLang::x86Runner {
 	void __stdcall free_(unsigned int address) {
 		free((void*)address);
 	}
-	void __stdcall print(unsigned int str) {
-		 std_lcout << (lstring)(lchar*)str;
+	void __cdecl print(unsigned int str) {
+		for (size_t i = 1; i <= str; i++) {
+			lchar* t = (lchar*)*(&str + i);
+			std_lcout << (lchar*)*(&str + i);
+		}
 	}
 	void __stdcall printR(double data) {
 		printf("%f", data);
@@ -1564,19 +1661,47 @@ namespace MLang::x86Runner {
 		else printf("unclear");
 	}
 	float __stdcall random() {
-		return (float)rand() / RAND_MAX;
+		float a = (float)rand() / RAND_MAX;
+		__asm {
+			mov eax, dword ptr[a]
+			pop edi
+			pop esi
+			pop ebx
+			leave
+			ret
+		}
+		return 0;
 	}
+	double __stdcall random2() {
+		double a = (double)rand() / RAND_MAX;
+		__asm {
+			mov eax,dword ptr [a]
+			mov edx,dword ptr [a+4]
+			pop edi
+			pop esi
+			pop ebx
+			leave
+			ret
+		}
+		return 0;
+	}
+	void __stdcall srand_(unsigned int seed) {
+		return srand(seed);
+	}
+
+
 	void Load(const ByteArray<unsigned char>& code, const std::vector<lstring>& constStr, const std::vector<redirection>& redirections, size_t GlobalSize_, const std::vector<lstring> apiTable) {
 		release();
 		GlobalSize = GlobalSize_;
 		GlobalAddress = new unsigned char[GlobalSize];
 		strings = constStr;
 		auto tcode = code;
-		DebugOutput(tcode);
 		LinkFunction(tcode, R("[System]string"), string, redirections);
 		LinkFunction(tcode, R("[System]global"), global, redirections);
 		LinkFunction(tcode, R("[System]random"), random, redirections);
-		
+		LinkFunction(tcode, R("[Label]label_function_Local$[System]$rand"), random2, redirections);
+		LinkFunction(tcode, R("[Label]label_function_Local$[System]$srand"), srand_, redirections);
+
 		LinkFunction(tcode, R("[Label]label_function_Local$[System]$print"), print, redirections);
 		LinkFunction(tcode, R("[Label]label_function_Local$[System]$printN"), printN, redirections);
 		LinkFunction(tcode, R("[Label]label_function_Local$[System]$printZ"), printZ, redirections);
@@ -1624,6 +1749,7 @@ namespace MLang::x86Runner {
 		DebugOutput(tcode, ProgramAddress);
 	}
 	void run() {
+		srand(100);
 		try {
 			void (__stdcall *func)() = (void(__stdcall *)())ProgramAddress;
 			func();

@@ -6,7 +6,7 @@
 #include "../header/Lexer.h"
 #include "../header/IRGenerator.h"
 
-#ifdef WIN32
+#ifdef _WIN32
 #include "../header/x86.h"
 #endif // WIN32
 
@@ -22,7 +22,7 @@ void NewType(std::vector<structure>& structure_, lstring name, bool publiced, si
     tmp.size = size;
     structure_.push_back(tmp);
 }
-void NewBuiltInFunction(functionSet& functionSet, const lstring name, const std::vector<type>& args, const type& ret) {
+void NewBuiltInFunction(functionSet& functionSet, const lstring name, const std::vector<type>& args, const type& ret,bool cdecl_) {
     function func{};
     func.name = name;
     func.args = args;
@@ -30,13 +30,14 @@ void NewBuiltInFunction(functionSet& functionSet, const lstring name, const std:
     func.local.clear();
     func.codes.clear();
     func.publiced = true;
-    func.use_arg_size = false;
+    func.use_arg_size = cdecl_;
+    func.call_type = cdecl_ ? R("cdecl") : R("stdcall");
     functionSet.func.push_back(func);
 }
 extern void cut_tokens(lstring code, std::vector<lstring>& tks);
 
 bool IR2MEXE(const lstring& ir,ByteArray<unsigned char>& mexe) {
-#ifdef WIN32
+#ifdef _WIN32
     x86Generator x86{};
     x86.generate(ir);
     if (x86.Error) {
@@ -64,10 +65,8 @@ bool IR2MEXE(const lstring& ir,ByteArray<unsigned char>& mexe) {
     for (auto& x : x86.linkTable) {
         ByteArray<unsigned char> tmp{};
         tmp = (int)x.ip;
-        DebugOutput(x.ip);
         data.Ins(x.name, tmp, {});
     }
-    DebugOutput(data.build());
     //data.translate(data.build());
     sm.Ins(R("Redirect table"), data.build(), {});
     mexe = sm.build();
@@ -77,26 +76,43 @@ bool IR2MEXE(const lstring& ir,ByteArray<unsigned char>& mexe) {
 
 int main()
 {
-    DebugOutput(base64_decode(base64_encode(R("我"))));
-    Tree<int> t;
     Lexer lex{};
 
 #ifdef G_UNICODE_
 	std::wcout.imbue(std::locale("zh_CN"));
 #endif 
-
     bool err = lex.analyze(R(R"(
+
+Class:Array{
+	N:DimPtr;
+	_init_()->N:={
+        printN(&DimPtr);print(&"
+")
+	}
+	_destroy_()->N:={
+		Destroy()
+	}
+
+	[Public][cdecl][ArgSize]ReDim(N:ArgSize,N:size)->Boolen:={
+        printN(&DimPtr);print(&"
+");
+		Destroy();
+	}
+    [Public]A()->N:={
+        printN(&DimPtr);print(&"<-
+");
+        Destroy();
+	}
+	Destroy()->N:={
+        printN(&DimPtr);print(&"
+")
+    }
+}
+
 Main{
 	main()->N:={
-        N:i=0;
-        while(i<10){
-            printN(i);
-            print(&"
-");
-            //if(0.5){print(&"SS")}{print(&"BB")};
-			i=i+1;
-		};
-        return(0);
+		//Array:A.ReDim(sizeof:N,2,3);
+        Array:A.A();
 	}
 }
 
@@ -112,71 +128,75 @@ Main{
     type ret{};
     functionSet builtIn{};
     ret.typeName = R("N");
-    NewBuiltInFunction(builtIn, R("break"), args, ret);
-    NewBuiltInFunction(builtIn, R("continue"), args, ret);
-    NewBuiltInFunction(builtIn, R("Pause"), args, ret);
-    NewBuiltInFunction(builtIn, R("_IR_"), args, ret);
+    NewBuiltInFunction(builtIn, R("break"), args, ret, false);
+    NewBuiltInFunction(builtIn, R("continue"), args, ret, false);
+    NewBuiltInFunction(builtIn, R("Pause"), args, ret, false);
+    NewBuiltInFunction(builtIn, R("_IR_"), args, ret, false);
+    ret.typeName = R("R");
+    NewBuiltInFunction(builtIn, R("rand"), args, ret, false);
 
+    ret.typeName = R("N");
     args.resize(1);
     args[0].typeName = R("Boolen");
-    NewBuiltInFunction(builtIn, R("if"), args, ret);
-    NewBuiltInFunction(builtIn, R("while"), args, ret);
-    NewBuiltInFunction(builtIn, R("do_while"), args, ret);
-    NewBuiltInFunction(builtIn, R("switch"), args, ret);
+    NewBuiltInFunction(builtIn, R("if"), args, ret, false);
+    NewBuiltInFunction(builtIn, R("while"), args, ret, false);
+    NewBuiltInFunction(builtIn, R("do_while"), args, ret, false);
+    NewBuiltInFunction(builtIn, R("switch"), args, ret, false);
     args[0].typeName = R("N");
-    NewBuiltInFunction(builtIn, R("return"), args, ret);
-    NewBuiltInFunction(builtIn, R("print"), args, ret);
-    NewBuiltInFunction(builtIn, R("printN"), args, ret);
-    NewBuiltInFunction(builtIn, R("new"), args, ret);
-    NewBuiltInFunction(builtIn, R("free"), args, ret);
-    NewBuiltInFunction(builtIn, R("DebugOutput"), args, ret);
-    NewBuiltInFunction(builtIn, R("ErrMark"), args, ret);
+    NewBuiltInFunction(builtIn, R("return"), args, ret, false);
+    NewBuiltInFunction(builtIn, R("print"), args, ret, true);
+    NewBuiltInFunction(builtIn, R("printN"), args, ret, false);
+    NewBuiltInFunction(builtIn, R("srand"), args, ret, false);
+    NewBuiltInFunction(builtIn, R("new"), args, ret, false);
+    NewBuiltInFunction(builtIn, R("free"), args, ret, false);
+    NewBuiltInFunction(builtIn, R("DebugOutput"), args, ret, false);
+    NewBuiltInFunction(builtIn, R("ErrMark"), args, ret, false);
 
     args[0].typeName = R("R");
-    NewBuiltInFunction(builtIn, R("printR"), args, ret);
+    NewBuiltInFunction(builtIn, R("printR"), args, ret, false);
     args[0].typeName = R("Z");
-    NewBuiltInFunction(builtIn, R("printZ"), args, ret);
+    NewBuiltInFunction(builtIn, R("printZ"), args, ret, false);
     args[0].typeName = R("B");
-    NewBuiltInFunction(builtIn, R("printB"), args, ret);
+    NewBuiltInFunction(builtIn, R("printB"), args, ret, false);
     args[0].typeName = R("Boolen");
-    NewBuiltInFunction(builtIn, R("printBoolen"), args, ret);
+    NewBuiltInFunction(builtIn, R("printBoolen"), args, ret, false);
 
     ret.typeName = R("R");
     args[0].typeName = R("N");
-    NewBuiltInFunction(builtIn, R("T2R"), args, ret);
+    NewBuiltInFunction(builtIn, R("T2R"), args, ret, false);
     ret.typeName = R("N");
-    NewBuiltInFunction(builtIn, R("N"), args, ret);
+    NewBuiltInFunction(builtIn, R("N"), args, ret, false);
     ret.typeName = R("R");
-    NewBuiltInFunction(builtIn, R("R"), args, ret);
+    NewBuiltInFunction(builtIn, R("R"), args, ret, false);
     ret.typeName = R("B");
-    NewBuiltInFunction(builtIn, R("B"), args, ret);
+    NewBuiltInFunction(builtIn, R("B"), args, ret, false);
     ret.typeName = R("Z");
-    NewBuiltInFunction(builtIn, R("Z"), args, ret);
+    NewBuiltInFunction(builtIn, R("Z"), args, ret, false);
     ret.typeName = R("Boolen");
-    NewBuiltInFunction(builtIn, R("Boolen"), args, ret);
+    NewBuiltInFunction(builtIn, R("Boolen"), args, ret, false);
 
     args.resize(2);
     args[0].typeName = R("N");
     args[1].typeName = R("N");
     ret.typeName = R("Boolen");
-    NewBuiltInFunction(builtIn, R("CmpStr"), args, ret);
+    NewBuiltInFunction(builtIn, R("CmpStr"), args, ret, false);
     args[0].typeName = R("R");
     args[1].typeName = R("N");
     ret.typeName = R("N");
-    NewBuiltInFunction(builtIn, R("R2T"), args, ret);
+    NewBuiltInFunction(builtIn, R("R2T"), args, ret, false);
     args[0].typeName = R("N");
     args[1].typeName = R("N");
     ret.typeName = R("N");
-    NewBuiltInFunction(builtIn, R("input"), args, ret);
+    NewBuiltInFunction(builtIn, R("input"), args, ret, false);
 
     args.resize(3);
     args[0].typeName = R("N");
     args[1].typeName = R("N");
     args[2].typeName = R("N");
     ret.typeName = R("N");
-    NewBuiltInFunction(builtIn, R("memcopy"), args, ret);
+    NewBuiltInFunction(builtIn, R("memcopy"), args, ret, false);
     ret.typeName = R("Boolen");
-    NewBuiltInFunction(builtIn, R("CmpMem"), args, ret);
+    NewBuiltInFunction(builtIn, R("CmpMem"), args, ret, false);
 
 
 
@@ -203,6 +223,7 @@ Main{
     if (err) return 0;
 #ifdef _WIN32
     x86Runner::LoadMEXE(mexe);
+    std_lcout << ir.IR;
     x86Runner::run();
 #endif // _WIN32
 }

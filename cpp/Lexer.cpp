@@ -4,6 +4,7 @@ using namespace MLang;
 bool Error{};
 
 void error(std::vector<lstring>& tks, lstring err, size_t ip) {
+    Error = true;
     std_lcout << RED << R("[错误]") << CYAN << R("[词法分析]") << RESET << err << std::endl;
 }
 
@@ -345,8 +346,8 @@ extern void cut_tokens(lstring code,std::vector<lstring>& tks){
         i++;
         tmp_tk = code.substr(i - 1, 2);
         if (tmp_tk == R("//") && !forbid) annotation_line = true;
-        if (tmp_tk == R("/*") && !forbid && !annotation_line) { annotation = true; i++; }
-        if (tmp_tk == R("*/") && !forbid && !annotation_line) { annotation = false; i++; }
+        if (tmp_tk == R("/*") && !forbid && !annotation_line) { annotation = true; i++; continue; }
+        if (tmp_tk == R("*/") && !forbid && !annotation_line) { annotation = false; i++; continue; }
         if (code.substr(i - 1, 1) == R("\n") && !annotation && !forbid) annotation_line = false;
         if (annotation || annotation_line) continue;
         if (IsOperator(tmp_tk, 0) && !forbid && !annotation_line) {

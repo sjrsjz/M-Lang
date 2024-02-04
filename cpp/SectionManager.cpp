@@ -77,7 +77,6 @@ namespace MLang {
 			pos += sizeof(lchar) + k * sizeof(lchar);
 			names.push_back(t1);
 			bins.push_back(bin.SubByteArray(tpos+sizeof(size_t),bin.Get<size_t>(tpos)));
-			DebugOutput(t1, bins.back().size);
 		}
 	}
 }

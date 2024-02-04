@@ -88,14 +88,21 @@ bool is_base64(lchar c) {
 }
 lstring base64_encode(const lstring& input) {
 #if G_UNICODE_
-	return MLang::to_wide_string(base64_encode(MLang::to_byte_string(input)));
+    std::string tmp{};
+    tmp.resize(input.size() * sizeof(wchar_t));
+    memcpy((void*)tmp.c_str(), (void*)input.c_str(), input.size() * sizeof(wchar_t));
+    return MLang::to_wide_string(base64_encode(tmp));
 #else
     return base64_encode(lstring);
 #endif
 }
 lstring base64_decode(const lstring& input) {
 #if G_UNICODE_
-    return MLang::to_wide_string(base64_decode(MLang::to_byte_string(input)));
+    std::string tmp = base64_decode(MLang::to_byte_string(input));
+    std::wstring tmp2{};
+    tmp2.resize(tmp.size() / sizeof(wchar_t));
+    memcpy((void*)tmp2.c_str(), (void*)tmp.c_str(), tmp.size());
+    return tmp2;
 #else
     return base64_decode(lstring);
 #endif
