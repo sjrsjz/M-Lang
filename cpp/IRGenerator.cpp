@@ -1635,7 +1635,7 @@ size_t IRGenerator::getVarOffset(const analyzed_functionSet& functionSet, const 
 		if(!ifNotRef(func.ret)) offset += getStructureSize(R("N"));
 		for (auto& x : func.args) {
 			if (x.name == var) return offset;
-			offset += size(x);
+			offset += argSize(x);
 		}
 		error(R("Î´Öª²ÎÊý:") + var);
 	}
