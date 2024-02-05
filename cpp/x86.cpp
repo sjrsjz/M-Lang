@@ -260,7 +260,7 @@ void x86Generator::generate(lstring IR) {
 			}
 			else if (args[1].typeName == R("arg")) {
 				codes << 141 << 133;
-				codes += 2 * sizeof(int) + (int)st_intptr_t(args[1].name);
+				codes += 4 * sizeof(int) + (int)st_intptr_t(args[1].name);
 				codes << 137 << 133;
 				codes += (int)offset;
 			}
@@ -1109,7 +1109,7 @@ void x86Generator::generate(lstring IR) {
 				codes << 129 << 196;
 				codes += (int)size2;
 			}
-			else if (args[2].name != R("null")) {
+			if (args[2].name != R("null")) {
 				size_t id = st_size_t(args[2].name);
 				size = tmpSize(id, tmp_stack);
 				intptr_t offset2 = -intptr_t(localSize + tmpOffset(id, tmp_stack));

@@ -105,11 +105,16 @@ namespace MLang {
         return converter.to_bytes(input);
     }
    
-
-    
+    // 默认情况：is_vector为false
     template<typename T,typename... Types>
-    void DebugOutput(const T& data, const Types&... args) {
-#if defined(_WIN32) || defined(_WIN64)
+    struct is_vector : std::false_type {};
+
+    // 特化：为所有vector类型，is_vector为true
+    template<typename T, typename... Types>
+    struct is_vector<const std::vector<T, Types...>&> : std::true_type {};
+
+    template<typename T, typename... Types>
+    lstringstream DebugOutputString(const T& data, const Types&... args) {
         lstringstream ss;
         //ss << "Type:" << typeid(data).name();
         if constexpr (std::is_same<decltype(data), const ByteArray<unsigned char>&>::value) {
@@ -119,37 +124,35 @@ namespace MLang {
             }
             ss << "}";
         }
-        else {
-            ss << data;
-        }
-        OutputDebugString(ss.str().c_str());
-        if constexpr (sizeof...(args)) {
-            OutputDebugString(R(" | "));
-            DebugOutput(args...);
-        }
-        else {
-            OutputDebugString(R("\n"));
-        }
-#else
-        lstringstream ss;
-        if constexpr (std::is_same<decltype(data), const ByteArray<unsigned char>&>::value) {
-            ss << "size:" << data.size << "{";
-            for (size_t i = 0; i < data.size; i++) {
-                ss << (i ? R(", ") : R("")) << to_lstring((unsigned char)data.ptr[i]);
+        else if constexpr (is_vector<decltype(data)>::value) {
+            ss << "size:" << data.size() << "{";
+            for (size_t i = 0; i < data.size(); i++) {
+                ss << (i ? R(", ") : R("")) << DebugOutputString(data[i]).str();
             }
             ss << "}";
         }
         else {
-            ss << data;
+            if constexpr (std::is_same<decltype(data), const lstring&>::value) {
+				ss << R("\"") << data << R("\"");
+			}
+            else {
+				ss << data;
+			}
         }
-        std_lcout << ss.str();
         if constexpr (sizeof...(args)) {
-			std::cout << " | ";
-			DebugOutput(args...);
-		}
-		else {
-			std::cout << std::endl;
-		}
+            ss << R(" | ") << DebugOutputString(args...).str();
+        }
+        return ss;
+    }
+
+    template<typename T,typename... Types>
+    void DebugOutput(const T& data, const Types&... args) {
+        lstring tmp = DebugOutputString(data, args...).str();
+#if defined(_WIN32) || defined(_WIN64)
+        OutputDebugString(tmp.c_str());
+        OutputDebugString(R("\n"));
+#else
+        std::cout << tmp << std::endl;
 #endif
     }
 }
