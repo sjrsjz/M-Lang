@@ -147,12 +147,14 @@ namespace MLang {
 
     template<typename T,typename... Types>
     void DebugOutput(const T& data, const Types&... args) {
+#if _DEBUG
         lstring tmp = DebugOutputString(data, args...).str();
 #if defined(_WIN32) || defined(_WIN64)
         OutputDebugString(tmp.c_str());
         OutputDebugString(R("\n"));
 #else
         std::cout << tmp << std::endl;
+#endif
 #endif
     }
 }

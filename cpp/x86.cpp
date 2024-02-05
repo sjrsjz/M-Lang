@@ -6,10 +6,10 @@
 using namespace MLang;
 namespace MLang {
 	type analyzeArg(lstring tk) {
-		lstring left = tk.substr(0, 1);
-		lstring right = tk.size()>=2?tk.substr(1, max_(tk.size() - 1, 0)):R("");
+		lstring left = tk.size() >= 1 ? tk.substr(0, 1) : R("");
+		lstring right = tk.size() >= 2 ? tk.substr(1, max_(tk.size() - 1, 0)) : R("");
 		type ret{};
-		if (tk.substr(0, 2) == R("&%")) {
+		if (tk.size() >= 2 && tk.substr(0, 2) == R("&%")) {
 			ret.typeName = R("&tmp");
 			ret.name = tk.substr(2, tk.size() - 2);
 		}
@@ -39,8 +39,8 @@ namespace MLang {
 			ret.name = right;
 		}
 		else if (left == R("?")) {
-			left = tk.substr(0, 3);
-			right = tk.substr(3, tk.size() - 3);
+			left = tk.size() >= 3 ? tk.substr(0, 3) : R("");
+			right = tk.size() >= 3 ? tk.substr(3, tk.size() - 3) : tk;
 			if (left == R("?uI")) {
 				ret.typeName = R("uI");
 				ret.name = right;
@@ -146,6 +146,7 @@ void x86Generator::generate(lstring IR) {
 		size_t arg_size = tk.size() - 1;
 		validCode = true;
 		std::vector<type> args{};
+		DebugOutput(lines[i]);
 		for (size_t i = 0; i < arg_size; i++) {
 			args.push_back(analyzeArg(tk[i + 1]));
 		}
@@ -1533,10 +1534,10 @@ void x86Generator::addBuiltInFunction(const lstring& name, std::vector<redirecti
 	linkTable.push_back(tmp);
 	codes << 0 << 0 << 0 << 0 << 255 << 224;
 }
-void error(lstring err) {
-	std_lcout << err << std::endl;
-}
 namespace MLang::x86Runner {
+	void error(lstring err) {
+		std_lcout << R("[´íÎó][x86ÔËÐÐÊ±]") << RESET << err << std::endl;
+	}
 	void NewSysFunction() {
 		sys_redirectTable.clear();
 		sys_redirect.clear();

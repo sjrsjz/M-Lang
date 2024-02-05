@@ -115,7 +115,7 @@ namespace MLang {
         if (!fin.is_open()) return R("");
         std::string buf;
         lstring buf2{};
-        while (std::getline(fin, buf)) {
+        while (std::getline(fin, buf, '\0')) {//?
 #ifdef  G_UNICODE_
             buf2 += to_wide_string(buf);
 #else
