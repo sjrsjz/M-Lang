@@ -76,12 +76,12 @@ Class:string{
     }
 }
 Main{
-	main()->N:={
-		string:A.const(&"Hello ");
+    main()->N:={
+        string:A.const(&"Hello ");
         string:B.const(&"World!");
         string:C.const(&"
 ");
         string:D=(A+B+C)*10;
-		print(D.ad);
-	}
+        print(D.ad);
+    }
 }
