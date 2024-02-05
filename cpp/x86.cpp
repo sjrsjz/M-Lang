@@ -929,7 +929,8 @@ void x86Generator::generate(lstring IR) {
 				codes << 243 << 15 << 16 << 0 << 243 << 15 << 89 << 3 << 243 << 15 << 16 << 12 << 36 << 243 << 15
 					<< 92 << 200 << 243 << 15 << 16 << 0 << 243 << 15 << 88 << 3 << 243 << 15 << 16 << 16 << 243
 					<< 15 << 89 << 19 << 243 << 15 << 92 << 194 << 243 << 15 << 89 << 200 << 243 << 15 << 17
-					<< 140 << 36;
+					<< 141;
+				codes += (int)offset;
 			}
 			else if (tk[1] == R("or")) {
 				codes << 243 << 15 << 16 << 133;
@@ -941,7 +942,7 @@ void x86Generator::generate(lstring IR) {
 				codes << 243 << 15 << 89 << 141;
 				codes += (int)offset3;
 				codes << 243 << 15 << 92 << 193 << 243 << 15 << 17 << 133;
-				codes += (int)offset3;
+				codes += (int)offset;
 			}
 			else if (tk[1] == R("not")) {
 				codes << 104;

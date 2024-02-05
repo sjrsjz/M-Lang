@@ -59,8 +59,14 @@ void IRGenerator::generateFunction(analyzed_functionSet& functionSet, analyzed_f
 	}
 	tmpStack.clear();
 	ins(R("tmpBegin"));
+	tmpCodeStack.push_back(tmpCode);
+	size_t curr = IR.length();
+	tmpCode.clear();
 	size_t tmp = allocTmpID(Type_N);
 	initSetVars(func.local, tmp, 0, R("&"), true);
+	IR.insert(curr,tmpCode);
+	tmpCode = tmpCodeStack.back();
+	tmpCodeStack.pop_back();
 	ins(R("tmpEnd"));
 	for (size_t i = 0; i < func.codes.size(); i++) {
 		error_line = i;
@@ -69,11 +75,17 @@ void IRGenerator::generateFunction(analyzed_functionSet& functionSet, analyzed_f
 	ins(R("#label_function_End_Local") + DIVISION + functionSet.name + DIVISION + func.name);
 	tmpStack.clear();
 	ins(R("tmpBegin"));
+	tmpCodeStack.push_back(tmpCode);
+	curr = IR.length();
+	tmpCode.clear();
 	tmp = allocTmpID(Type_N);
 	size_t tmp2 = allocTmpID(Type_R);
 	ins(R("storeQ %") + to_lstring(tmp2));
 	destroySetVars(func.local, tmp, 0, R("&"), true);
 	ins(R("loadQ %") + to_lstring(tmp2));
+	IR.insert(curr, tmpCode);
+	tmpCode = tmpCodeStack.back();
+	tmpCodeStack.pop_back();
 	ins(R("tmpEnd"));
 	if (func.transit) {
 		ins(R("loadThisArg &") + to_lstring(getVarOffset(functionSet, func, R("Local") + DIVISION + R("[thisArg]"))));
@@ -86,32 +98,53 @@ void IRGenerator::generateFunction(analyzed_functionSet& functionSet, analyzed_f
 void IRGenerator::generateLine(analyzed_functionSet& functionSet, analyzed_function& func, Tree<node>& EX) {
 	ins(R("\n;") + functionSet.name + DIVISION + func.name + R(" Line:") + to_lstring(error_line));
 	ins(R("tmpBegin"));
-	destroyCode.clear();
 	tmpStack.clear();
+	tmpCodeStack.push_back(tmpCode);
+	destroyCodeStack.push_back(destroyCode);
+	initCodeStack.push_back(initCode);
+	tmpCode.clear();
+	destroyCode.clear();
+	initCode.clear();
+	size_t curr = IR.length();
 	compileTree(functionSet, func, EX, {});
-	for (auto& x : destroyCode) ins(x);
+	IR.insert(curr, tmpCode + initCode);
+	IR += destroyCode;
+	tmpCode = tmpCodeStack.back();
+	destroyCode = destroyCodeStack.back();
+	initCode = initCodeStack.back();
+	tmpCodeStack.pop_back();
+	destroyCodeStack.pop_back();
+	initCodeStack.pop_back();
+	//for (auto& x : destroyCode) ins(x);
 	ins(R("tmpEnd"));
 }
 type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_function& func, Tree<node>& EX, std::optional<lstring> ExtraInfo) {
+	//initCodeStack.push_back(initCode);
+	//destroyCodeStack.push_back(destroyCode);
+
+	//initCode.clear();
+	//destroyCode.clear();
+
+	size_t curr = IR.length();
 	type ret{};
-	if (Error) return ret;
 	node p=EX.Get();
 	lstring tk = p.token, type_ = p.type;
+	if (Error) goto RET;
 	if (type_ == R("Operator")) {
 		if (tk == R("=")) {
 			if (!EX.child()) {
 				error(R("赋值参数过少"));
-				return ret;
+				goto RET;
 			} 
 			type A = compileTree(functionSet, func, EX, {});
 			if (!A.address) {
 				error(R("赋值左值必须提供指针"));
-				return ret;
+				goto RET;
 			}
 			if (!EX.next()) {
 				error(R("赋值参数过少"));
 				EX.parent();
-				return ret;
+				goto RET;
 			}
 			type B = compileTree(functionSet, func, EX, {});
 			type C{};
@@ -122,7 +155,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 				analyzed_function func0 = getFunction(functionSet, tk1, args, {});
 				if (args.size() == 1 && func0.args.size() == 1) {
 					size_t id1 = allocTmpID(func0.ret);
-					C = func0.args[1];
+					C = func0.args[0];
 					ret = func0.ret;
 					ret.id = id1;
 					if (generateImplictConversion(C, B, functionSet, func, EX)) {
@@ -145,7 +178,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 						}
 					}
 					EX.parent();
-					return ret;
+					goto RET;
 				}
 			}
 			C = A;
@@ -162,15 +195,15 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 				}
 			}
 			EX.parent();
-			return ret;
+			goto RET;
 		}
 		else if (cmpTK(tk, { R("+"),R("-"),R("*"),R("/"),R("%"),R("\\"),R(">"),R("<"),R(">="),R("<="),R("!="),R("==") })) {
 			if (!EX.child()) {
-				error(R("二元运算参数过少")); return ret;
+				error(R("二元运算参数过少")); goto RET;
 			}
 			type A = compileTree(functionSet, func, EX, {});
 			if (!EX.next()) {
-				error(R("二元运算参数过少")); EX.parent(); return ret;
+				error(R("二元运算参数过少")); EX.parent(); goto RET;
 			}
 			type B = compileTree(functionSet, func, EX, {});
 			type C{};
@@ -181,7 +214,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 				analyzed_function func0 = getFunction(functionSet, tk1, args, {});
 				if (args.size() == 1 && func0.args.size() == 1) {
 					size_t id1 = allocTmpID(func0.ret);
-					C = func0.args[1];
+					C = func0.args[0];
 					ret = func0.ret;
 					ret.id = id1;
 					if (generateImplictConversion(C, B, functionSet, func, EX)) {
@@ -204,7 +237,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 						}
 					}
 					EX.parent();
-					return ret;
+					goto RET;
 				}
 			}
 			C = maxPrecision(A, B);
@@ -235,17 +268,17 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 				error(R("不支持的类型:") + tk + R(" ") + A.typeName + R(" ") + B.typeName);
 			}
 			EX.parent();
-			return ret;
+			goto RET;
 		}
 		else if (cmpTK(tk, { R("and"),R("or"),R("xor") })) {
 			if (!EX.child()) {
-				error(R("二元运算参数过少")); return ret;
+				error(R("二元运算参数过少")); goto RET;
 			}
 			type A = compileTree(functionSet, func, EX, {});
 			if (!EX.next()) {
 				error(R("二元运算参数过少"));
 				EX.parent();
-				return ret;
+				goto RET;
 			}
 			type B = compileTree(functionSet, func, EX, {});
 			type C{};
@@ -256,7 +289,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 				analyzed_function func0 = getFunction(functionSet, tk1, args, {});
 				if (args.size() == 1 && func0.args.size() == 1) {
 					size_t id1 = allocTmpID(func0.ret);
-					C = func0.args[1];
+					C = func0.args[0];
 					ret = func0.ret;
 					ret.id = id1;
 					if (generateImplictConversion(C, B, functionSet, func, EX)) {
@@ -279,7 +312,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 						}
 					}
 					EX.parent();
-					return ret;
+					goto RET;
 				}
 			}
 			C = maxPrecision(A, B);
@@ -295,11 +328,11 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 			size_t id2 = C.id;
 			ins(R("opBoolen ") + tk + R(" %") + to_lstring(ret.id) + R(" %") + to_lstring(id1) + R(" %") + to_lstring(id2));
 			EX.parent();
-			return ret;
+			goto RET;
 		}
 		else if (cmpTK(tk, { R("Minus"),R("Abs"),R("not") })) {
 			if (!EX.child()) {
-				error(R("一元运算参数过少")); return ret;
+				error(R("一元运算参数过少")); goto RET;
 			}
 			type A = compileTree(functionSet, func, EX, {});
 			type C = A;
@@ -331,15 +364,15 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 				error(R("不支持的类型:") + tk + R(" ") + A.typeName);
 			}
 			EX.parent();
-			return ret;
+			goto RET;
 		}
 		else if (tk == R("&")) {
 			if (!EX.child()) {
-				error(R("一元运算参数过少")); return ret;
+				error(R("一元运算参数过少")); goto RET;
 			}
 			type A = compileTree(functionSet, func, EX, {});
 			if (!A.address) {
-				error(R("不能取得非指针类型的地址")); return ret;
+				error(R("不能取得非指针类型的地址")); goto RET;
 			}
 			ret = A;
 			ret.typeName = R("N");
@@ -349,12 +382,12 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 			return ret;
 		}
 		else {
-			error(R("未知运算符")); return ret;
+			error(R("未知运算符")); goto RET;
 		}
 	}
 	else if (type_==R("Var")) {
 		lstring v_type, v_name;
-		if (!getVarType(tk, v_type, v_name)) return ret;
+		if (!getVarType(tk, v_type, v_name)) goto RET;
 		type A{};
 		if (v_type == R("Local")) {
 			A = getLocalType(v_name, func);
@@ -364,7 +397,8 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 				ins(R("load %") + to_lstring(A.id) + R(" %") + to_lstring(A.id) + R(" ") + to_lstring(getStructureSize(R("N"))));
 			}
 			A.address = true;
-			return A;
+			ret = A;
+			goto RET;
 		}
 		if (v_type == R("Arg")) {
 			A = getArgType(functionSet, v_name, func);
@@ -374,21 +408,24 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 				ins(R("load %") + to_lstring(A.id) + R(" %") + to_lstring(A.id) + R(" ") + to_lstring(getStructureSize(R("N"))));
 			}
 			A.address = true;
-			return A;
+			ret = A;
+			goto RET;
 		}
 		if (v_type == R("Set")) {
 			A = getSetVarType(v_name, functionSet);
 			A.id = allocTmpID(Type_N);
 			ins(R("address %") + to_lstring(A.id) + R(" $") + to_lstring(GlobalOffset + getVarOffset(functionSet, func, tk)));
 			A.address = true;
-			return A;
+			ret = A;
+			goto RET;
 		}
 		if (v_type == R("Global")) {
 			A = getGlobalVarType(v_name);
 			A.id = allocTmpID(Type_N);
 			ins(R("address %") + to_lstring(A.id) + R(" $") + to_lstring(getVarOffset(functionSet, func, tk)));
 			A.address = true;
-			return A;
+			ret = A;
+			goto RET;
 		}
 		if (v_type == R("Const")) {
 			if (v_name == R("[true]")) {
@@ -411,7 +448,8 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 				ins(R("address %") + to_lstring(A.id) + R(" @") + to_lstring(getVarOffset(functionSet, func, tk)));
 				A.address = true;
 			}
-			return A;
+			ret = A;
+			goto RET;
 		}
 		if (v_type == R("Class")) {
 			A = getSetVarType(v_name, functionSet);
@@ -420,13 +458,14 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 			ins(R("load %") + to_lstring(A.id) + R(" %") + to_lstring(A.id) + R(" ") + to_lstring(getStructureSize(R("N"))));
 			ins(R("offset %") + to_lstring(A.id) + R(" ") + to_lstring(getElementOffset(functionSet, functionSet.name, v_name)));
 			A.address = true;
-			return A;
+			ret = A;
+			goto RET;
 		}
 		error(R("未知变量:") + tk);
-		return ret;
+		goto RET;
 	}
 	else if (type_ == R("Call")) {
-		if (handleBuiltInFunctions(functionSet, func, EX, tk, ret)) return ret;
+		if (handleBuiltInFunctions(functionSet, func, EX, tk, ret)) goto RET;
 		lstring arg_T{};
 		lstring this_arg = R(" null");
 		if (ifMethod(tk)) {
@@ -446,7 +485,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 			for (; i < func0.args.size(); i++) {
 				if (i >= args.size()) {
 					error(R("函数调用参数过少"));
-					return ret;
+					goto RET;
 				}
 				generateImplictConversion(func0.args[i], args[i], functionSet, func, EX);
 				arg_T += R(" %") + to_lstring(func0.args[i].id);
@@ -485,7 +524,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 			ret.id = id1;
 			ret.address = true;
 		}
-		return ret;
+		goto RET;
 	}
 	else if (type_ == R("thisCall")) {
 		std::vector<type> args{};lstring arg_T{};
@@ -495,11 +534,11 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 			A = compileTree(functionSet, func, EX, {});
 			if (A.array) {
 				error(R("方法的被引用结构不能为数组"));
-				return ret;
+				goto RET;
 			}
 			if (!A.address) {
 				error(R("方法的被引用结构必须为指针"));
-				return ret;
+				goto RET;
 			}
 			while (EX.next()) {
 				args.push_back(compileTree(functionSet, func, EX, {}));
@@ -510,7 +549,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 			for (; i < func0.args.size(); i++) {
 				if (i >= args.size()) {
 					error(R("方法引用参数过少"));
-					return ret;
+					goto RET;
 				}
 				generateImplictConversion(func0.args[i], args[i], functionSet, func, EX);
 				arg_T += R(" %") + to_lstring(func0.args[i].id);
@@ -528,7 +567,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 		}
 		else {
 			error(R("方法引用必须提供被引用结构"));
-			return ret;
+			goto RET;
 		}
 		ret = func0.ret;
 		ret.id = allocTmpID(func0.ret);
@@ -549,7 +588,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 			ret.id = id1;
 			ret.address = true;
 		}
-		return ret;
+		goto RET;
 	}
 	else if(type_==R("Const")) {
 		type A{};
@@ -566,7 +605,8 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 			A.typeName = R("[STRING]");
 			A.name = process_quotation_mark(tk);
 		}
-		return A;
+		ret = A;
+		goto RET;
 	}
 	else if (type_ == R("Int")) {
 		type A{};
@@ -575,7 +615,8 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 		A.array = false;
 		A.id = allocTmpID(Type_Z);
 		ins(R("num %") + to_lstring(A.id) + R(" ?I") + tk);
-		return A;
+		ret = A;
+		goto RET;
 	}
 	else if (type_ == R("Double")) {
 		type A{};
@@ -584,7 +625,8 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 		A.array = false;
 		A.id = allocTmpID(Type_R);
 		ins(R("num %") + to_lstring(A.id) + R(" ?D") + tk);
-		return A;
+		ret = A;
+		goto RET;
 	}
 	else if (type_ == R("Array")) {
 		EX.child();
@@ -630,7 +672,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 		else {
 			if (!ret0.array) {
 				error(R("下标的作用对象必须为数组"));
-				return ret;
+				goto RET;
 			}
 			type B{};
 			B.typeName = R("N");
@@ -666,11 +708,11 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 			ret.address = true;
 		}
 		EX.parent();
-		return ret;
+		goto RET;
 	}
 	else if (type_ == R("ad_v")) {
 		if (!EX.child()) {
-			error(R("错误的指针用法")); return ret;
+			error(R("错误的指针用法")); goto RET;
 		}
 		type A = compileTree(functionSet, func, EX, {});
 		type C = Type_N;
@@ -679,7 +721,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 		C.typeName = process_quotation_mark(tk);
 		ret = C;
 		EX.parent();
-		return ret;
+		goto RET;
 	}
 	else if (type_ == R("Block")) {
 		if (EX.child()) {
@@ -695,7 +737,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 				} while (EX.next());
 			EX.parent();
 		}
-		return ret;
+		goto RET;
 	}
 	else if (type_==R("Element")) {
 		if (EX.child()) {
@@ -717,7 +759,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 		else {
 			error(R("引用的对象不能为空"));
 		}
-		return ret;
+		goto RET;
 	}
 	else if (type_==R("FunctionAddress")) {
 		ret.typeName = R("N");
@@ -725,22 +767,31 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 		ret.address = false;
 		ret.id = allocTmpID(ret);
 		ins(R("ExactlyAddress %") + to_lstring(ret.id) + R(" #label_function_") + getFullName(tk,functionSet));
-		return ret;
+		goto RET;
 	}else if(type_==R("ExactlyAddress")) {
 		ret.typeName = R("N");
 		ret.array = false;
 		ret.address = false;
 		ret.id = allocTmpID(ret);
 		ins(R("ExactlyAddress %") + to_lstring(ret.id));
-		return ret;
+		goto RET;
 	}
 	else if (type_ == R("")) return ret;
 	else
 	{
 		error(R("不支持的结构:Type = ") + type_ + R(" Token = ") + tk);
 		ret.can_be_ignored = false;
-		return ret;
+		goto RET;
 	}
+
+	RET:
+	//IR.insert(curr, initCode);
+	//IR += destroyCode;
+	//initCode = initCodeStack.back();
+	//destroyCode = destroyCodeStack.back();
+	//initCodeStack.pop_back();
+	//destroyCodeStack.pop_back();
+	return ret;
 }
 bool IRGenerator::ifMethod(lstring FullName) {
 	lstring type, className, name;
@@ -864,8 +915,8 @@ label_destroyGenerator_1:
 }
 void IRGenerator::initSetVars(std::vector<type>& vars, size_t tmp, size_t offset, lstring tk, bool localMode) {
 	for (auto& x : vars) {
-		size_t size = getStructureSize(x.typeName);
-		size_t dim = x.array ? x.dim.size() : 1;
+		size_t size = getStructureSize(x.name == R("[this]") ? R("N") : x.typeName);
+		size_t dim = x.name != R("[this]") && x.array ? x.dim.size() : 1;
 		if (localMode) {
 			for (size_t j = 0; j < dim; j++) {
 				offset += size;
@@ -882,8 +933,8 @@ void IRGenerator::initSetVars(std::vector<type>& vars, size_t tmp, size_t offset
 }
 void IRGenerator::destroySetVars(std::vector<type>& vars, size_t tmp, size_t offset, lstring tk, bool localMode) {
 	for (auto& x : vars) {
-		size_t size = getStructureSize(x.typeName);
-		size_t dim = x.array ? x.dim.size() : 1;
+		size_t size = getStructureSize(x.name == R("[this]") ? R("N") : x.typeName);
+		size_t dim = x.name != R("[this]") && x.array ? x.dim.size() : 1;
 		if (localMode) {
 			for (size_t j = 0; j < dim; j++) {
 				offset += size;
@@ -1046,6 +1097,7 @@ label_handleBuiltInFunctions_1:
 				lstring tk1 = R("Local") + DIVISION + func_ret.typeName + DIVISION + R("_return_" + A.typeName);
 				if (haveFunction(tk1)) {
 					std::vector<type> args{};
+					args.push_back(A);
 					analyzed_function func0 = getFunction(functionSet, tk1, args, {});
 					if (func0.args.size() == 1) {
 						size_t id1 = allocTmpID(func_ret);
@@ -1064,10 +1116,10 @@ label_handleBuiltInFunctions_1:
 							ArgSize_T = R(" %") + to_lstring(ArgSize_ID);
 						}
 						if (ifNotRef(func0.ret)) {
-							ins(R("Call #label_function_") + tk1 + R(" null %") + to_lstring(id1) + ArgSize_T + R(" %") + to_lstring(id2) + R(" %") + to_lstring(C.id));
+							ins(R("Call #label_function_") + tk1 + R(" %") + to_lstring(id2) + R(" %") + to_lstring(id1) + ArgSize_T  + R(" %") + to_lstring(C.id));
 						}
 						else {
-							ins(R("CallA #label_function_") + tk1 + R(" null &%") + to_lstring(id1) + ArgSize_T + R(" %") + to_lstring(id2) + R(" %") + to_lstring(C.id));
+							ins(R("CallA #label_function_") + tk1 + R(" %") + to_lstring(id2) + R(" &%") + to_lstring(id1) + ArgSize_T  + R(" %") + to_lstring(C.id));
 							id2 = allocTmpID(Type_N);
 							ins(R("address %") + to_lstring(id2) + R(" &%") + to_lstring(id1));
 							ret.id = id2;
@@ -1363,16 +1415,16 @@ size_t IRGenerator::allocTmpID(type A) {
 	size_t size_ = size(A);
 	tmpStack.push_back(size_);
 	size_t id = tmpStack.size();
-	ins(R("tmp %") + to_lstring(id) + R(" ") + to_lstring(size_));
+	tmpCode += R("tmp %") + to_lstring(id) + R(" ") + to_lstring(size_) + R("\n");
 	analyzed_functionSet* class_{};
 	for (auto& x : analyzed_functionSets) {
 		if (x.name == A.typeName) class_ = &x;
 	}
 	if (class_ && setHasFunction(*class_, R("_init_"))) {
-		ins(R("Call #label_function_Local") + DIVISION + A.typeName + DIVISION + R("_init_ &%") + to_lstring(id) + R(" null"));
+		initCode += (R("Call #label_function_Local") + DIVISION + A.typeName + DIVISION + R("_init_ &%") + to_lstring(id) + R(" null")) + R("\n");
 	}
 	if (class_ && setHasFunction(*class_, R("_destroy_"))) {
-		destroyCode.push_back(R("Call #label_function_Local") + DIVISION + A.typeName + DIVISION + R("_destroy_ &%") + to_lstring(id) + R(" null"));
+		destroyCode += (R("Call #label_function_Local") + DIVISION + A.typeName + DIVISION + R("_destroy_ &%") + to_lstring(id) + R(" null")) + R("\n");
 	}
 	return id;
 }
@@ -1751,6 +1803,13 @@ bool IRGenerator::analyze(
 	Type_Boolen.array = false;
 	Type_Boolen.address = false;
 
+	initCodeStack.clear();
+	destroyCodeStack.clear();
+	tmpStack.clear();
+	initCode.clear();
+	destroyCode.clear();
+	tmpCode.clear();
+
 	type This{}, ThisArg{};
 	This = Type_N;
 	This.address = true;
@@ -1785,6 +1844,9 @@ bool IRGenerator::analyze(
 	ins(R(";Entry"));
 	ins(R("enter"));
 	ins(R("tmpBegin"));
+	tmpCodeStack.push_back(tmpCode);
+	tmpCode.clear();
+	size_t curr = IR.length();
 	size_t tmp = allocTmpID(Type_N);
 	size_t tmp2 = allocTmpID(Type_R);
 	initSetVars(globalVars, tmp, 0, R("$"), false);
@@ -1796,8 +1858,10 @@ bool IRGenerator::analyze(
 		}
 	}
 	ins(R("Call #label_function_Local$Main$main null null"));
-
-	ins(R("loadQ %") + to_lstring(tmp2));
+	IR.insert(curr, tmpCode);
+	tmpCode = tmpCodeStack.back();
+	tmpCodeStack.pop_back();
+	//ins(R("loadQ %") + to_lstring(tmp2));
 	ins(R("tmpEnd"));
 	analyzed_functionSet* MainSet{};
 	analyzed_function* mainFunc{};

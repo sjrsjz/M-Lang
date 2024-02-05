@@ -52,7 +52,7 @@ public:
     }
     Tree* LocateParentTree(Tree* parent) {
         if (located) return parent;
-        assert(pointer < (intptr_t)nodes.size());
+        assert(pointer>=0 && pointer < (intptr_t)nodes.size());
         return nodes[pointer].LocateParentTree(this);
     }
     T& Get() {

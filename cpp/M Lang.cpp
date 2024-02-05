@@ -83,110 +83,91 @@ int main(int argn,char* argv[])
 #if _DEBUG
     bool err = lex.analyze(R(R"(
 
-Class:Array{
-	N:ptr;
-	N:DimSize;
-	N:DimPtr;
-	N:typeSize;
-	N:init;
-	N:destroy;
-	N:TotalSize;
-	_init_()->N:={
-		init=0;destroy=0;TotalSize=0;
-		DimSize=0;typeSize=0;DimPtr=0;ptr=0;
-	}
-	_destroy_()->N:={
-		Destroy()
-	}
-	[Public]set_init_destroy(N:I,N:D)->N:={
-		init=I;destroy=D
-	}
-	[Public][cdecl][ArgSize]ReDim(N:ArgSize,N:size)->Boolen:={
-		Destroy();
-		typeSize=size;
-		DimPtr=new((ArgSize-1)*sizeof:N);
-		N:i=0;N:size0=1;
-		while(i<ArgSize-1){
-			N:dim=(&size+(i+1)*sizeof:N)->N;
-			(DimPtr+i*sizeof:N)->N=dim;
-			size0=size0*dim;
-			i=i+1;
-		};
-		TotalSize=size0;
-		ptr=new(size0*size);
-		i=0;
-		if(init!=0 and ptr!=0){
-			while(i<size0){
-				data_init(ptr+i*typeSize);
-                i=i+1	
-			}
-		};
-		
-		return(true)
-	}
-	[Transit][ptr]data_init(N:ptr)->N:={return(init)}
-	[Transit][ptr]data_destroy(N:ptr)->N:={return(destroy)}
-	[Public][cdecl][ArgSize]"[]"(N:ArgSize)->N:={		
-        N:i=0;
-        N:offset=0;
-        while(i<ArgSize){
-			N:index=(&ArgSize+(i+1)*sizeof:N)->N;
-			offset=offset*(DimPtr+i*sizeof:N)->N+index;
-			i=i+1;
-		};
-		return(ptr+offset*typeSize);
-	}
-	Destroy()->N:={
-		N:i=0;
-		if(destroy!=0 and ptr!=0){
-			while(i<TotalSize){
-				data_destroy(ptr+i*typeSize);i=i+1		
-			}
-		};
-		DimSize=0;typeSize=0;
-		if(DimPtr!=0){free(DimPtr)};
-		if(ptr!=0){free(ptr)};
-		DimPtr=0;ptr=0;
-	}
+_string_{
+    R2Str(R:data)->string:={
+        string:tmp;
+        tmp.size=0;
+        tmp.ad=new(256);
+        R2T(data,tmp.ad);
+        while(N(tmp.ad+tmp.size)->B!=0 or N(tmp.ad+tmp.size+1)->B!=0){tmp.size=tmp.size+2};
+        tmp.size=tmp.size+2;
+        return(tmp)
+    }
 }
-Class:A{
-	[Public]N:a;
-	[Public]N:b;
+Class:string{
+    [Public]N:ad;[Public]N:size;
+    _init_()->N:={
+        ad=0;size=0
+    }
+    _destroy_()->N:={
+        if(ad!=0){free(ad);ad=0};
+        size=0;
+    }
+    _string_:={
+        N:ad,N:size
+    }
+    [Public]_return_string(string:s)->N:={//prevent RAII destroys data
+        _destroy_();
+        ad=new(s.size);
+        size=s.size;
+        memcopy(ad,s.ad,size);
+    }
+    [Public]=(string:s)->string:={
+        _destroy_();
+        ad=new(s.size);
+        
+        size=s.size;
+        memcopy(ad,s.ad,s.size);
 
-	[Public]_init_()->N:={
-        a=0;b=0;
-		print(&"init ");printN(&this);print(&"
-");
-	}
-	[Public]_destroy_()->N:={
-		print(&"destroy ");printN(&this);print(&"
-"); 
-	}
+        return(this)
+    }
+    [Public]const(N:str)->N:={
+        _destroy_();
+        N:i=0;
+        while(N(str+i)->B!=0 or N(str+i+1)->B!=0){i=i+2};
+        size=i+2;
+        ad=new(size);
+        memcopy(ad,str,size);
+    }
+    [Public]+(string:s)->string:={
+        string:tmp;
+        if(size!=0){
+            tmp.size=s.size+size-2;
+            tmp.ad=new(tmp.size);
+            memcopy(tmp.ad,ad,size);
+            memcopy(tmp.ad+size-2,s.ad,s.size);
+        }{
+            tmp=s;
+        };
+        return(tmp)
+    }
+    [Public]*(N:times)->string:={
+        string:tmp;
+        N:i=0;
+        while(i<times){
+            tmp=tmp+this;
+            i=i+1
+        };
+        return(tmp)
+    }
+    [Public]ToR()->R:={
+        return(T2R(ad))
+    }
+    [Public]==(string:s)->Boolen:={
+        return(CmpStr(ad,s.ad))
+    }
+    [Public]!=(string:s)->Boolen:={
+        return(not CmpStr(ad,s.ad))
+    }
 }
 Main{
-    f()->A:={
-		A:a;
-        a.a=114;
-		a.b=514;        
-		return(a)
-	}
 	main()->N:={
-		Array:A.set_init_destroy(~A$_init_,~A$_destroy_);
-		A.ReDim(sizeof:A,2,3);
-        A[0][0]->A=f();
-        A[0][1]->A.a=2;
-        A[0][2]->A.a=3;
-        A[1][0]->A.a=4;
-        A[1][1]->A.a=5;
-        A[1][2]->A.a=6;
-		printN(A[0][0]->A.a);
-		printN(A[0][1]->A.b);
-		printN(A[0][2]->A.a);
-		printN(A[1][0]->A.b);
-		printN(A[1][1]->A.a);
-		printN(A[1][2]->A.b);
-        print(&"
-")
+		string:A.const(&"Hello ");
+        string:B.const(&"World!");
+        string:C.const(&"
+");
+        string:D=(A+B+C)*10;
+		print(D.ad);
 	}
 }
 

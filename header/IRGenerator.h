@@ -48,7 +48,12 @@ namespace MLang {
 		intptr_t GlobalOffset{};
 		size_t currLocalSize{};
 		std::vector<size_t> tmpStack{};
-		std::vector<lstring> destroyCode{};
+		std::vector<lstring> initCodeStack{};
+		lstring initCode{};
+		std::vector<lstring> destroyCodeStack{};
+		lstring destroyCode{};
+		std::vector<lstring> tmpCodeStack{};
+		lstring tmpCode{};
 		intptr_t label{};
 
 		std::vector<lstring> loopStartStack{};
