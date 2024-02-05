@@ -1041,7 +1041,7 @@ void x86Generator::generate(lstring IR) {
 		}
 		else if (op == R("Call") || op == R("Call_cdecl")) {
 			size_t size{},size2{};
-			if (arg_size < 2) {
+			if (arg_size < 3) {
 				error(R("参数个数不符"));
 				continue;
 			}
@@ -1096,8 +1096,14 @@ void x86Generator::generate(lstring IR) {
 				}
 			}
 			if (args[1].name != R("null")) {
-				codes << 139 << 141;
-				codes += (int)-intptr_t(localSize + tmpOffset(st_size_t(args[1].name), tmp_stack));
+				if (args[1].typeName == R("&tmp")) {
+					codes << 141 << 141;
+					codes += (int)-intptr_t(localSize + tmpOffset(st_size_t(args[1].name), tmp_stack));
+				}
+				else {
+					codes << 139 << 141;
+					codes += (int)-intptr_t(localSize + tmpOffset(st_size_t(args[1].name), tmp_stack));
+				}
 			}
 			codes << 232 << 0 << 0 << 0 << 0;
 			redirection tmp{};
@@ -1141,7 +1147,7 @@ void x86Generator::generate(lstring IR) {
 		}
 		else if (op == R("CallA") || op == R("CallA_cdecl")) {
 			size_t size{}, size2{};
-			if (arg_size < 2) {
+			if (arg_size < 3) {
 				error(R("参数个数不符"));
 				continue;
 			}
@@ -1196,8 +1202,14 @@ void x86Generator::generate(lstring IR) {
 				}
 			}
 			if (args[1].name != R("null")) {
-				codes << 139 << 141;
-				codes += (int)-intptr_t(localSize + tmpOffset(st_size_t(args[1].name), tmp_stack));
+				if (args[1].typeName == R("&tmp")) {
+					codes << 141 << 141;
+					codes += (int)-intptr_t(localSize + tmpOffset(st_size_t(args[1].name), tmp_stack));
+				}
+				else {
+					codes << 139 << 141;
+					codes += (int)-intptr_t(localSize + tmpOffset(st_size_t(args[1].name), tmp_stack));
+				}
 			}
 			codes << 232 << 0 << 0 << 0 << 0;
 			redirection tmp{};
@@ -1413,12 +1425,12 @@ void x86Generator::generate(lstring IR) {
 			codes << 221 << 157;
 			codes += (int)offset;
 		}
-		else if (op == R("jmp_address")) {
+		else if (op == R("transit")) {
 			if (arg_size != 0) {
 				error(R("参数个数不符"));
 				continue;
 			}
-			codes << 201 << 255 << 224;
+			codes << 201 << 95 << 94 << 91 << 131 << 196 << 4 << 83 << 255 << 224;
 		}
 		else if (op == R("storeThis")) {
 			if (arg_size != 1) {
@@ -1447,11 +1459,11 @@ void x86Generator::generate(lstring IR) {
 				continue;
 			}
 			intptr_t offset = -st_intptr_t(args[0].name);
-			intptr_t offset2= st_intptr_t(args[1].name);
+			intptr_t offset2= 4*sizeof(int) + st_intptr_t(args[1].name);
 			codes << 139 << 133;
-			codes += (int)offset;
-			codes << 137 << 133;
 			codes += (int)offset2;
+			codes << 137 << 133;
+			codes += (int)offset;
 		}
 		else if (op == R("loadThisArg")) {
 			if (arg_size != 1) {
@@ -1472,6 +1484,7 @@ void x86Generator::generate(lstring IR) {
 		}
 		haveValidCode = validCode;
 	}
+
 	ErrorType = R("重定位");
 	addBuiltInFunction(R("[System]string"), redirections_label);
 	addBuiltInFunction(R("[System]global"), redirections_label);
@@ -1506,6 +1519,7 @@ void x86Generator::generate(lstring IR) {
 			warning(R("未被链接的标签:") + redirections_label[i].name + R(" ip:") + to_lstring(redirections_label[i].ip));
 		}
 	}
+
 }
 void x86Generator::addBuiltInFunction(const lstring& name, std::vector<redirection>& redirections) {
 	redirection tmp{};

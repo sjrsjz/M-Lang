@@ -67,20 +67,20 @@ bool IR2MEXE(const lstring& ir,ByteArray<unsigned char>& mexe) {
         tmp = (int)x.ip;
         data.Ins(x.name, tmp, {});
     }
-    //data.translate(data.build());
     sm.Ins(R("Redirect table"), data.build(), {});
     mexe = sm.build();
     return true;
 #endif
 }
 
-int main()
+int main(int argn,char* argv[])
 {
     Lexer lex{};
 
 #ifdef G_UNICODE_
 	std::wcout.imbue(std::locale("zh_CN"));
 #endif 
+#if _DEBUG
     bool err = lex.analyze(R(R"(
 
 Class:Array{
@@ -117,14 +117,15 @@ Class:Array{
 		i=0;
 		if(init!=0 and ptr!=0){
 			while(i<size0){
-				data_init(ptr+i*typeSize);i=i+1	
+				data_init(ptr+i*typeSize);
+                i=i+1	
 			}
 		};
 		
 		return(true)
 	}
-	[Transit:ptr]data_init(N:ptr)->N:={print(&"A");return(init)}
-	[Transit:ptr]data_destroy(N:ptr)->N:={print(&"B");return(destroy)}
+	[Transit][ptr]data_init(N:ptr)->N:={return(init)}
+	[Transit][ptr]data_destroy(N:ptr)->N:={return(destroy)}
 	[Public][cdecl][ArgSize]"[]"(N:ArgSize)->N:={		
         N:i=0;
         N:offset=0;
@@ -150,24 +151,55 @@ Class:Array{
 }
 Class:A{
 	[Public]N:a;
+	[Public]N:b;
+
 	[Public]_init_()->N:={
-		print(&"init ");printN(&this);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+        a=0;b=0;
+		print(&"init ");printN(&this);print(&"
+");
 	}
 	[Public]_destroy_()->N:={
-		print(&"destroy ");printN(&this);
+		print(&"destroy ");printN(&this);print(&"
+"); 
 	}
 }
 Main{
-	
+    f()->A:={
+		A:a;
+        a.a=114;
+		a.b=514;        
+		return(a)
+	}
 	main()->N:={
 		Array:A.set_init_destroy(~A$_init_,~A$_destroy_);
 		A.ReDim(sizeof:A,2,3);
-        A[1][2]->A.a=114514;
-		printN(A[1][2]->A.a);
+        A[0][0]->A=f();
+        A[0][1]->A.a=2;
+        A[0][2]->A.a=3;
+        A[1][0]->A.a=4;
+        A[1][1]->A.a=5;
+        A[1][2]->A.a=6;
+		printN(A[0][0]->A.a);
+		printN(A[0][1]->A.b);
+		printN(A[0][2]->A.a);
+		printN(A[1][0]->A.b);
+		printN(A[1][1]->A.a);
+		printN(A[1][2]->A.b);
+        print(&"
+")
 	}
 }
 
 )"));
+#else
+    if (argn != 2) return 0;
+#ifdef G_UNICODE_
+	lstring code = readFileString(to_wide_string(argv[1]));
+#else
+    lstring code = readFileString(argv[1]);
+#endif
+    bool err = lex.analyze(code);
+#endif
     if (err) return 0;
     NewType(lex.structures, R("N"), false, sizeof(size_t));
     NewType(lex.structures, R("Z"), false, sizeof(int));
@@ -269,7 +301,9 @@ Main{
 	IRGenerator ir{};
     err = ir.analyze(ast.libs, ast.globalVars, ast.analyzed_functionSets, ast.sets, ast.structures, ast.ExtraFunctions, ast.constants);
     if (err) return 0;
+#if _DEBUG
     std_lcout << ir.IR;
+#endif
     ByteArray<unsigned char> mexe;
     err = !IR2MEXE(ir.IR, mexe);
     if (err) return 0;

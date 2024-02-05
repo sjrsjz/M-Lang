@@ -77,7 +77,7 @@ void IRGenerator::generateFunction(analyzed_functionSet& functionSet, analyzed_f
 	ins(R("tmpEnd"));
 	if (func.transit) {
 		ins(R("loadThisArg &") + to_lstring(getVarOffset(functionSet, func, R("Local") + DIVISION + R("[thisArg]"))));
-		ins(R("jmp_address"));
+		ins(R("transit"));
 	}
 	else
 		ins(R("return ") + to_lstring(countArgSize(functionSet, func)));
@@ -1161,7 +1161,7 @@ label_handleBuiltInFunctions_1:
 	}
 	else if (name == getFullName(R("Pause"), *functionSet0)) {
 		ins(R("pause"));
-		return false;
+		return true;
 	}
 	else if (name == getFullName(R("_IR_"), *functionSet0)) {
 		ret = Type_N;
@@ -1369,10 +1369,10 @@ size_t IRGenerator::allocTmpID(type A) {
 		if (x.name == A.typeName) class_ = &x;
 	}
 	if (class_ && setHasFunction(*class_, R("_init_"))) {
-		ins(R("Call #label_function_Local") + DIVISION + A.typeName + DIVISION + R("_init_ null &%") + to_lstring(id));
+		ins(R("Call #label_function_Local") + DIVISION + A.typeName + DIVISION + R("_init_ &%") + to_lstring(id) + R(" null"));
 	}
 	if (class_ && setHasFunction(*class_, R("_destroy_"))) {
-		destroyCode.push_back(R("Call #label_function_Local") + DIVISION + A.typeName + DIVISION + R("_destroy_ null &%") + to_lstring(id));
+		destroyCode.push_back(R("Call #label_function_Local") + DIVISION + A.typeName + DIVISION + R("_destroy_ &%") + to_lstring(id) + R(" null"));
 	}
 	return id;
 }
@@ -1756,7 +1756,7 @@ bool IRGenerator::analyze(
 	This.address = true;
 	This.name = R("[this]");
 	ThisArg = Type_N;
-	ThisArg.address = true;
+	ThisArg.address = false;
 	ThisArg.name = R("[thisArg]");
 	for (auto& x : functionSets) {
 		if (!x.isClass) continue;
