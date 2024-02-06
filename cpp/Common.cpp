@@ -125,6 +125,7 @@ namespace MLang {
         fin.close();
         return buf2;
     }
+
     size_t DimSize(std::vector<size_t> dim) {
         size_t j = 1;
         for (int i = 0; i < dim.size(); i++) j *= dim[i];
@@ -144,6 +145,17 @@ namespace MLang {
         tmp.push_back(str.substr(lp, str.size() - lp + 1));
         return tmp;
     }
-
+    bool writeFileString(lstring path, lstring str) {
+#if G_UNICODE_
+        std::wofstream fout{};
+#else
+        std::ofstream fout{};
+#endif // UNICODE
+        fout.open(path, std::ios::out);
+        if (!fout.is_open()) return false;
+        fout.write(str.c_str(), str.size() * sizeof(lchar));
+        fout.close();
+        return true;
+    }
 
 }

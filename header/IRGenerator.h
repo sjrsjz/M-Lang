@@ -20,6 +20,7 @@ namespace MLang {
 		functionSet ExtraFunctions{};
 		bool Error{};
 		intptr_t error_line{};
+		std::vector<intptr_t> error_lineStack{};
 		lstring error_functionSet{};
 		lstring error_function{};
 		lstring error_type{};

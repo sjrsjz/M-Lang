@@ -394,7 +394,7 @@ void x86Generator::generate(lstring IR) {
 				codes << 137 << 133;
 				codes += (int)offset;
 				codes << 137 << 149;
-				codes += (int)offset2 + 4;
+				codes += (int)offset + 4;
 				break;
 			default:
 				error(R("不支持的数据大小"));
@@ -1644,9 +1644,12 @@ namespace MLang::x86Runner {
 		return std::stod((lchar*)str);
 	}
 	unsigned int __stdcall new_(unsigned int size) {
-		return (unsigned int)malloc(size);
+		unsigned int ptr = (unsigned int)malloc(size);
+		DebugOutput("New", ptr);
+		return ptr;
 	}
 	void __stdcall free_(unsigned int address) {
+		DebugOutput("Free", address);
 		free((void*)address);
 	}
 	void __cdecl print(unsigned int str) {

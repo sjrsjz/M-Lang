@@ -5,7 +5,11 @@ inline bool IRGenerator::ins(lstring tk) {
 }
 
 void IRGenerator::error(lstring err) {
-	std_lcout << RED << R("[错误]") << CYAN << R("[中间代码生成]") << R("[程序集/类:") << error_functionSet << R("][函数/方法:") << error_function << R("][行:") << error_line + 1 << R("]") << RESET << err << std::endl;
+	lstring err_ = err;
+	for (auto& x : error_lineStack) {
+		err_ += R("[行:") + to_lstring(x) + R("]");
+	}
+	std_lcout << RED << R("[错误]") << CYAN << R("[中间代码生成]") << R("[程序集/类:") << error_functionSet << R("][函数/方法:") << error_function << R("]") << err_ << R("[行:") << error_line + 1 << R("]") << RESET << err << std::endl;
 	Error = true;
 }
 bool IRGenerator::getFunctionType(lstring fullName, lstring& type, lstring& super, lstring& name) {
@@ -725,16 +729,22 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 	}
 	else if (type_ == R("Block")) {
 		if (EX.child()) {
+			error_lineStack.push_back(error_line);
+			error_line = 0;
 			if(ExtraInfo.has_value())
 				do
 				{
 					ret = compileTree(functionSet, func, EX, ExtraInfo);
+					error_line++;
 				} while (EX.next());
 			else
 				do
 				{
 					ret = compileTree(functionSet, func, EX, {});
+					error_line++;
 				} while (EX.next());
+			error_line = error_lineStack.back();
+			error_lineStack.pop_back();
 			EX.parent();
 		}
 		goto RET;
@@ -1244,15 +1254,14 @@ bool IRGenerator::cmpDim(const std::vector<size_t>& tk1, const std::vector<size_
 	return true;
 }
 bool IRGenerator::generateImplictConversion(type& A, type& B, analyzed_functionSet functionSet, analyzed_function func, Tree<node> EX) {
-	lstring t = R("Local") + DIVISION + A.typeName + DIVISION + R("To") + B.typeName;
+	lstring t = R("Local") + DIVISION + B.typeName + DIVISION + R("To") + A.typeName;
 	size_t id;
 	if (haveFunction(t)) {
 		std::vector<type> args{}, args2{};
-		args.push_back(B);
 		args2 = getFunction(functionSet, t, args, {}).args;
 		if (cmpArg(args, args2)) {
 			id = allocTmpID(A);
-			ins(R("Call #label_function_") + t + R(" %") + to_lstring(id) + R(" %") + to_lstring(A.id) + R(" %") + to_lstring(B.id));
+			ins(R("Call #label_function_") + t + R(" %") + to_lstring(B.id) + R(" %") + to_lstring(id));
 			A.id = id;
 			return true;
 		}
@@ -1809,6 +1818,7 @@ bool IRGenerator::analyze(
 	initCode.clear();
 	destroyCode.clear();
 	tmpCode.clear();
+	error_lineStack.clear();
 
 	type This{}, ThisArg{};
 	This = Type_N;
@@ -1894,7 +1904,7 @@ bool IRGenerator::analyze(
 	}
 	for (auto& x : ExtraFunctions.func) {
 		ins(R("#label_function_Extra") + DIVISION + x.DLL + DIVISION + x.extra_name);
-		ins(R("[API]") + base64_encode(x.DLL) + R(" ") + base64_encode(x.extra_name));
+		ins(R("[API] ") + base64_encode(x.DLL) + R(" ") + base64_encode(x.extra_name));
 	}
 	return Error;
 }

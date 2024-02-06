@@ -36,152 +36,7 @@ void NewBuiltInFunction(functionSet& functionSet, const lstring name, const std:
 }
 extern void cut_tokens(lstring code, std::vector<lstring>& tks);
 
-bool IR2MEXE(const lstring& ir,ByteArray<unsigned char>& mexe) {
-#ifdef _WIN32
-    x86Generator x86{};
-    x86.generate(ir);
-    if (x86.Error) {
-		return false;
-	}
-	mexe = x86.codes;
-    SectionManager sm{};
-    sm.Ins(R("Code"), mexe, {});
-    ByteArray tbin{};
-    tbin = (unsigned int)x86.globalSize;
-    sm.Ins(R("Global size"), tbin, {});
-    SectionManager data{};
-    data.Clear();
-    for (auto& x : x86.apiTable) {
-        data.Ins(x, ByteArray(), {});
-    }
-    sm.Ins(R("API table"), data.build(), {});
-    data.Clear();
-    for (auto& x : x86.constStr) {
-		data.Ins(x, ByteArray(), {});
-	}
-    sm.Ins(R("Strings"), data.build(), {});
-
-    data.Clear();
-    for (auto& x : x86.linkTable) {
-        ByteArray<unsigned char> tmp{};
-        tmp = (int)x.ip;
-        data.Ins(x.name, tmp, {});
-    }
-    sm.Ins(R("Redirect table"), data.build(), {});
-    mexe = sm.build();
-    return true;
-#endif
-}
-
-int main(int argn,char* argv[])
-{
-    Lexer lex{};
-
-#ifdef G_UNICODE_
-	std::wcout.imbue(std::locale("zh_CN"));
-#endif 
-#if _DEBUG
-    bool err = lex.analyze(R(R"(
-
-_string_{
-    R2Str(R:data)->string:={
-        string:tmp;
-        tmp.size=0;
-        tmp.ad=new(256);
-        R2T(data,tmp.ad);
-        while(N(tmp.ad+tmp.size)->B!=0 or N(tmp.ad+tmp.size+1)->B!=0){tmp.size=tmp.size+2};
-        tmp.size=tmp.size+2;
-        return(tmp)
-    }
-}
-Class:string{
-    [Public]N:ad;[Public]N:size;
-    _init_()->N:={
-        ad=0;size=0
-    }
-    _destroy_()->N:={
-        if(ad!=0){free(ad);ad=0};
-        size=0;
-    }
-    _string_:={
-        N:ad,N:size
-    }
-    [Public]_return_string(string:s)->N:={//prevent RAII destroys data
-        _destroy_();
-        ad=new(s.size);
-        size=s.size;
-        memcopy(ad,s.ad,size);
-    }
-    [Public]=(string:s)->string:={
-        _destroy_();
-        ad=new(s.size);
-        
-        size=s.size;
-        memcopy(ad,s.ad,s.size);
-
-        return(this)
-    }
-    [Public]const(N:str)->N:={
-        _destroy_();
-        N:i=0;
-        while(N(str+i)->B!=0 or N(str+i+1)->B!=0){i=i+2};
-        size=i+2;
-        ad=new(size);
-        memcopy(ad,str,size);
-    }
-    [Public]+(string:s)->string:={
-        string:tmp;
-        if(size!=0){
-            tmp.size=s.size+size-2;
-            tmp.ad=new(tmp.size);
-            memcopy(tmp.ad,ad,size);
-            memcopy(tmp.ad+size-2,s.ad,s.size);
-        }{
-            tmp=s;
-        };
-        return(tmp)
-    }
-    [Public]*(N:times)->string:={
-        string:tmp;
-        N:i=0;
-        while(i<times){
-            tmp=tmp+this;
-            i=i+1
-        };
-        return(tmp)
-    }
-    [Public]ToR()->R:={
-        return(T2R(ad))
-    }
-    [Public]==(string:s)->Boolen:={
-        return(CmpStr(ad,s.ad))
-    }
-    [Public]!=(string:s)->Boolen:={
-        return(not CmpStr(ad,s.ad))
-    }
-}
-Main{
-	main()->N:={
-		string:A.const(&"Hello ");
-        string:B.const(&"World!");
-        string:C.const(&"
-");
-        string:D=(A+B+C)*10;
-		print(D.ad);
-	}
-}
-
-)"));
-#else
-    if (argn != 2) return 0;
-#ifdef G_UNICODE_
-	lstring code = readFileString(to_wide_string(argv[1]));
-#else
-    lstring code = readFileString(argv[1]);
-#endif
-    bool err = lex.analyze(code);
-#endif
-    if (err) return 0;
+void PrepareLexer(Lexer& lex) {
     NewType(lex.structures, R("N"), false, sizeof(size_t));
     NewType(lex.structures, R("Z"), false, sizeof(int));
     NewType(lex.structures, R("R"), false, sizeof(double));
@@ -214,7 +69,7 @@ Main{
     NewBuiltInFunction(builtIn, R("new"), args, ret, false);
     NewBuiltInFunction(builtIn, R("free"), args, ret, false);
     NewBuiltInFunction(builtIn, R("DebugOutput"), args, ret, false);
-    NewBuiltInFunction(builtIn, R("ErrMark"), args, ret, false);
+    //NewBuiltInFunction(builtIn, R("ErrMark"), args, ret, false);
 
     args[0].typeName = R("R");
     NewBuiltInFunction(builtIn, R("printR"), args, ret, false);
@@ -274,6 +129,170 @@ Main{
     builtIn.local.clear();
     builtIn.name = R("[System]");
     lex.functionSets.push_back(builtIn);
+}
+
+bool IR2MEXE(const lstring& ir,ByteArray<unsigned char>& mexe) {
+#ifdef _WIN32
+    x86Generator x86{};
+    x86.generate(ir);
+    if (x86.Error) {
+		return false;
+	}
+	mexe = x86.codes;
+    SectionManager sm{};
+    sm.Ins(R("Code"), mexe, {});
+    ByteArray tbin{};
+    tbin = (unsigned int)x86.globalSize;
+    sm.Ins(R("Global size"), tbin, {});
+    SectionManager data{};
+    data.Clear();
+    for (auto& x : x86.apiTable) {
+        data.Ins(x, ByteArray(), {});
+    }
+    sm.Ins(R("API table"), data.build(), {});
+    data.Clear();
+    for (auto& x : x86.constStr) {
+		data.Ins(x, ByteArray(), {});
+	}
+    sm.Ins(R("Strings"), data.build(), {});
+
+    data.Clear();
+    for (auto& x : x86.linkTable) {
+        ByteArray<unsigned char> tmp{};
+        tmp = (int)x.ip;
+        data.Ins(x.name, tmp, {});
+    }
+    sm.Ins(R("Redirect table"), data.build(), {});
+    mexe = sm.build();
+    return true;
+#endif
+}
+
+int test(int argn,char* argv[])
+{
+    Lexer lex{};
+
+#ifdef G_UNICODE_
+	std::wcout.imbue(std::locale("zh_CN"));
+#endif 
+#if _DEBUG
+    bool err = lex.analyze(R(R"(
+
+Extra:"user32.dll"{
+    MessageBoxW(N:HWND,N:Text,N:Caption,N:Type)->N:=MessageBoxW;
+}
+
+_string_{
+    R2Str(R:data)->string:={
+        string:tmp;
+        tmp.size=0;
+        tmp.ad=new(512);
+        R2T(data,tmp.ad);
+        while(N(tmp.ad+tmp.size)->B!=0 or N(tmp.ad+tmp.size+1)->B!=0){tmp.size=tmp.size+2};
+        tmp.size=tmp.size+2;
+        return(tmp)
+    }
+}
+Class:string{
+    [Public]N:ad;[Public]N:size;
+    _init_()->N:={
+        ad=0;size=0
+    }
+    _destroy_()->N:={
+        //printN(ad);
+        if(ad!=0){free(ad);ad=0};
+        size=0;
+    }
+    _string_:={
+        N:ad,N:size
+    }
+    [Public]_return_string(string:s)->N:={//prevent RAII destroys data
+
+        _destroy_();
+        ad=new(s.size);
+        size=s.size;
+        memcopy(ad,s.ad,size);
+    }
+    [Public]=(string:s)->string:={
+        _destroy_();
+        ad=new(s.size);
+        
+        size=s.size;
+        memcopy(ad,s.ad,s.size);
+
+        return(this)
+    }
+    [Public]const(N:str)->N:={
+        _destroy_();
+        N:i=0;
+        while(N(str+i)->B!=0 or N(str+i+1)->B!=0){i=i+2};
+        size=i+2;
+        ad=new(size);
+        memcopy(ad,str,size);
+    }
+    [Public]+(string:s)->string:={
+        string:tmp;
+        if(size!=0){
+            tmp.size=s.size+size-2;
+            tmp.ad=new(tmp.size);
+            memcopy(tmp.ad,ad,size);
+            memcopy(tmp.ad+size-2,s.ad,s.size);
+        }{
+            tmp=s;
+        };
+        return(tmp)
+    }
+    [Public]*(N:times)->string:={
+        string:tmp;
+        N:i=0;
+        while(i<times){
+            tmp=tmp+this;
+            i=i+1
+        };
+        return(tmp)
+    }
+    [Public]ToR()->R:={
+        return(T2R(ad))
+    }
+    [Public]==(string:s)->Boolen:={
+        return(CmpStr(ad,s.ad))
+    }
+    [Public]!=(string:s)->Boolen:={
+        return(not CmpStr(ad,s.ad))
+    }
+    [Public]ToN()->N:={
+		return(ad)
+	}
+}
+Main{
+    f()->string:={
+        string:A.const(&"test");
+        return(A);
+    }
+	main()->N:={
+		string:A.const(&"Hello. ");
+        string:B.const(&"World!");
+        string:C.const(&"
+");
+        string:D=f()+C+R2Str(0.5)+C+(A+B+C)*10;
+        MessageBoxW(0,D,&"Title",0);
+		print(D);
+	}
+}
+
+)"));
+#else
+    if (argn != 2) return 0;
+#ifdef G_UNICODE_
+	lstring code = readFileString(to_wide_string(argv[1]));
+#else
+    lstring code = readFileString(argv[1]);
+#endif
+    bool err = lex.analyze(code);
+#endif
+    if (err) return 0;
+
+    PrepareLexer(lex);
 
     AST ast{};
 	
@@ -292,4 +311,134 @@ Main{
     x86Runner::LoadMEXE(mexe);
     x86Runner::run();
 #endif // _WIN32
+}
+
+bool process_command(std::vector<lstring> args) {
+    if (args.size() == 2 && args[0] == R("runIR")) {
+        lstring ir = readFileString(args[1]);
+        ByteArray<unsigned char> mexe;
+        if (!IR2MEXE(ir, mexe)) {
+			return false;
+		}
+#ifdef _WIN32
+        x86Runner::LoadMEXE(mexe);
+        x86Runner::run();
+#endif // _WIN32
+        return true;
+    }
+    else if (args.size() == 2 && args[0] == R("run")) {
+        Lexer lex{};
+		bool err = lex.analyze(readFileString(args[1]));
+		if (err) return false;
+		PrepareLexer(lex);
+		AST ast{};
+		err = ast.analyze(lex.importedLibs, lex.globals, lex.functionSets, lex.structures, lex.ExternFunctions, lex.constants);
+		if (err) return false;
+		IRGenerator ir{};
+		err = ir.analyze(ast.libs, ast.globalVars, ast.analyzed_functionSets, ast.sets, ast.structures, ast.ExtraFunctions, ast.constants);
+		if (err) return false;
+		ByteArray<unsigned char> mexe;
+		err = !IR2MEXE(ir.IR, mexe);
+		if (err) return false;
+#ifdef _WIN32
+        x86Runner::LoadMEXE(mexe);
+        x86Runner::run();
+#endif // _WIN32
+        return true;
+    }
+    else if (args.size() == 2 && args[0] == R("runMEXE")) {
+        ByteArray<unsigned char> mexe = readFileByteArray<unsigned char>(args[1]);
+        #ifdef _WIN32
+        x86Runner::LoadMEXE(mexe);
+        x86Runner::run();
+        #endif // _WIN32
+        return true;
+    }
+    else if (args.size() == 3 && args[0] == R("buildIR")) {
+        Lexer lex{};
+        bool err = lex.analyze(readFileString(args[1]));
+        if (err) return false;
+        PrepareLexer(lex);
+        AST ast{};
+        err = ast.analyze(lex.importedLibs, lex.globals, lex.functionSets, lex.structures, lex.ExternFunctions, lex.constants);
+        if (err) return false;
+        IRGenerator ir{};
+        err = ir.analyze(ast.libs, ast.globalVars, ast.analyzed_functionSets, ast.sets, ast.structures, ast.ExtraFunctions, ast.constants);
+        if (err) return false;
+        writeFileString(args[2], ir.IR);
+        return true;
+    }
+    else if (args.size() == 3 && args[0] == R("buildMEXE")) {
+		ByteArray<unsigned char> mexe;
+		if (!IR2MEXE(readFileString(args[1]), mexe)) return false;
+		writeFileByteArray(args[2], mexe);
+		return true;	
+    }
+    else if (args.size() == 3 && args[0] == R("build")) {
+        Lexer lex{};
+		bool err = lex.analyze(readFileString(args[1]));
+		if (err) return false;
+		PrepareLexer(lex);
+		AST ast{};
+		err = ast.analyze(lex.importedLibs, lex.globals, lex.functionSets, lex.structures, lex.ExternFunctions, lex.constants);
+		if (err) return false;
+		IRGenerator ir{};
+		err = ir.analyze(ast.libs, ast.globalVars, ast.analyzed_functionSets, ast.sets, ast.structures, ast.ExtraFunctions, ast.constants);
+		if (err) return false;
+		ByteArray<unsigned char> mexe;
+		err = !IR2MEXE(ir.IR, mexe);
+		if (err) return false;
+		writeFileByteArray(args[2], mexe);
+		return true;
+    }
+    else if (args.size() == 1) {
+        Lexer lex{};
+		bool err = lex.analyze(readFileString(args[0]));
+		if (err) return false;
+		PrepareLexer(lex);
+		AST ast{};
+		err = ast.analyze(lex.importedLibs, lex.globals, lex.functionSets, lex.structures, lex.ExternFunctions, lex.constants);
+		if (err) return false;
+		IRGenerator ir{};
+		err = ir.analyze(ast.libs, ast.globalVars, ast.analyzed_functionSets, ast.sets, ast.structures, ast.ExtraFunctions, ast.constants);
+		if (err) return false;
+		ByteArray<unsigned char> mexe;
+		err = !IR2MEXE(ir.IR, mexe);
+		if (err) return false;
+#ifdef _WIN32
+        x86Runner::LoadMEXE(mexe);
+        x86Runner::run();
+#endif // _WIN32
+		return true;	
+    }
+}
+
+int main(int argn, char* argv[]) {
+#ifdef G_UNICODE_
+    std::wcout.imbue(std::locale("zh_CN"));
+#endif 
+#if _DEBUG
+    test(argn, argv);
+#else
+    if (argn == 1) {
+        std::cout << "Usage:\n";
+		std::cout << "runIR <IR file>\n";
+		std::cout << "run <source file>\n";
+		std::cout << "runMEXE <MEXE file>\n";
+		std::cout << "buildIR <source file> <IR file>\n";
+		std::cout << "buildMEXE <IR file> <MEXE file>\n";
+		std::cout << "build <source file> <MEXE file>\n";
+		return 0;
+    }
+    std::vector<lstring> args;
+    for (int i = 1; i < argn; i++) {
+#ifdef G_UNICODE_
+        args.push_back(to_wide_string(argv[i]));
+#else
+		args.push_back(argv[i]);
+#endif
+    }
+    process_command(args);
+#endif // _DEBUG
+	return 0;
 }

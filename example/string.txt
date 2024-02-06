@@ -2,7 +2,7 @@ _string_{
     R2Str(R:data)->string:={
         string:tmp;
         tmp.size=0;
-        tmp.ad=new(256);
+        tmp.ad=new(512);
         R2T(data,tmp.ad);
         while(N(tmp.ad+tmp.size)->B!=0 or N(tmp.ad+tmp.size+1)->B!=0){tmp.size=tmp.size+2};
         tmp.size=tmp.size+2;
@@ -15,6 +15,7 @@ Class:string{
         ad=0;size=0
     }
     _destroy_()->N:={
+        //printN(ad);
         if(ad!=0){free(ad);ad=0};
         size=0;
     }
@@ -22,6 +23,7 @@ Class:string{
         N:ad,N:size
     }
     [Public]_return_string(string:s)->N:={//prevent RAII destroys data
+
         _destroy_();
         ad=new(s.size);
         size=s.size;
@@ -74,14 +76,27 @@ Class:string{
     [Public]!=(string:s)->Boolen:={
         return(not CmpStr(ad,s.ad))
     }
+    [Public]ToN()->N:={
+        return(ad)
+    }
 }
+
+Extra:"user32.dll"{
+    MessageBoxW(N:HWND,N:Text,N:Caption,N:Type)->N:=MessageBoxW;
+}
+
 Main{
-	main()->N:={
-		string:A.const(&"Hello ");
+    f()->string:={
+        string:A.const(&"test");
+        return(A);
+    }
+        main()->N:={
+        string:A.const(&"Hello. ");
         string:B.const(&"World!");
         string:C.const(&"
 ");
-        string:D=(A+B+C)*10;
-		print(D.ad);
-	}
+        string:D=f()+C+R2Str(0.5)+C+(A+B+C)*10;
+        MessageBoxW(0,D,&"Title",0);
+        print(D);
+    }
 }

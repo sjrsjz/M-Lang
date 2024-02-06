@@ -515,7 +515,7 @@ lstring AST::getFunctionFullName(lstring name, functionSet functionSet_) {
 	std::vector<lstring> t{};
 	lstring className{};
 	lstring func{};
-	t = split(name, R("\n"));
+	t = split(name,DIVISION);
 	if (!t.size()) return R("");
 	if (t.size() == 1) {
 		className = R("");
@@ -550,12 +550,11 @@ lstring AST::getFunctionFullName(lstring name, functionSet functionSet_) {
 		if (className != R("")) {
 			if (ExtraFunctions.func[j].DLL == className)
 				return R("Extra") + DIVISION + className + DIVISION + ExtraFunctions.func[j].extra_name;
-			else
-				continue;
+		}
+		else
 			if (ExtraFunctions.func[j].name == func) {
 				return R("Extra") + DIVISION + ExtraFunctions.func[j].DLL + DIVISION + ExtraFunctions.func[j].extra_name;
 			}
-		}
 	}
 	return R("Unknown") + DIVISION + R("Unknown") + DIVISION + func;
 }

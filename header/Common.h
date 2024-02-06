@@ -84,6 +84,27 @@ namespace MLang {
     void output(std::vector<lstring> tk,lstring str,intptr_t pos);
     lstring gather(std::vector<lstring> tks, size_t c);
     lstring readFileString(lstring path);
+    template<typename T> inline ByteArray<T> readFileByteArray(lstring path) {
+        std::ifstream fin{};
+        fin.open(path, std::ios::in | std::ios::binary);
+        if (!fin.is_open()) return ByteArray<T>{};
+        fin.seekg(0, std::ios::end);
+        size_t size = fin.tellg();
+        fin.seekg(0, std::ios::beg);
+        ByteArray<T> buf(size);
+        fin.read((char*)buf.ptr, size);
+        fin.close();
+        return buf;
+    }
+    bool writeFileString(lstring path, lstring str);
+    bool inline writeFileByteArray(lstring path, ByteArray<> data) {
+        std::ofstream fout{};
+        fout.open(path, std::ios::out);
+        if (!fout.is_open()) return false;
+        fout.write((char*)data.ptr, data.size);
+        fout.close();
+        return true;
+    }
     size_t DimSize(std::vector<size_t> dim);
     std::vector<lstring> split(lstring str, lstring str_0);
 

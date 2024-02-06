@@ -6,6 +6,14 @@ private:
     T data{};
     intptr_t pointer{};
     bool located;
+    void error() {
+#if UNICODE
+        std::wcerr << RED << R("[错误]") << CYAN << R("[树损坏]") << RESET << __LINE__ << std::endl;
+#else
+        std::cerr << RED << R("[错误]") << CYAN << R("[树损坏]") << RESET << __LINE__ << std::endl;
+#endif // UNICODE
+
+	}
 public:
     Tree() {
         located = false;
@@ -52,7 +60,7 @@ public:
     }
     Tree* LocateParentTree(Tree* parent) {
         if (located) return parent;
-        assert(pointer>=0 && pointer < (intptr_t)nodes.size());
+        if(!(pointer>=0 && pointer < (intptr_t)nodes.size())) {error(); return nullptr;}
         return nodes[pointer].LocateParentTree(this);
     }
     T& Get() {
@@ -78,7 +86,7 @@ public:
         if (!c || !c->size()) return false;
         c->pointer = 0;
         c->located = false;
-        assert(c->pointer >= 0 && c->pointer < (intptr_t)c->nodes.size());
+        if (!(c->pointer >= 0 && c->pointer < (intptr_t)c->nodes.size())) { error(); return false; }
         c->nodes[c->pointer].located = true;
         return true;
     }
@@ -152,7 +160,7 @@ public:
     }
     T& operator [](size_t index) {
         Tree* c = LocateCurrentTree();
-        assert(index < c->nodes.size());
+        if (index >= c->nodes.size()) { error(); return nullptr; }
         return c->nodes[index].data;
     }
     bool remove() {
