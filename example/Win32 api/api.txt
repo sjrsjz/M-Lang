@@ -1,0 +1,18 @@
+Extra:"user32.dll"{
+    CreateWindow(N:dwExStyle,N:lpClassName,N:lpWindowName,N:dwStyle,
+        N:X,N:Y,N:nWidth,N:nHeight,N:hWndParent,N:hMenu,N:hInstance,N:lpParam)->N:=CreateWindowExW;
+    ShowWindow(N:hwnd,N:nCmdShow)->N:=ShowWindow;
+    UpdateWindow(N:hwnd)->N:=UpdateWindow;
+    GetMessage(MSG:lpMsg,N:hwnd,N:wMsgFilterMin,N:wMsgFilterMax)->N:=GetMessageW;
+    TranslateMessage(MSG:lpMsg)->N:=TranslateMessage;
+    DispatchMessage(MSG:lpMsg)->N:=DispatchMessageW;
+    LoadIcon(N:hInstance,N:lpIconName)->N:=LoadIconW;
+    LoadCursor(N:hInstance,N:lpIconName)->N:=LoadCursorW;
+    RegisterClass(WNDCLASS:class)->N:=RegisterClassW;
+    msgbox(N:a,N:msg,N:title,N:b)->N:=MessageBoxW;
+    DefWindowProc(N:hwnd,N:wMsg,N:wParam,N:lParam)->N:=DefWindowProcW;
+    PostQuitMessage(N:nExitCode)->N:=PostQuitMessage;
+}
+Extra:"gdi32.dll"{
+    GetStockObject(N:nIndex)->N:=GetStockObject;
+}

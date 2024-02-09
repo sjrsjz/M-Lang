@@ -1,4 +1,5 @@
-﻿#include "../header/Common.h"
+﻿#define _IN_MAIN_
+#include "../header/Common.h"
 #include "../header/Tree.h"
 #include "../header/ByteArray.h"
 #include "../header/SectionManager.h"
@@ -9,7 +10,6 @@
 #ifdef _WIN32
 #include "../header/x86.h"
 #endif // WIN32
-
 
 using namespace MLang;
 
@@ -175,8 +175,8 @@ int test(int argn,char* argv[])
 #ifdef G_UNICODE_
 	std::wcout.imbue(std::locale("zh_CN"));
 #endif 
-#if _DEBUG
-    bool err = lex.analyze(R(R"(
+
+    bool err = lex.analyze(R(R"ABC(
 
 Extra:"user32.dll"{
     MessageBoxW(N:HWND,N:Text,N:Caption,N:Type)->N:=MessageBoxW;
@@ -206,7 +206,7 @@ Class:string{
     _string_:={
         N:ad,N:size
     }
-    [Public]_return_string(string:s)->N:={//prevent RAII destroys data
+    [Public]"return(string)"(string:s)->N:={//prevent RAII destroys data
 
         _destroy_();
         ad=new(s.size);
@@ -251,7 +251,7 @@ Class:string{
         };
         return(tmp)
     }
-    [Public]ToR()->R:={
+    [Public]"R()"()->R:={
         return(T2R(ad))
     }
     [Public]==(string:s)->Boolen:={
@@ -260,36 +260,29 @@ Class:string{
     [Public]!=(string:s)->Boolen:={
         return(not CmpStr(ad,s.ad))
     }
-    [Public]ToN()->N:={
+    [Public]"N()"()->N:={
 		return(ad)
 	}
 }
 Main{
-    f()->string:={
+    string:A_G;
+    f(B:s[0])->string:={
         string:A.const(&"test");
         return(A);
     }
 	main()->N:={
-		string:A.const(&"Hello. ");
-        string:B.const(&"World!");
-        string:C.const(&"
-");
-        string:D=f()+C+R2Str(0.5)+C+(A+B+C)*10;
-        MessageBoxW(0,D,&"Title",0);
-		print(D);
+		string:A.const("Hello ");
+        string:B.const("World!");
+        string:C.const("\n");
+        string:D=f("Hello")+C+R2Str(0.5)+C+(A+B+C)*10;
+        A_G=D;
+        MessageBoxW(0,D,"Title",0);
+		print(A_G,D);
 	}
 }
 
-)"));
-#else
-    if (argn != 2) return 0;
-#ifdef G_UNICODE_
-	lstring code = readFileString(to_wide_string(argv[1]));
-#else
-    lstring code = readFileString(argv[1]);
-#endif
-    bool err = lex.analyze(code);
-#endif
+)ABC"));
+
     if (err) return 0;
 
     PrepareLexer(lex);
@@ -315,6 +308,7 @@ Main{
 
 bool process_command(std::vector<lstring> args) {
     if (args.size() == 2 && args[0] == R("runIR")) {
+        workPath = getDictionary(args[1]) + R("\\");
         lstring ir = readFileString(args[1]);
         ByteArray<unsigned char> mexe;
         if (!IR2MEXE(ir, mexe)) {
@@ -327,6 +321,7 @@ bool process_command(std::vector<lstring> args) {
         return true;
     }
     else if (args.size() == 2 && args[0] == R("run")) {
+        workPath = getDictionary(args[1]) + R("\\");
         Lexer lex{};
 		bool err = lex.analyze(readFileString(args[1]));
 		if (err) return false;
@@ -347,6 +342,7 @@ bool process_command(std::vector<lstring> args) {
         return true;
     }
     else if (args.size() == 2 && args[0] == R("runMEXE")) {
+        workPath = getDictionary(args[1]) + R("\\");
         ByteArray<unsigned char> mexe = readFileByteArray<unsigned char>(args[1]);
         #ifdef _WIN32
         x86Runner::LoadMEXE(mexe);
@@ -355,6 +351,7 @@ bool process_command(std::vector<lstring> args) {
         return true;
     }
     else if (args.size() == 3 && args[0] == R("buildIR")) {
+        workPath = getDictionary(args[1]) + R("\\");
         Lexer lex{};
         bool err = lex.analyze(readFileString(args[1]));
         if (err) return false;
@@ -369,12 +366,14 @@ bool process_command(std::vector<lstring> args) {
         return true;
     }
     else if (args.size() == 3 && args[0] == R("buildMEXE")) {
-		ByteArray<unsigned char> mexe;
+        workPath = getDictionary(args[1]) + R("\\");
+        ByteArray<unsigned char> mexe;
 		if (!IR2MEXE(readFileString(args[1]), mexe)) return false;
 		writeFileByteArray(args[2], mexe);
 		return true;	
     }
     else if (args.size() == 3 && args[0] == R("build")) {
+        workPath = getDictionary(args[1]) + R("\\");
         Lexer lex{};
 		bool err = lex.analyze(readFileString(args[1]));
 		if (err) return false;
@@ -392,6 +391,7 @@ bool process_command(std::vector<lstring> args) {
 		return true;
     }
     else if (args.size() == 1) {
+        workPath = getDictionary(args[0]) + R("\\");
         Lexer lex{};
 		bool err = lex.analyze(readFileString(args[0]));
 		if (err) return false;
@@ -432,11 +432,7 @@ int main(int argn, char* argv[]) {
     }
     std::vector<lstring> args;
     for (int i = 1; i < argn; i++) {
-#ifdef G_UNICODE_
         args.push_back(to_wide_string(argv[i]));
-#else
-		args.push_back(argv[i]);
-#endif
     }
     process_command(args);
 #endif // _DEBUG

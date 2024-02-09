@@ -22,7 +22,7 @@ Class:string{
     _string_:={
         N:ad,N:size
     }
-    [Public]_return_string(string:s)->N:={//prevent RAII destroys data
+    [Public]"return(string)"(string:s)->N:={//prevent RAII destroys data
 
         _destroy_();
         ad=new(s.size);
@@ -67,7 +67,7 @@ Class:string{
         };
         return(tmp)
     }
-    [Public]ToR()->R:={
+    [Public]"R()"()->R:={
         return(T2R(ad))
     }
     [Public]==(string:s)->Boolen:={
@@ -76,7 +76,7 @@ Class:string{
     [Public]!=(string:s)->Boolen:={
         return(not CmpStr(ad,s.ad))
     }
-    [Public]ToN()->N:={
+    [Public]"N()"()->N:={
         return(ad)
     }
 }
@@ -87,16 +87,15 @@ Extra:"user32.dll"{
 
 Main{
     f()->string:={
-        string:A.const(&"test");
+        string:A.const("test");
         return(A);
     }
         main()->N:={
-        string:A.const(&"Hello. ");
-        string:B.const(&"World!");
-        string:C.const(&"
-");
+        string:A.const("Hello. ");
+        string:B.const("World!");
+        string:C.const("\n");
         string:D=f()+C+R2Str(0.5)+C+(A+B+C)*10;
-        MessageBoxW(0,D,&"Title",0);
+        MessageBoxW(0,D,"Title",0);
         print(D);
     }
 }

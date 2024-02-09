@@ -67,6 +67,11 @@ typedef std::stringstream lstringstream;
 #define BOLDCYAN    R("\033[1m\033[36m")      /* Bold Cyan */
 #define BOLDWHITE   R("\033[1m\033[37m")      /* Bold White */
 
+#ifdef _IN_MAIN_
+lstring workPath{};
+#else
+extern lstring workPath;
+#endif
 namespace MLang {
     size_t max_(size_t A, size_t B);
     size_t min_(size_t A, size_t B);
@@ -84,6 +89,7 @@ namespace MLang {
     void output(std::vector<lstring> tk,lstring str,intptr_t pos);
     lstring gather(std::vector<lstring> tks, size_t c);
     lstring readFileString(lstring path);
+    lstring getDictionary(lstring path);
     template<typename T> inline ByteArray<T> readFileByteArray(lstring path) {
         std::ifstream fin{};
         fin.open(path, std::ios::in | std::ios::binary);
@@ -116,6 +122,9 @@ namespace MLang {
 #pragma warning(suppress : 4996)
         return converter.from_bytes(input);
     }
+    inline std::wstring to_wide_string(const std::wstring& input) {
+        return input;
+    }
 
     //convert wstring to string 
     inline std::string to_byte_string(const std::wstring& input)
@@ -124,6 +133,9 @@ namespace MLang {
         std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
 #pragma warning(suppress : 4996)
         return converter.to_bytes(input);
+    }
+    inline std::string to_byte_string(const std::string& input) {
+        return input;
     }
    
     // 默认情况：is_vector为false

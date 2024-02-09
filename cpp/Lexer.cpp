@@ -323,9 +323,10 @@ intptr_t Lexer::analyze_globalVars(std::vector<lstring> tks, size_t ip) {
     std::vector<lstring> tk0{};
     type var{};
     functionSet set{};
-    final = search(tks, R(":"), 0, ip + 1, 0);
+    final = search(tks, R(";"), 0, ip + 1, 0);
     if (final == -1) final = tks.size() + 1;
     SubTokens(tks, tk0, ip, final - 1);
+    DebugOutput(tk0);
     if (analyze_vars(tk0, var)) {
         globals.push_back(var);
         return final + 1;
@@ -345,10 +346,26 @@ extern void cut_tokens(lstring code,std::vector<lstring>& tks){
     while (i < length)
     {
         i++;
+
         tmp_tk = code.substr(i - 1, 2);
         if (tmp_tk == R("//") && !forbid) annotation_line = true;
         if (tmp_tk == R("/*") && !forbid && !annotation_line) { annotation = true; i++; continue; }
         if (tmp_tk == R("*/") && !forbid && !annotation_line) { annotation = false; i++; continue; }
+        if (tmp_tk == R("\\n") && forbid && !annotation && !annotation_line) {
+            curr_tk += R("\n");
+            i++;
+            continue;
+        }
+        if (tmp_tk == R("\\\\") && forbid && !annotation && !annotation_line) {
+            curr_tk += R("\\");
+            i++;
+            continue;
+        }
+        if (tmp_tk == R("\\\"") && forbid && !annotation && !annotation_line) {
+			curr_tk += R("\"");
+			i++;
+			continue;
+		}
         if (code.substr(i - 1, 1) == R("\n") && !annotation && !forbid) annotation_line = false;
         if (annotation || annotation_line) continue;
         if (IsOperator(tmp_tk, 0) && !forbid && !annotation_line) {
@@ -462,8 +479,8 @@ void Lexer::preprocesser(std::vector<lstring>& tk) {
             if (t == R("include")) {
                 if (i + 3 <= tk.size() && tk[i] == R("<") && tk[i + 2] == R(">")) {
                     t3 = tk[i + 1];
-                    path = (t3.substr(0, 1) == R("@")) ? t3.substr(2, t3.size() - 3) : t3.substr(1, t3.size());
-                    file = readFileString(path);
+                    path = process_quotation_mark((t3.substr(0, 1) == R("@")) ? t3.substr(2, t3.size() - 2) : t3);
+                    file = readFileString((t3.substr(0, 1) == R("@")) ? path : workPath + path);
                     cut_tokens(file, ttk);
                     tk.insert(tk.end(),ttk.begin(),ttk.end());
                     tk.erase(tk.begin() + i - 1, tk.begin() + i + 4);

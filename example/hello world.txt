@@ -1,5 +1,5 @@
 Main{
 	main()->N:={
-		print(&"Hello World!")
+		print("Hello World!")
 	}
 }

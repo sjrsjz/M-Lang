@@ -70,12 +70,10 @@ Class:A{
 
 	[Public]_init_()->N:={
         a=0;b=1024;
-		print(&"init ");printN(&this);print(&"
-");
+		print("init ");printN(&this);print("\n");
 	}
 	[Public]_destroy_()->N:={
-		print(&"destroy ");printN(&this);print(&"
-"); 
+		print("destroy ");printN(&this);print("\n"); 
 	}
 }
 Main{
@@ -94,13 +92,12 @@ Main{
 		A[1][0]->A.a=4;
 		A[1][1]->A.a=5;
 		A[1][2]->A.a=6;
-		printN(A[0][0]->A.a);print(&"|");
-		printN(A[0][1]->A.b);print(&"|");
-		printN(A[0][2]->A.a);print(&"|");
-		printN(A[1][0]->A.b);print(&"|");
-		printN(A[1][1]->A.a);print(&"|");
+		printN(A[0][0]->A.a);print("|");
+		printN(A[0][1]->A.b);print("|");
+		printN(A[0][2]->A.a);print("|");
+		printN(A[1][0]->A.b);print("|");
+		printN(A[1][1]->A.a);print("|");
 		printN(A[1][2]->A.b);
-		print(&"
-")
+		print("\n")
 	}
 }

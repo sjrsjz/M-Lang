@@ -61,6 +61,7 @@ namespace MLang {
 		std::vector<lstring> loopEndStack{};
 
 		void error(lstring err);
+		void warning(lstring warn);
 		bool getFunctionType(lstring fullName,lstring& type,lstring& super,lstring& name);
 		size_t countVarSize(const std::vector<type>&);
 		void generateFunctionSet(analyzed_functionSet& functionSet);

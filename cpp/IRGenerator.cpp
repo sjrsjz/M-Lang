@@ -5,13 +5,21 @@ inline bool IRGenerator::ins(lstring tk) {
 }
 
 void IRGenerator::error(lstring err) {
-	lstring err_ = err;
+	lstring err_{};
 	for (auto& x : error_lineStack) {
-		err_ += R("[行:") + to_lstring(x) + R("]");
+		err_ += R("[行:") + to_lstring(x + 1) + R("]");
 	}
 	std_lcout << RED << R("[错误]") << CYAN << R("[中间代码生成]") << R("[程序集/类:") << error_functionSet << R("][函数/方法:") << error_function << R("]") << err_ << R("[行:") << error_line + 1 << R("]") << RESET << err << std::endl;
 	Error = true;
 }
+void IRGenerator::warning(lstring warn) {
+	lstring err_{};
+	for (auto& x : error_lineStack) {
+		err_ += R("[行:") + to_lstring(x + 1) + R("]");
+	}
+	std_lcout << YELLOW << R("[警告]") << CYAN << R("[中间代码生成]") << R("[程序集/类:") << error_functionSet << R("][函数/方法:") << error_function << R("]") << err_ << R("[行:") << error_line + 1 << R("]") << RESET << warn << std::endl;
+}
+
 bool IRGenerator::getFunctionType(lstring fullName, lstring& type, lstring& super, lstring& name) {
 	std::vector<lstring> t = split(fullName, DIVISION);
 	if (t.size() < 2 || t.size() > 3) {
@@ -1104,7 +1112,7 @@ label_handleBuiltInFunctions_1:
 					EX.parent();
 					return false;
 				}
-				lstring tk1 = R("Local") + DIVISION + func_ret.typeName + DIVISION + R("_return_" + A.typeName);
+				lstring tk1 = R("Local") + DIVISION + func_ret.typeName + DIVISION + R("return(") + A.typeName + R(")");
 				if (haveFunction(tk1)) {
 					std::vector<type> args{};
 					args.push_back(A);
@@ -1254,7 +1262,8 @@ bool IRGenerator::cmpDim(const std::vector<size_t>& tk1, const std::vector<size_
 	return true;
 }
 bool IRGenerator::generateImplictConversion(type& A, type& B, analyzed_functionSet functionSet, analyzed_function func, Tree<node> EX) {
-	lstring t = R("Local") + DIVISION + B.typeName + DIVISION + R("To") + A.typeName;
+	lstring t = R("Local") + DIVISION + B.typeName + DIVISION + A.typeName + R("()");
+	DebugOutput(t);
 	size_t id;
 	if (haveFunction(t)) {
 		std::vector<type> args{}, args2{};
@@ -1273,8 +1282,24 @@ bool IRGenerator::generateImplictConversion(type& A, type& B, analyzed_functionS
 		A.id = B.id;
 		return true;
 	}
+	if (A.array && B.array && A.typeName == B.typeName) {
+		warning(R("尝试对类型相同但性质不同的数组进行强制转换"));
+		A.id = B.id;
+		return true;
+	}
+	if (A.array && !B.array && B.typeName==R("N")) {
+		warning(R("尝试将无符号整数/地址转换成数组"));
+		A.id = B.id;
+		return true;
+	}
+	if (!A.array && B.array && A.typeName == R("N")) {
+		warning(R("尝试将数组转换成无符号整数/地址"));
+		A.id = B.id;
+		return true;
+	}
 	if (A.array || B.array) {
-		error(R("非法强制转换:数组"));
+		
+		warning(R("非法强制转换:数组"));
 		return false;
 	}
 	if (B.address && ifBaseType(B)) {
