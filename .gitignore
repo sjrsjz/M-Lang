@@ -362,3 +362,4 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /example/M Lang.exe
+/example/Win32 api/M Lang.exe
