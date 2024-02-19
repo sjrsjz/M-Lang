@@ -19,6 +19,7 @@ namespace MLang {
 		ByteArray<> constantData{};
 		analyzed_functionSet ExtraFunctions{};
 		bool Error{};
+		bool enableWarning{};
 		intptr_t error_line{};
 		std::vector<intptr_t> error_lineStack{};
 		lstring error_functionSet{};

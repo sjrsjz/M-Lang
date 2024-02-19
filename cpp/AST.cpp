@@ -95,7 +95,9 @@ analyzed_function AST::analyzeFunction(functionSet& functionSet_, function& func
 	analyzed_function func0{};
 	func0.codes.clear();
 	size_t i{};
+#if _DEBUG
 	std_lcout << std::endl << "[Function]" << func.name << std::endl ;
+#endif
 	while (i>=0 && i< func.codes.size())
 	{
 		error_line = i;
@@ -128,6 +130,7 @@ analyzed_function AST::analyzeFunction(functionSet& functionSet_, function& func
 	func0.transit = func.transit;
 	func0.transitArg = func.transitArg;
 	func0.use_arg_size = func.use_arg_size;
+	func0.polymorphic = func.polymorphic;
 	return func0;
 }
 bool AST::analyzeExper(functionSet& functionSet_, function& func, Tree<node>& EX, std::vector<lstring> tk) {
@@ -646,7 +649,7 @@ bool AST::analyze(
 	structures = structures_;
 	sets = functionSets_;
 	ExtraFunctions = ExtraFunctions_;
-
+	analyzePolymorphism(nullptr, nullptr);
 
 	Error = false;
 	error_type = R("Struct");
@@ -676,4 +679,30 @@ bool AST::haveFunction(functionSet functionSet_, function func, lstring name) {
 		for (const auto& y : x.func) if ((!x.isClass || y.publiced) && y.name == name) return true;
 	}
 	for (const auto& x : ExtraFunctions.func) if (x.name == name) return true;
+}
+void AST::analyzePolymorphism(functionSet* currFunctionSet,function* currFunc) {//多态性分析
+	for (auto&x:sets) {
+		for (auto& y : x.func) {
+			if (y.polymorphic) continue;
+			if (!currFunc) {
+				analyzePolymorphism(&x, &y);
+				continue;
+			}
+			if (currFunc && currFunc != &y && currFunc->name == y.name && (!currFunctionSet->isClass || currFunctionSet->isClass && (!x.isClass || x.isClass && y.publiced))) {
+				currFunc->polymorphic = true;
+				y.polymorphic = true;
+			}
+		}
+	}
+	for (auto& x : ExtraFunctions.func) {
+		if (x.polymorphic) continue;
+		if (!currFunc) {
+			analyzePolymorphism(&ExtraFunctions, &x);
+			continue;
+		}
+		if (currFunc && currFunc != &x && currFunc->name == x.name) {
+			currFunc->polymorphic = true;
+			x.polymorphic = true;
+		}
+	}
 }

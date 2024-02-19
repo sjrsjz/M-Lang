@@ -32,6 +32,14 @@ void NewBuiltInFunction(functionSet& functionSet, const lstring name, const std:
     func.publiced = true;
     func.use_arg_size = cdecl_;
     func.call_type = cdecl_ ? R("cdecl") : R("stdcall");
+    bool a = false;
+    for (auto& x : functionSet.func) {
+        if (x.name == name) {
+            x.polymorphic = true;
+            a = true;
+        }
+    }
+    func.polymorphic = a;
     functionSet.func.push_back(func);
 }
 extern void cut_tokens(lstring code, std::vector<lstring>& tks);

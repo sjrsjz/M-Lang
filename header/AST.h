@@ -48,5 +48,6 @@ namespace MLang {
 		lstring getFunctionFullName(lstring name, functionSet functionSet_);
 		void error(lstring err);
 		bool haveFunction(functionSet functionSet_, function func, lstring name);
+		void analyzePolymorphism(functionSet* currFunctionSet, function* currFunc);
 	};
 }

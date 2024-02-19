@@ -13,6 +13,7 @@ void IRGenerator::error(lstring err) {
 	Error = true;
 }
 void IRGenerator::warning(lstring warn) {
+	if (!enableWarning) return;
 	lstring err_{};
 	for (const auto& x : error_lineStack) {
 		err_ += R("[行:") + to_lstring(x + 1) + R("]");
@@ -84,7 +85,7 @@ void IRGenerator::generateFunction(analyzed_functionSet& functionSet, analyzed_f
 		error_line = i;
 		generateLine(functionSet, func, func.codes[i]);
 	}
-	ins(R("#label_function_End_Local") + DIVISION + functionSet.name + DIVISION + func.name);
+	ins(R("#label_function_End_Local") + DIVISION + functionSet.name + DIVISION + func.name + buildFunctionTypeStr(func));
 	tmpStack.clear();
 	ins(R("tmpBegin"));
 	tmpCodeStack.push_back(tmpCode);
@@ -664,10 +665,10 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 				error(R("未声明传入参数个数"));
 			}
 			if (ifNotRef(ret)) {
-				ins(R("Call_cdecl #label_function_") + tk1 + R(" %") + to_lstring(C.id) + R(" %") + to_lstring(ret.id) + arg_T);
+				ins(R("Call_cdecl #label_function_") + tk1 + buildFunctionTypeStr(*func0) + R(" %") + to_lstring(C.id) + R(" %") + to_lstring(ret.id) + arg_T);
 			}
 			else {
-				ins(R("CallA_cdecl #label_function_") + tk1 + R(" %") + to_lstring(C.id) + R(" &%") + to_lstring(ret.id) + arg_T);
+				ins(R("CallA_cdecl #label_function_") + tk1 + buildFunctionTypeStr(*func0) + R(" %") + to_lstring(C.id) + R(" &%") + to_lstring(ret.id) + arg_T);
 			}
 		}
 		else {
@@ -1096,7 +1097,7 @@ label_handleBuiltInFunctions_1:
 				type B = func_ret;
 				generateImplictConversion(B, A, functionSet, func, EX);
 				ins(R("ret %") + to_lstring(B.id) + R(" ") + to_lstring(size(B)));
-				ins(R("jmp #label_function_End_") + getFullName(func.name, functionSet));
+				ins(R("jmp #label_function_End_") + getFullName(func.name, functionSet) + buildFunctionTypeStr(func));
 				EX.parent();
 				return true;
 			}
@@ -1147,7 +1148,7 @@ label_handleBuiltInFunctions_1:
 							ret.id = id2;
 							ret.address = true;
 						}
-						ins(R("jmp #label_function_End_") + getFullName(func.name, functionSet));
+						ins(R("jmp #label_function_End_") + getFullName(func.name, functionSet) + buildFunctionTypeStr(func));
 						EX.parent();
 						return true;
 					}
@@ -1300,8 +1301,7 @@ bool IRGenerator::generateImplictConversion(type& A, type& B, analyzed_functionS
 		return true;
 	}
 	if (A.array || B.array) {
-		
-		warning(R("非法强制转换:数组"));
+		error(R("非法强制转换:数组"));
 		return false;
 	}
 	if (B.address && ifBaseType(B)) {
@@ -1997,6 +1997,7 @@ bool IRGenerator::buildThisCall(analyzed_functionSet& functionSet, analyzed_func
 	return true;
 }
 lstring IRGenerator::buildFunctionTypeStr(const analyzed_function& func) {
+	if (!func.polymorphic) return R("");
 	lstring str{};
 	for (const auto& x : func.args) {
 		str += R("_") + base64_encode(x.typeName + (x.array ? R("[]") : R("")));

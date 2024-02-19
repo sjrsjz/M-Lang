@@ -35,6 +35,7 @@ struct function {
     bool transit;
     lstring transitArg;
     bool use_arg_size;
+    bool polymorphic;
 };
 struct structure {
     lstring name;
@@ -74,6 +75,7 @@ struct analyzed_function {
     bool transit;
     lstring transitArg;
     bool use_arg_size;
+    bool polymorphic;
 };
 struct analyzed_functionSet {
     lstring name;
