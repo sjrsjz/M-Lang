@@ -63,6 +63,9 @@ Class:Array{
 		if(ptr!=0){free(ptr)};
 		DimPtr=0;ptr=0;
 	}
+	[Public]"sizeof()"(N:index)->N:={
+		return((DimPtr+index*sizeof:N)->N)
+	}
 }
 Class:A{
 	[Public]N:a;
@@ -98,6 +101,8 @@ Main{
 		printN(A[1][0]->A.b);print("|");
 		printN(A[1][1]->A.a);print("|");
 		printN(A[1][2]->A.b);
-		print("\n")
+		print("\n");
+		printN(sizeof:(A,0));
+		print("\n");
 	}
 }

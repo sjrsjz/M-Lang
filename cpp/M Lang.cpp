@@ -426,7 +426,7 @@ bool process_command(std::vector<lstring> args) {
 		if (err) return false;
 		ByteArray<unsigned char> mexe;
 		err = !IR2MEXE(ir.IR, mexe);
-        std_lcout << ir.IR;
+        //std_lcout << ir.IR;
 		if (err) return false;
 #ifdef _WIN32
         x86Runner::LoadMEXE(mexe);
