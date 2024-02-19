@@ -17,7 +17,7 @@ namespace MLang {
 		std::vector<type> constants{};
 		
 		ByteArray<> constantData{};
-		functionSet ExtraFunctions{};
+		analyzed_functionSet ExtraFunctions{};
 		bool Error{};
 		intptr_t error_line{};
 		std::vector<intptr_t> error_lineStack{};
@@ -60,6 +60,7 @@ namespace MLang {
 		std::vector<lstring> loopStartStack{};
 		std::vector<lstring> loopEndStack{};
 
+		bool buildThisCall(analyzed_functionSet& functionSet, analyzed_function& func, Tree<node>& EX,const lstring& fullname, analyzed_function& callfunc, type& object, std::vector<type>& args, type& ret);
 		void error(lstring err);
 		void warning(lstring warn);
 		bool getFunctionType(lstring fullName,lstring& type,lstring& super,lstring& name);
@@ -94,11 +95,11 @@ namespace MLang {
 		structure getStructure(lstring name);
 		type getSetVarType(lstring name, const analyzed_functionSet& functionSet);
 		type getGlobalVarType(lstring name);
-		analyzed_function getFunction(const analyzed_functionSet& functionSet, lstring fullName, std::vector<type>& args, std::optional<bool> variable);
-		bool cmpArgNum(const std::vector<type>& A, const std::vector<type>& B);
-		bool cmpArg(const std::vector<type>& A, const std::vector<type>& B);
+		analyzed_function* getFunction(const analyzed_functionSet& functionSet, lstring fullName, const std::optional<std::vector<type>>& args, std::optional<bool> variable);
+		bool cmpArgNum(const std::vector<type>& A, const std::optional<std::vector<type>>& B);
+		bool cmpArg(const std::vector<type>& A, const std::optional<std::vector<type>>& B);
 		analyzed_function toAnalyzedFunction(function func);
-		lstring getFullName(lstring name, const analyzed_functionSet& functionSet);
+		lstring getFullName(const lstring& name, const analyzed_functionSet& functionSet);
 		bool ifBaseType(const type& A);
 		size_t argSize(const type& A);
 		size_t countArgSize(const analyzed_functionSet& functionSet, const analyzed_function& func);
@@ -110,5 +111,6 @@ namespace MLang {
 		void countGlobalSize();
 		size_t getStructureSize(lstring type);
 		bool ins(lstring tk);
+		lstring buildFunctionTypeStr(const analyzed_function& func);
 	};
 }

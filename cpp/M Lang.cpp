@@ -264,6 +264,17 @@ Class:string{
 		return(ad)
 	}
 }
+Class:test{
+    [Public]"sizeof()"(Z:arg)->N:={
+        print("Z");
+
+        return(arg)
+    }
+    [Public]"sizeof()"(R:arg)->N:={
+        print("R");
+        return(233)
+    }
+}
 Main{
     string:A_G;
     f(B:s[0])->string:={
@@ -271,6 +282,13 @@ Main{
         return(A);
     }
 	main()->N:={
+        test:T;
+        printN(sizeof:(T,114514.01));printN(sizeof:(T,114514));
+        print("\n");
+        string:A_Array[10];
+        if(CmpStr(typeof:(1+2),"Z")==0){
+            printN(sizeof:(A_Array));print(" True\n");
+        };
 		string:A.const("Hello ");
         string:B.const("World!");
         string:C.const("\n");

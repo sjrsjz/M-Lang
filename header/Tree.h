@@ -46,10 +46,12 @@ public:
     ~Tree() { data.~T(); }
     bool next() {
         Tree* c = LocateParentTree(nullptr);
+        Tree* curr = LocateCurrentTree();
         c->pointer++;
         if (c->pointer >= (intptr_t)c->nodes.size()) {
             c->pointer = c->nodes.size() - 1; return false;
         }
+        if(curr) curr->located = false;
         c->nodes[c->pointer].located = true;
         return true;
     }
@@ -73,6 +75,8 @@ public:
     bool parent() {
         Tree* c = LocateParentTree(nullptr);
         if (!c) return false;
+        Tree* curr = LocateCurrentTree();
+        if (curr) curr->located = false;
         c->reset(); return true;
     }
     bool haveParent() {
@@ -110,7 +114,7 @@ public:
     }
     bool insert(const Tree& o) {
         Tree* c = LocateCurrentTree();
-        if (!c) { pointer = 0; data = o; located = true; return true; }
+        if (!c) { *this = o; pointer = 0; located = true; return true; }
         if (c->pointer > (intptr_t)c->nodes.size()) return false;
         c->nodes.insert((c->nodes.begin() + (c->pointer > 0 ? c->pointer : 0)), o);
         return true;

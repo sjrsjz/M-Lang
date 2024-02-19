@@ -6,7 +6,7 @@ inline bool IRGenerator::ins(lstring tk) {
 
 void IRGenerator::error(lstring err) {
 	lstring err_{};
-	for (auto& x : error_lineStack) {
+	for (const auto& x : error_lineStack) {
 		err_ += R("[行:") + to_lstring(x + 1) + R("]");
 	}
 	std_lcout << RED << R("[错误]") << CYAN << R("[中间代码生成]") << R("[程序集/类:") << error_functionSet << R("][函数/方法:") << error_function << R("]") << err_ << R("[行:") << error_line + 1 << R("]") << RESET << err << std::endl;
@@ -14,7 +14,7 @@ void IRGenerator::error(lstring err) {
 }
 void IRGenerator::warning(lstring warn) {
 	lstring err_{};
-	for (auto& x : error_lineStack) {
+	for (const auto& x : error_lineStack) {
 		err_ += R("[行:") + to_lstring(x + 1) + R("]");
 	}
 	std_lcout << YELLOW << R("[警告]") << CYAN << R("[中间代码生成]") << R("[程序集/类:") << error_functionSet << R("][函数/方法:") << error_function << R("]") << err_ << R("[行:") << error_line + 1 << R("]") << RESET << warn << std::endl;
@@ -41,7 +41,7 @@ bool IRGenerator::getFunctionType(lstring fullName, lstring& type, lstring& supe
 }
 size_t IRGenerator::countVarSize(const std::vector<type>& var) {
 	size_t size_{};
-	for (auto& x : var) size_ += size(x);
+	for (const auto& x : var) size_ += size(x);
 	return size_;
 }
 void IRGenerator::generateFunctionSet(analyzed_functionSet& functionSet) {
@@ -53,9 +53,9 @@ void IRGenerator::generateFunctionSet(analyzed_functionSet& functionSet) {
 }
 void IRGenerator::generateFunction(analyzed_functionSet& functionSet, analyzed_function& func) {
 	if (Error) return;
-	ins(R("\n\n#label_function_Local") + DIVISION + functionSet.name + DIVISION + func.name);
+	ins(R("\n\n#label_function_Local") + DIVISION + functionSet.name + DIVISION + func.name + buildFunctionTypeStr(func));
 	size_t local_size{};
-	for (auto& x : func.local) {
+	for (const auto& x : func.local) {
 		size_t size_ = x.name == R("[this]") ? size(Type_N) : size(x);
 		ins(R(";") + x.typeName + R(" ") + x.name + (x.array ? R("[]") : R("")) + R(" size:") + to_lstring(size_));
 		local_size += size_;
@@ -163,32 +163,10 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 			lstring tk1 = R("Local") + DIVISION + A.typeName + DIVISION + tk;
 			if (haveFunction(tk1)) {
 				std::vector<type> args{};
-				args.resize(1);
-				analyzed_function func0 = getFunction(functionSet, tk1, args, {});
-				if (args.size() == 1 && func0.args.size() == 1) {
-					size_t id1 = allocTmpID(func0.ret);
-					C = func0.args[0];
-					ret = func0.ret;
-					ret.id = id1;
-					if (generateImplictConversion(C, B, functionSet, func, EX)) {
-						lstring tk2 = func0.call_type == R("cdecl") ? R("_cdecl") : R("");
-						size_t argSize_ID{};
-						lstring argSize_T{};
-						if (func0.use_arg_size) {
-							argSize_ID = allocTmpID(Type_N);
-							ins(R("num %") + to_lstring(argSize_ID) + R(" ?I2"));
-							argSize_T = R(" %") + to_lstring(argSize_ID);
-						}
-						if (ifNotRef(func0.ret))
-							ins(R("Call") + tk2 + R(" #label_function_") + tk1 + R(" %") + to_lstring(A.id) + R(" %") + to_lstring(id1) + argSize_T +  + R(" %") + to_lstring(C.id));
-						else {
-							ins(R("CallA") + tk2 + R(" #label_function_") + tk1 + R(" %") + to_lstring(A.id) + R(" &%") + to_lstring(id1) + argSize_T  + R(" %") + to_lstring(C.id));
-							size_t id2 = allocTmpID(Type_N);
-							ins(R("address %") + to_lstring(id2) + R(" &%") + to_lstring(id1));
-							ret.id = id2;
-							ret.address = true;
-						}
-					}
+				args.push_back(B);
+				analyzed_function* func0 = getFunction(functionSet, tk1, args, {});
+				if (func0 && args.size() == 1 && func0->args.size() == 1) {
+					buildThisCall(functionSet, func, EX, tk1, *func0, A, args, ret);
 					EX.parent();
 					goto RET;
 				}
@@ -222,32 +200,10 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 			lstring tk1 = R("Local") + DIVISION + A.typeName + DIVISION + tk;
 			if (haveFunction(tk1)) {
 				std::vector<type> args{};
-				args.resize(1);
-				analyzed_function func0 = getFunction(functionSet, tk1, args, {});
-				if (args.size() == 1 && func0.args.size() == 1) {
-					size_t id1 = allocTmpID(func0.ret);
-					C = func0.args[0];
-					ret = func0.ret;
-					ret.id = id1;
-					if (generateImplictConversion(C, B, functionSet, func, EX)) {
-						lstring tk2 = func0.call_type == R("cdecl") ? R("_cdecl") : R("");
-						size_t argSize_ID{};
-						lstring argSize_T{};
-						if (func0.use_arg_size) {
-							argSize_ID = allocTmpID(Type_N);
-							ins(R("num %") + to_lstring(argSize_ID) + R(" ?I2"));
-							argSize_T = R(" %") + to_lstring(argSize_ID);
-						}
-						if (ifNotRef(func0.ret))
-							ins(R("Call") + tk2 + R(" #label_function_") + tk1 + R(" %") + to_lstring(A.id) + R(" %") + to_lstring(id1) + argSize_T + +R(" %") + to_lstring(C.id));
-						else {
-							ins(R("CallA") + tk2 + R(" #label_function_") + tk1 + R(" %") + to_lstring(A.id) + R(" &%") + to_lstring(id1) + argSize_T + R(" %") + to_lstring(C.id));
-							size_t id2 = allocTmpID(Type_N);
-							ins(R("address %") + to_lstring(id2) + R(" &%") + to_lstring(id1));
-							ret.id = id2;
-							ret.address = true;
-						}
-					}
+				args.push_back(B);
+				analyzed_function* func0 = getFunction(functionSet, tk1, args, {});
+				if (func0 && args.size() == 1 && func0->args.size() == 1) {
+					buildThisCall(functionSet, func, EX, tk1, *func0, A, args, ret);
 					EX.parent();
 					goto RET;
 				}
@@ -297,32 +253,10 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 			lstring tk1 = R("Local") + DIVISION + A.typeName + DIVISION + tk;
 			if (haveFunction(tk1)) {
 				std::vector<type> args{};
-				args.resize(1);
-				analyzed_function func0 = getFunction(functionSet, tk1, args, {});
-				if (args.size() == 1 && func0.args.size() == 1) {
-					size_t id1 = allocTmpID(func0.ret);
-					C = func0.args[0];
-					ret = func0.ret;
-					ret.id = id1;
-					if (generateImplictConversion(C, B, functionSet, func, EX)) {
-						lstring tk2 = func0.call_type == R("cdecl") ? R("_cdecl") : R("");
-						size_t argSize_ID{};
-						lstring argSize_T{};
-						if (func0.use_arg_size) {
-							argSize_ID = allocTmpID(Type_N);
-							ins(R("num %") + to_lstring(argSize_ID) + R(" ?I2"));
-							argSize_T = R(" %") + to_lstring(argSize_ID);
-						}
-						if (ifNotRef(func0.ret))
-							ins(R("Call") + tk2 + R(" #label_function_") + tk1 + R(" %") + to_lstring(A.id) + R(" %") + to_lstring(id1) + argSize_T + +R(" %") + to_lstring(C.id));
-						else {
-							ins(R("CallA") + tk2 + R(" #label_function_") + tk1 + R(" %") + to_lstring(A.id) + R(" &%") + to_lstring(id1) + argSize_T + R(" %") + to_lstring(C.id));
-							size_t id2 = allocTmpID(Type_N);
-							ins(R("address %") + to_lstring(id2) + R(" &%") + to_lstring(id1));
-							ret.id = id2;
-							ret.address = true;
-						}
-					}
+				args.push_back(B);
+				analyzed_function* func0 = getFunction(functionSet, tk1, args, {});
+				if (func0 && args.size() == 1 && func0->args.size() == 1) {
+					buildThisCall(functionSet, func, EX, tk1, *func0, A, args, ret);
 					EX.parent();
 					goto RET;
 				}
@@ -347,6 +281,16 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 				error(R("一元运算参数过少")); goto RET;
 			}
 			type A = compileTree(functionSet, func, EX, {});
+			lstring tk1=R("Local") + DIVISION + A.typeName + DIVISION + tk;
+			if (haveFunction(tk1)) {
+				std::vector<type> args{};
+				analyzed_function* func0 = getFunction(functionSet, tk1, {}, {});
+				if (func0 && args.size() == 0 && func0->args.size() == 0) {
+					buildThisCall(functionSet, func, EX, tk1, *func0, A, args, ret);
+					EX.parent();
+					goto RET;
+				}
+			}
 			type C = A;
 			C.typeName = tk == R("not") ? R("Boolen") : R("R");
 			C.address = false;
@@ -479,33 +423,58 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 	else if (type_ == R("Call")) {
 		if (handleBuiltInFunctions(functionSet, func, EX, tk, ret)) goto RET;
 		lstring arg_T{};
-		lstring this_arg = R(" null");
-		if (ifMethod(tk)) {
-			size_t id1 = allocTmpID(Type_N);
-			ins(R("address %") + to_lstring(id1) + R(" &") + to_lstring(getVarOffset(functionSet, func, R("Local") + DIVISION + R("[this]"))));
-			ins(R("load %") + to_lstring(id1) + R(" %") + to_lstring(id1) + R(" ") + to_lstring(getStructureSize(R("N"))));
-			this_arg = R(" %") + to_lstring(id1);
-		}
 		std::vector<type> args{};
-		analyzed_function func0;
+		analyzed_function* func0;
  		if(EX.child()){
 			do {
 				args.push_back(compileTree(functionSet, func, EX, {}));
 			} while (EX.next());
+
+			type A{};
+			if (ifMethod(tk)) {
+				analyzed_function* func0 = getFunction(functionSet, tk, args, true);
+				if (func0) {
+					size_t id1 = allocTmpID(Type_N);
+					ins(R("address %") + to_lstring(id1) + R(" &") + to_lstring(getVarOffset(functionSet, func, R("Local") + DIVISION + R("[this]"))));
+					ins(R("load %") + to_lstring(id1) + R(" %") + to_lstring(id1) + R(" ") + to_lstring(getStructureSize(R("N"))));
+					A.typeName = functionSet.name;
+					A.address = true;
+					A.array = false;
+					A.id = id1;
+
+					buildThisCall(functionSet, func, EX, tk, *func0, A, args, ret);
+					goto RET;
+				}
+			}
+
+			lstring tk1 = R("Local") + DIVISION + tk + DIVISION + R("_new_");
+
+			if (haveFunction(tk1)) {
+				analyzed_function* func0 = getFunction(functionSet, tk1, args, {});
+				if (func0 && buildThisCall(functionSet, func, EX, tk1, *func0, A, args, ret)) {
+					EX.parent();
+					goto RET;
+				}
+			}
+
 			func0 = getFunction(functionSet, tk, args, {});
+			if (!func0) {
+				error(R("找不到可以匹配的函数/方法"));
+				goto RET;
+			}
 			size_t i = 0;
-			for (; i < func0.args.size(); i++) {
+			for (; i < func0->args.size(); i++) {
 				if (i >= args.size()) {
 					error(R("函数调用参数过少"));
 					goto RET;
 				}
-				generateImplictConversion(func0.args[i], args[i], functionSet, func, EX);
-				arg_T += R(" %") + to_lstring(func0.args[i].id);
+				generateImplictConversion(func0->args[i], args[i], functionSet, func, EX);
+				arg_T += R(" %") + to_lstring(func0->args[i].id);
 			}
-			if (func0.use_arg_size) {
+			if (func0->use_arg_size) {
 				while (i < args.size())
 				{
-					type tmp = func0.args[func0.args.size() - 1];
+					type tmp = func0->args[func0->args.size() - 1];
 					generateImplictConversion(tmp, args[i], functionSet, func, EX);
 					arg_T += R(" %") + to_lstring(tmp.id);
 					i++;	
@@ -515,22 +484,26 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 		}
 		else {
 			func0 = getFunction(functionSet, tk, args, {});
+			if (!func0) {
+				error(R("找不到可以匹配的函数/方法"));
+				goto RET;
+			}
 		}
-		ret = func0.ret;
-		ret.id = allocTmpID(func0.ret);
-		lstring tk2 = func0.call_type == R("cdecl") ? R("_cdecl") : R("");
+		ret = func0->ret;
+		ret.id = allocTmpID(func0->ret);
+		lstring tk2 = func0->call_type == R("cdecl") ? R("_cdecl") : R("");
 		size_t argSize_ID{};lstring argSize_T{};
-		if (func0.use_arg_size) {
+		if (func0->use_arg_size) {
 			argSize_ID = allocTmpID(Type_N);
 			ins(R("num %") + to_lstring(argSize_ID) + R(" ?I") + to_lstring(args.size()));
 			argSize_T = R(" %") + to_lstring(argSize_ID);
 		}
 		if (ifNotRef(ret)) {
-			ins(R("Call") + tk2 + R(" #label_function_") + tk + this_arg + R(" %") + to_lstring(ret.id) + argSize_T + arg_T);
+			ins(R("Call") + tk2 + R(" #label_function_") + tk + buildFunctionTypeStr(*func0) + R(" null %") + to_lstring(ret.id) + argSize_T + arg_T);
 		}
 		else
 		{
-			ins(R("CallA") + tk2 + R(" #label_function_") + tk + this_arg + R(" &%") + to_lstring(ret.id) + argSize_T + arg_T);
+			ins(R("CallA") + tk2 + R(" #label_function_") + tk + buildFunctionTypeStr(*func0) + R(" null &%") + to_lstring(ret.id) + argSize_T + arg_T);
 			size_t id1 = allocTmpID(Type_N);
 			ins(R("address %") + to_lstring(id1) + R(" &%") + to_lstring(ret.id));
 			ret.id = id1;
@@ -539,66 +512,25 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 		goto RET;
 	}
 	else if (type_ == R("thisCall")) {
-		std::vector<type> args{};lstring arg_T{};
-		analyzed_function func0{}; lstring tk1{};
+		std::vector<type> args{};
+		analyzed_function* func0{}; lstring tk1{};
 		type A{};
 		if (EX.child()) {
 			A = compileTree(functionSet, func, EX, {});
-			if (A.array) {
-				error(R("方法的被引用结构不能为数组"));
-				goto RET;
-			}
-			if (!A.address) {
-				error(R("方法的被引用结构必须为指针"));
-				goto RET;
-			}
 			while (EX.next()) {
 				args.push_back(compileTree(functionSet, func, EX, {}));
 			} 
 			tk1 = R("Local") + DIVISION + A.typeName + DIVISION + tk;
 			func0 = getFunction(functionSet, tk1, args, {});
-			size_t i = 0;
-			for (; i < func0.args.size(); i++) {
-				if (i >= args.size()) {
-					error(R("方法引用参数过少"));
-					goto RET;
-				}
-				generateImplictConversion(func0.args[i], args[i], functionSet, func, EX);
-				arg_T += R(" %") + to_lstring(func0.args[i].id);
+			if (!func0) {
+				error(R("找不到可以匹配的方法"));
+				goto RET;
 			}
-			if (func0.use_arg_size) {
-				while (i < args.size())
-				{
-					type tmp = func0.args[func0.args.size() - 1];
-					generateImplictConversion(tmp, args[i], functionSet, func, EX);
-					arg_T += R(" %") + to_lstring(tmp.id);
-					i++;
-				}
-			}
+			buildThisCall(functionSet, func, EX, tk1, *func0, A, args, ret);
 			EX.parent();
 		}
 		else {
 			error(R("方法引用必须提供被引用结构"));
-			goto RET;
-		}
-		ret = func0.ret;
-		ret.id = allocTmpID(func0.ret);
-		lstring tk2 = func0.call_type == R("cdecl") ? R("_cdecl") : R("");
-		size_t argSize_ID{}; lstring argSize_T{};
-		if (func0.use_arg_size) {
-			argSize_ID = allocTmpID(Type_N);
-			ins(R("num %") + to_lstring(argSize_ID) + R(" ?I") + to_lstring(args.size()));
-			argSize_T = R(" %") + to_lstring(argSize_ID);
-		}
-		if (ifNotRef(ret)) {
-			ins(R("Call") + tk2 + R(" #label_function_") + tk1 + R(" %") + to_lstring(A.id) + R(" %") + to_lstring(ret.id) + argSize_T + arg_T);
-		}
-		else {
-			ins(R("CallA") + tk2 + R(" #label_function_") + tk1 + R(" & %") + to_lstring(A.id) + R(" % ") + to_lstring(ret.id) + argSize_T + arg_T);
-			size_t id1 = allocTmpID(Type_N);
-			ins(R("address %") + to_lstring(id1) + R(" &%") + to_lstring(ret.id));
-			ret.id = id1;
-			ret.address = true;
 		}
 		goto RET;
 	}
@@ -618,6 +550,63 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 			A.name = process_quotation_mark(tk);
 		}
 		ret = A;
+		goto RET;
+	}
+	else if (type_ == R("typeof")) {
+		if (!EX.child()) {
+			error(R("typeof必须作用于表达式"));
+			goto RET;
+		}
+		type A = compileTree(functionSet, func, EX, {});
+		std::vector<type> args{};
+		while (EX.next()) {
+			args.push_back(compileTree(functionSet, func, EX, {}));
+		}
+		EX.parent();
+		lstring tk1= R("Local") + DIVISION + A.typeName + DIVISION + R("typeof()");
+		if (haveFunction(tk1)) {
+			//thiscall
+			analyzed_function* func0 = getFunction(functionSet, tk1, args, true);
+			if (func0) {
+				buildThisCall(functionSet, func, EX, tk1, *func0, A, args, ret);
+				goto RET;
+			}
+		}
+		lstring tk = A.typeName + (A.array ? R("[]") : R(""));
+		ret.typeName = R("B");
+		tk = process_quotation_mark(tk);
+		ret.dim.push_back(tk.size());
+		ret.id = allocTmpID(Type_Boolen);
+		ret.array = true;
+		ret.address = true;
+		ins(R("address %") + to_lstring(ret.id) + R(" ?T") + to_lstring(allocStr(tk)));
+		goto RET;
+	}
+	else if (type_ == R("sizeof")) {
+		if (!EX.child()) {
+			error(R("sizeof必须作用于表达式"));
+			goto RET;
+		}
+		type A = compileTree(functionSet, func, EX, {});
+		lstring tk1 = R("Local") + DIVISION + A.typeName + DIVISION + R("sizeof()");
+		if (haveFunction(tk1)) {
+			std::vector<type> args{};
+			while (EX.next()) {
+				args.push_back(compileTree(functionSet, func, EX, {}));
+			}
+			analyzed_function* func0 = getFunction(functionSet, tk1, args, {});
+			if (func0) {
+				buildThisCall(functionSet, func, EX, tk1, *func0, A, args, ret);
+				EX.parent();
+				goto RET;
+			}
+		}
+		EX.parent();
+		ret.typeName = R("N");
+		ret.id = allocTmpID(Type_N);
+		ret.address = false;
+		ret.array = false;
+		ins(R("num %") + to_lstring(ret.id) + R(" ?I") + to_lstring(size(A)));
 		goto RET;
 	}
 	else if (type_ == R("Int")) {
@@ -654,28 +643,28 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 		}
 		lstring tk1 = R("Local") + DIVISION + C.typeName + DIVISION + R("[]");
 		lstring arg_T{};
-		if (haveFunction(tk1)) {
-			analyzed_function func0 = getFunction(functionSet, tk1, args, true);
+		analyzed_function* func0{};
+		if (haveFunction(tk1) && (func0 = getFunction(functionSet, tk1, args, true))) {
 			for (auto& x : args) {
 				type Ntype{}; Ntype.typeName = R("N");
 				generateImplictConversion(Ntype, x, functionSet, func, EX);
 				arg_T += R(" %") + to_lstring(Ntype.id);
 			}
-			ret = func0.ret;
+			ret = func0->ret;
 			ret.id = allocTmpID(Type_N);
 			type B{};
 			B.typeName = R("N");
 			B.id = allocTmpID(Type_N);
 			ins(R("num %") + to_lstring(B.id) + R(" ?uI") + to_lstring(args.size()));
 			arg_T = R(" %") + to_lstring(B.id) + arg_T;
-			if (func0.call_type != R("cdecl")) {
-				error(R("不支持的调用方式:") + func0.call_type);
+			if (func0->call_type != R("cdecl")) {
+				error(R("不支持的调用方式:") + func0->call_type);
 			}
-			else if (!func0.use_arg_size) {
+			else if (!func0->use_arg_size) {
 				error(R("未声明传入参数个数"));
 			}
 			if (ifNotRef(ret)) {
-				ins(R("Call_cdecl #label_function_") + tk1 + R(" %") + to_lstring(C.id) + R(" %") + to_lstring(ret.id)  + arg_T);
+				ins(R("Call_cdecl #label_function_") + tk1 + R(" %") + to_lstring(C.id) + R(" %") + to_lstring(ret.id) + arg_T);
 			}
 			else {
 				ins(R("CallA_cdecl #label_function_") + tk1 + R(" %") + to_lstring(C.id) + R(" &%") + to_lstring(ret.id) + arg_T);
@@ -727,13 +716,28 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 			error(R("错误的指针用法")); goto RET;
 		}
 		type A = compileTree(functionSet, func, EX, {});
-		type C = Type_N;
-		generateImplictConversion(C, A, functionSet, func, EX);
-		C.address = true;
-		C.typeName = process_quotation_mark(tk);
-		ret = C;
-		EX.parent();
-		goto RET;
+		lstring tmp = process_quotation_mark(tk);
+		lstring tk1 = R("Local") + DIVISION + A.typeName + DIVISION + R("->") + tmp;
+		analyzed_function* func0{};
+		std::vector<type> args{};
+		if (haveFunction(tk1) && (func0 = getFunction(functionSet, tk1, args, {}))) {
+			if (func0->args.size() != 1) {
+				error(R("错误的指针用法"));
+				goto RET;
+			}
+			buildThisCall(functionSet, func, EX, tk1, *func0, A, args, ret);
+			EX.parent();
+			goto RET;
+		}
+		else {
+			type C = Type_N;
+			generateImplictConversion(C, A, functionSet, func, EX);
+			C.address = true;
+			C.typeName = tmp;
+			ret = C;
+			EX.parent();
+			goto RET;
+		}
 	}
 	else if (type_ == R("Block")) {
 		if (EX.child()) {
@@ -818,7 +822,7 @@ bool IRGenerator::ifMethod(lstring FullName) {
 		return false;
 	}
 	if (type == R("Local")) {
-		for (auto& x : analyzed_functionSets) {
+		for (const auto& x : analyzed_functionSets) {
 			if (x.name == className) return x.isClass;
 		}
 		error(R("未知函数:") + FullName);
@@ -850,9 +854,9 @@ type IRGenerator::getElement(analyzed_functionSet& functionSet, lstring struct_,
 } 
 size_t IRGenerator::getElementOffset(analyzed_functionSet& functionSet, lstring struct_, lstring element) {
 	size_t k{};
-	for (auto& x : structures) {
+	for (const auto& x : structures) {
 		if (x.name == struct_) {
-			for (auto& y : x.elements) {
+			for (const auto& y : x.elements) {
 				if (y.name == element) {
 					if (x.name != functionSet.name && x.isClass && !y.publiced) {
 						error(R("试图在 ") + struct_ + R(" 中引用未公开的成员 ") + element);
@@ -882,7 +886,7 @@ label_initGenerator_1:
 	intptr_t localOffset{};
 	for (auto& x : struct0.elements) {
 		size_t localSize = getStructureSize(x.typeName);
-		size_t dim = x.array ? x.dim.size() : 1;
+		size_t dim = x.array ? DimSize(x.dim) : 1;
 		for (size_t i = 0; i < dim; i++) {
 			initGenerator(x, tmp, localOffset + offset, tk, localMode);
 			localOffset += localSize * (localMode ? -1 : 1);
@@ -914,7 +918,7 @@ label_destroyGenerator_1:
 	intptr_t localOffset{};
 	for (auto& x : struct0.elements) {
 		size_t localSize = getStructureSize(x.typeName);
-		size_t dim = x.array ? x.dim.size() : 1;
+		size_t dim = x.array ? DimSize(x.dim) : 1;
 		for (size_t i = 0; i < dim; i++) {
 			destroyGenerator(x, tmp, localOffset + offset, tk, localMode);
 			localOffset += localSize * (localMode ? -1 : 1);
@@ -934,7 +938,7 @@ label_destroyGenerator_1:
 void IRGenerator::initSetVars(std::vector<type>& vars, size_t tmp, size_t offset, lstring tk, bool localMode) {
 	for (auto& x : vars) {
 		size_t size = getStructureSize(x.name == R("[this]") ? R("N") : x.typeName);
-		size_t dim = x.name != R("[this]") && x.array ? x.dim.size() : 1;
+		size_t dim = x.name != R("[this]") && x.array ? DimSize(x.dim) : 1;
 		if (localMode) {
 			for (size_t j = 0; j < dim; j++) {
 				offset += size;
@@ -952,7 +956,7 @@ void IRGenerator::initSetVars(std::vector<type>& vars, size_t tmp, size_t offset
 void IRGenerator::destroySetVars(std::vector<type>& vars, size_t tmp, size_t offset, lstring tk, bool localMode) {
 	for (auto& x : vars) {
 		size_t size = getStructureSize(x.name == R("[this]") ? R("N") : x.typeName);
-		size_t dim = x.name != R("[this]") && x.array ? x.dim.size() : 1;
+		size_t dim = x.name != R("[this]") && x.array ? DimSize(x.dim) : 1;
 		if (localMode) {
 			for (size_t j = 0; j < dim; j++) {
 				offset += size;
@@ -1113,31 +1117,31 @@ label_handleBuiltInFunctions_1:
 					return false;
 				}
 				lstring tk1 = R("Local") + DIVISION + func_ret.typeName + DIVISION + R("return(") + A.typeName + R(")");
-				if (haveFunction(tk1)) {
-					std::vector<type> args{};
-					args.push_back(A);
-					analyzed_function func0 = getFunction(functionSet, tk1, args, {});
-					if (func0.args.size() == 1) {
+				std::vector<type> args{};
+				args.push_back(A);
+				analyzed_function* func0{};
+				if (haveFunction(tk1) && (func0 = getFunction(functionSet, tk1, args, {}))) {
+					if (func0->args.size() == 1) {
 						size_t id1 = allocTmpID(func_ret);
-						type C = func0.args[0];
+						type C = func0->args[0];
 						generateImplictConversion(C, A, functionSet, func, EX);
-						ret = func0.ret;
+						ret = func0->ret;
 						ret.id = id1;
 						size_t id2 = allocTmpID(Type_N);
 						ins(R("address %") + to_lstring(id2) + R(" !") + to_lstring(getVarOffset(functionSet, func, R("Arg") + DIVISION + R("[ret]"))));
 						ins(R("load %") + to_lstring(id2) + R(" %") + to_lstring(id2) + R(" ") + to_lstring(getStructureSize(R("N"))));
 						size_t ArgSize_ID{};
 						lstring ArgSize_T{};
-						if (func0.use_arg_size) {
+						if (func0->use_arg_size) {
 							ArgSize_ID = allocTmpID(Type_N);
 							ins(R("num %") + to_lstring(ArgSize_ID) + R(" ?I") + to_lstring(args.size()));
 							ArgSize_T = R(" %") + to_lstring(ArgSize_ID);
 						}
-						if (ifNotRef(func0.ret)) {
-							ins(R("Call #label_function_") + tk1 + R(" %") + to_lstring(id2) + R(" %") + to_lstring(id1) + ArgSize_T  + R(" %") + to_lstring(C.id));
+						if (ifNotRef(func0->ret)) {
+							ins(R("Call #label_function_") + tk1 + buildFunctionTypeStr(*func0) + R(" %") + to_lstring(id2) + R(" %") + to_lstring(id1) + ArgSize_T  + R(" %") + to_lstring(C.id));
 						}
 						else {
-							ins(R("CallA #label_function_") + tk1 + R(" %") + to_lstring(id2) + R(" &%") + to_lstring(id1) + ArgSize_T  + R(" %") + to_lstring(C.id));
+							ins(R("CallA #label_function_") + tk1 + buildFunctionTypeStr(*func0) + R(" %") + to_lstring(id2) + R(" &%") + to_lstring(id1) + ArgSize_T  + R(" %") + to_lstring(C.id));
 							id2 = allocTmpID(Type_N);
 							ins(R("address %") + to_lstring(id2) + R(" &%") + to_lstring(id1));
 							ret.id = id2;
@@ -1267,11 +1271,9 @@ bool IRGenerator::generateImplictConversion(type& A, type& B, analyzed_functionS
 	size_t id;
 	if (haveFunction(t)) {
 		std::vector<type> args{}, args2{};
-		args2 = getFunction(functionSet, t, args, {}).args;
-		if (cmpArg(args, args2)) {
-			id = allocTmpID(A);
-			ins(R("Call #label_function_") + t + R(" %") + to_lstring(B.id) + R(" %") + to_lstring(id));
-			A.id = id;
+		analyzed_function* func0 = getFunction(functionSet, t, args, {});
+		if (func0 && func0->args.size() == 0) {
+			buildThisCall(functionSet, func, EX, t, *func0, B, args, A);
 			return true;
 		}
 	}
@@ -1435,8 +1437,8 @@ bool IRGenerator::generateImplictConversion(type& A, type& B, analyzed_functionS
 	return true;
 }
 bool IRGenerator::haveFunction(lstring name) {
-	for (auto& x : analyzed_functionSets) {
-		for (auto& y : x.func) {
+	for (const auto& x : analyzed_functionSets) {
+		for (const auto& y : x.func) {
 			if (getFullName(y.name, x) == name) return true;
 		}
 	}
@@ -1468,13 +1470,13 @@ size_t IRGenerator::tmpOffset(size_t id, const std::vector<size_t>& stack) {
 		return 0;
 	}
 	size_t offset{};
-	for (auto& x : stack) {
+	for (const auto& x : stack) {
 		offset += x;
 	}
 	return offset;
 }
 bool IRGenerator::setHasFunction(const analyzed_functionSet& functionSet, lstring name) {
-	for (auto& x : functionSet.func) {
+	for (const auto& x : functionSet.func) {
 		if (x.name == name) return true;
 	}
 	return false;
@@ -1559,14 +1561,15 @@ type IRGenerator::getGlobalVarType(lstring name) {
 	error(R("未知全局变量:") + name);
 	return t;
 }
-analyzed_function IRGenerator::getFunction(const analyzed_functionSet& functionSet, lstring fullName, std::vector<type>& args, std::optional<bool> variable) {
+analyzed_function* IRGenerator::getFunction(const analyzed_functionSet& functionSet, lstring fullName, const std::optional<std::vector<type>>& args, std::optional<bool> variable) {
 	lstring type{}, className{}, name{};
 	analyzed_function tfunc{};
 	if (!getFunctionType(fullName, type, className, name)) {
 		error(R("错误的函数名称格式:") + fullName);
-		return tfunc;
+		return nullptr;
 	}
 	if (type == R("Local")) {
+		lstring err{};
 		for (auto& x : analyzed_functionSets) {
 			analyzed_function* k{};
 			bool a{};
@@ -1574,27 +1577,27 @@ analyzed_function IRGenerator::getFunction(const analyzed_functionSet& functionS
 				if (y.name == name) {
 					k = &y;
 					a =x.isClass && (y.publiced && x.name != functionSet.name || x.name == functionSet.name);
-					if (a && cmpArg(y.args, args)) return y;
+					if (a && cmpArg(y.args, args)) return &y;
 				}
 			}
 			if (k) {
 				if (x.isClass && !a) {
-					error(R("试图调用 ") + x.name + R(" 中未公开的方法:") + k->name);
-					return tfunc;
+					err = R("试图调用 ") + x.name + R(" 中未公开的方法:") + k->name;
+					continue;
 				}
 				if (!cmpArgNum(k->args, args) && !variable && !k->use_arg_size) {
-					error(R("参数过多或过少:") + fullName);
-					return tfunc;
+					err = R("参数过多或过少:") + fullName;
+					continue;
 				}
-				return *k;
+				return k;
 			}
 		}
-		error(R("未知函数:") + fullName);
+		error(err == R("") ? R("未知函数:") + fullName : err);
 	}
 	else if (type == R("Extra")) {
 		for (auto& x : ExtraFunctions.func) {
 			if (x.extra_name == name) {
-				return toAnalyzedFunction(x);
+				return &x;
 			}
 		}
 		error(R("未知外部函数:") + fullName);
@@ -1602,24 +1605,30 @@ analyzed_function IRGenerator::getFunction(const analyzed_functionSet& functionS
 	else {
 		error(R("未知函数:") + fullName);
 	}
-	return tfunc;
+	return nullptr;
 }
-bool IRGenerator::cmpArgNum(const std::vector<type>& A, const std::vector<type>& B) {
+bool IRGenerator::cmpArgNum(const std::vector<type>& A, const std::optional<std::vector<type>>& B) {
 	size_t j{}, k{};
-	for (intptr_t i = B.size() - 1; i >= 0; i--) {
-		if (!B[i].can_be_ignored) break;
+	std::vector<type> C{};
+	if (B.has_value())
+		C = B.value();
+	for (intptr_t i = C.size() - 1; i >= 0; i--) {
+		if (!C[i].can_be_ignored) break;
 		j++;
 	}
 	for (intptr_t i = A.size() - 1; i >= 0; i--) {
 		if (!A[i].can_be_ignored) break;
 		k++;
 	}
-	return A.size() == B.size() - j || A.size() - k == B.size() - j;
+	return A.size() == C.size() - j || A.size() - k == C.size() - j;
 }
-bool IRGenerator::cmpArg(const std::vector<type>& A, const std::vector<type>& B) {
-	if (A.size() != B.size()) return false;
+bool IRGenerator::cmpArg(const std::vector<type>& A, const std::optional<std::vector<type>>& B) {
+	std::vector<type> C{};
+	if (B.has_value()) 
+		C = B.value();
+	if (A.size() != C.size()) return false;
 	for (size_t i = 0; i < A.size(); i++) {
-		if (A[i].typeName != B[i].typeName || A[i].array != B[i].array) return false;
+		if (A[i].typeName != C[i].typeName || A[i].array != C[i].array) return false;
 	}
 	return true;
 }
@@ -1639,7 +1648,7 @@ analyzed_function IRGenerator::toAnalyzedFunction(function func) {
 	tfunc.use_arg_size = func.use_arg_size;
 	return tfunc;
 }
-lstring IRGenerator::getFullName(lstring name, const analyzed_functionSet& functionSet) {
+lstring IRGenerator::getFullName(const lstring& name, const analyzed_functionSet& functionSet) {
 	std::vector<lstring> t = split(name, DIVISION);
 	lstring className{}, func{};
 	if (!t.size()) return R("");
@@ -1816,7 +1825,10 @@ bool IRGenerator::analyze(
 	analyzed_functionSets = analyzed_functionSet_;
 	functionSets = functionSets_;
 	structures = structures_;
-	ExtraFunctions = ExtraFunctions_;
+	ExtraFunctions.func.clear();
+	for (auto& x : ExtraFunctions_.func) {
+		ExtraFunctions.func.push_back(toAnalyzedFunction(x));
+	}
 	constants = constants_;
 	Error = false;
 	strings.clear();
@@ -1919,7 +1931,7 @@ bool IRGenerator::analyze(
 	for (auto& x : analyzed_functionSets) {
 		if (x.name == R("[System]")) {
 			for (auto& y : x.func) {
-				ins(R("[System] #label_function_Local") + DIVISION + R("[System]") + DIVISION + y.name);
+				ins(R("[System] #label_function_Local") + DIVISION + R("[System]") + DIVISION + y.name + buildFunctionTypeStr(y));
 			}
 			continue;
 		}
@@ -1928,8 +1940,66 @@ bool IRGenerator::analyze(
 		if (!x.isClass) GlobalOffset += x.size;
 	}
 	for (auto& x : ExtraFunctions.func) {
-		ins(R("#label_function_Extra") + DIVISION + x.DLL + DIVISION + x.extra_name);
+		ins(R("#label_function_Extra") + DIVISION + x.DLL + DIVISION + x.extra_name + buildFunctionTypeStr(x));
 		ins(R("[API] ") + base64_encode(x.DLL) + R(" ") + base64_encode(x.extra_name));
 	}
 	return Error;
+}
+bool IRGenerator::buildThisCall(analyzed_functionSet& functionSet, analyzed_function& func, Tree<node>& EX,const lstring& fullname, analyzed_function& callfunc
+	, type& object, std::vector<type>& args, type& ret) {
+	lstring arg_T{};
+	if (object.array) {
+		error(R("方法的被引用结构不能为数组"));
+		return false;
+	}
+	if (!object.address) {
+		error(R("方法的被引用结构必须为指针"));
+		return false;
+	}
+	size_t i = 0;
+	for (; i < callfunc.args.size(); i++) {
+		if (i >= args.size()) {
+			error(R("方法引用参数过少"));
+			return false;
+		}
+		generateImplictConversion(callfunc.args[i], args[i], functionSet, func, EX);
+		arg_T += R(" %") + to_lstring(callfunc.args[i].id);
+	}
+	if (callfunc.use_arg_size) {
+		while (i < args.size())
+		{
+			type tmp = callfunc.args[callfunc.args.size() - 1];
+			generateImplictConversion(tmp, args[i], functionSet, func, EX);
+			arg_T += R(" %") + to_lstring(tmp.id);
+			i++;
+		}
+	}
+
+	ret = callfunc.ret;
+	ret.id = allocTmpID(callfunc.ret);
+	lstring tk2 = callfunc.call_type == R("cdecl") ? R("_cdecl") : R("");
+	size_t argSize_ID{}; lstring argSize_T{};
+	if (callfunc.use_arg_size) {
+		argSize_ID = allocTmpID(Type_N);
+		ins(R("num %") + to_lstring(argSize_ID) + R(" ?I") + to_lstring(args.size()));
+		argSize_T = R(" %") + to_lstring(argSize_ID);
+	}
+	if (ifNotRef(ret)) {
+		ins(R("Call") + tk2 + R(" #label_function_") + fullname + buildFunctionTypeStr(callfunc) + R(" %") + to_lstring(object.id) + R(" %") + to_lstring(ret.id) + argSize_T + arg_T);
+	}
+	else {
+		ins(R("CallA") + tk2 + R(" #label_function_") + fullname + buildFunctionTypeStr(callfunc) + R(" %") + to_lstring(object.id) + R(" &%") + to_lstring(ret.id) + argSize_T + arg_T);
+		size_t id1 = allocTmpID(Type_N);
+		ins(R("address %") + to_lstring(id1) + R(" &%") + to_lstring(ret.id));
+		ret.id = id1;
+		ret.address = true;
+	}
+	return true;
+}
+lstring IRGenerator::buildFunctionTypeStr(const analyzed_function& func) {
+	lstring str{};
+	for (const auto& x : func.args) {
+		str += R("_") + base64_encode(x.typeName + (x.array ? R("[]") : R("")));
+	}
+	return str;
 }

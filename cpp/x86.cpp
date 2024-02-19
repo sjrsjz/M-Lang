@@ -1654,7 +1654,7 @@ namespace MLang::x86Runner {
 	}
 	void __cdecl print(unsigned int str) {
 		for (size_t i = 1; i <= str; i++) {
-			lchar* t = (lchar*)*(&str + i);
+			//lchar* t = (lchar*)*(&str + i);
 			std_lcout << (lchar*)*(&str + i);
 		}
 	}
@@ -1719,23 +1719,23 @@ namespace MLang::x86Runner {
 		LinkFunction(tcode, R("[System]global"), global, redirections);
 		LinkFunction(tcode, R("[System]random"), random, redirections);
 		LinkFunction(tcode, R("[Label]label_function_Local$[System]$rand"), random2, redirections);
-		LinkFunction(tcode, R("[Label]label_function_Local$[System]$srand"), srand_, redirections);
+		LinkFunction(tcode, R("[Label]label_function_Local$[System]$srand_TgA="), srand_, redirections);
 
-		LinkFunction(tcode, R("[Label]label_function_Local$[System]$print"), print, redirections);
-		LinkFunction(tcode, R("[Label]label_function_Local$[System]$printN"), printN, redirections);
-		LinkFunction(tcode, R("[Label]label_function_Local$[System]$printZ"), printZ, redirections);
-		LinkFunction(tcode, R("[Label]label_function_Local$[System]$printR"), printR, redirections);
-		LinkFunction(tcode, R("[Label]label_function_Local$[System]$printB"), printB, redirections);
-		LinkFunction(tcode, R("[Label]label_function_Local$[System]$printBoolen"), printBoolen, redirections);
+		LinkFunction(tcode, R("[Label]label_function_Local$[System]$print_TgA="), print, redirections);
+		LinkFunction(tcode, R("[Label]label_function_Local$[System]$printN_TgA="), printN, redirections);
+		LinkFunction(tcode, R("[Label]label_function_Local$[System]$printZ_WgA="), printZ, redirections);
+		LinkFunction(tcode, R("[Label]label_function_Local$[System]$printR_UgA="), printR, redirections);
+		LinkFunction(tcode, R("[Label]label_function_Local$[System]$printB_QgA="), printB, redirections);
+		LinkFunction(tcode, R("[Label]label_function_Local$[System]$printBoolen_QgBvAG8AbABlAG4A"), printBoolen, redirections);
 
-		LinkFunction(tcode, R("[Label]label_function_Local$[System]$memcopy"), memcopy, redirections);
-		LinkFunction(tcode, R("[Label]label_function_Local$[System]$CmpStr"), CmpStr, redirections);
-		LinkFunction(tcode, R("[Label]label_function_Local$[System]$CmpMem"), CmpMem, redirections);
-		LinkFunction(tcode, R("[Label]label_function_Local$[System]$input"), input, redirections);
-		LinkFunction(tcode, R("[Label]label_function_Local$[System]$free"), free_, redirections);
-		LinkFunction(tcode, R("[Label]label_function_Local$[System]$new"), new_, redirections);
-		LinkFunction(tcode, R("[Label]label_function_Local$[System]$T2R"), T2R, redirections);
-		LinkFunction(tcode, R("[Label]label_function_Local$[System]$R2T"), R2T, redirections);
+		LinkFunction(tcode, R("[Label]label_function_Local$[System]$memcopy_TgA=_TgA=_TgA="), memcopy, redirections);
+		LinkFunction(tcode, R("[Label]label_function_Local$[System]$CmpStr_TgA=_TgA="), CmpStr, redirections);
+		LinkFunction(tcode, R("[Label]label_function_Local$[System]$CmpMem_TgA=_TgA=_TgA="), CmpMem, redirections);
+		LinkFunction(tcode, R("[Label]label_function_Local$[System]$input_TgA=_TgA="), input, redirections);
+		LinkFunction(tcode, R("[Label]label_function_Local$[System]$free_TgA="), free_, redirections);
+		LinkFunction(tcode, R("[Label]label_function_Local$[System]$new_TgA="), new_, redirections);
+		LinkFunction(tcode, R("[Label]label_function_Local$[System]$T2R_TgA="), T2R, redirections);
+		LinkFunction(tcode, R("[Label]label_function_Local$[System]$R2T_UgA=_TgA="), R2T, redirections);
 
 		LinkSysFunction(tcode, redirections);
 

@@ -95,7 +95,7 @@ analyzed_function AST::analyzeFunction(functionSet& functionSet_, function& func
 	analyzed_function func0{};
 	func0.codes.clear();
 	size_t i{};
-	//std_lcout << std::endl << "[Function]" << func.name << std::endl ;
+	std_lcout << std::endl << "[Function]" << func.name << std::endl ;
 	while (i>=0 && i< func.codes.size())
 	{
 		error_line = i;
@@ -263,18 +263,59 @@ bool AST::analyze_2(functionSet& functionSet_, function& func, Tree<node>& EX, s
 			error(R("括号不匹配")); return false;
 		}
 	}
-	if (analyzeVar(tk, var)) {
-		if (var.typeName == R("sizeof")) {
-			var.typeName = var.name;
-			p.token = to_lstring(size(var));
-			p.type = R("Int");
+	Tree<node> tmp_tree{};
+	
+	if (analyzeVar(functionSet_, func, tk, var, tmp_tree)) {
+		if (var.typeName == R("sizeof")) {//应添加object.sizeof
+			if (var.name==R("")) {
+				p.token = R("");
+				p.type = R("sizeof");
+				EX.push_back(p);
+				EX.ToChildrenEnd();
+				if (tmp_tree.child()) {
+					do {
+						EX.push_back(*tmp_tree.LocateCurrentTree());
+					} while (tmp_tree.next());
+				}
+				EX.parent();
+			}
+			else {
+				var.typeName = var.name;
+				p.token = to_lstring(size(var));
+				p.type = R("Int");
+				EX.push_back(p);
+			}
+		}
+		else if (var.typeName == R("typeof")) {//应添加object.typeof
+			if (var.name == R("")) {
+				p.token = R("");
+				p.type = R("typeof");
+				EX.push_back(p);
+				EX.ToChildrenEnd();
+				if (tmp_tree.child()) {
+					do {
+						EX.push_back(*tmp_tree.LocateCurrentTree());
+					} while (tmp_tree.next());
+				}
+				EX.parent();
+			}
+			else {
+				p.token = R("");
+				p.type = R("typeof");
+				EX.push_back(p);
+				EX.ToChildrenEnd();
+				p.token = var.name;
+				p.type = R("Var");
+				EX.push_back(p);
+				EX.parent();
+			}
 		}
 		else {
 			func.local.push_back(var);
 			p.token = getVarFullName(functionSet_, func, var.name);
 			p.type = R("Var");
-		}
-		EX.push_back(p);
+			EX.push_back(p);
+		}		
 		return true;
 	}
 	if (tk[tk.size() - 1] == R(")")) {
@@ -403,7 +444,7 @@ size_t AST::getStructureSize(lstring type) {
 	error(R("未知数据类型:") + type);
 	return 0;
 }
-bool AST::analyzeVar(std::vector<lstring> tk, type& var) {
+bool AST::analyzeVar(functionSet& functionSet_, function& func, std::vector<lstring> tk, type& var,Tree<node>& TREE) {
 	lstring head{}; size_t offset{}; std::vector<size_t> dim; intptr_t final;
 	if (iftk(tk, R("["), 1) && iftk(tk, R("]"), 3)) {
 		head = process_quotation_mark(tk[1]);
@@ -411,10 +452,31 @@ bool AST::analyzeVar(std::vector<lstring> tk, type& var) {
 	}
 	if (iftk(tk, R(":"), offset + 2) && tk.size() >= 3 + offset) {
 		var.typeName = process_quotation_mark(tk[offset]);
-		var.name = process_quotation_mark(tk[2 + offset]);
-		var.array = analyze_dims(tk, dim, 4 + offset, final);
+		if (tk[2 + offset] == R("(")) {
+			intptr_t right = search(tk, R(")"), 0, 2 + offset, 0);
+			if (right == -1) {
+				error(R("括号不匹配"));
+				return false;
+			}
+			std::vector<lstring> ctk{};
+			SubTokens(tk, ctk, 4 + offset, right - 1);
+			TREE.clear();
+			node tmp{};
+			TREE.push_back(tmp);
+			if (!analyzeArg(functionSet_, func, TREE, ctk)) {
+				error(R("处理表达式时出错"));
+				return false;
+			}
+			offset = right - 1;
+			var.name = R("");
+		}
+		else {
+			var.name = process_quotation_mark(tk[2 + offset]);
+			offset = 2 + offset;
+		}
+		var.array = analyze_dims(tk, dim, offset + 2, final);
 		var.dim = dim;
-		if (final == tk.size() + 1) {
+		if (final - 1 == tk.size()) {
 			if (head == R("Public")) var.publiced = true;
 			else if (head == R("Private") || head == R("")) var.publiced = false;
 			else { error(R("非法前缀:") + head); return false; }
@@ -606,4 +668,12 @@ bool AST::getFunctionType(lstring fullname, lstring& type, lstring& super, lstri
 		type = t[0]; super = t[1]; name = t[2]; return true;
 	}
 	return false;
+}
+bool AST::haveFunction(functionSet functionSet_, function func, lstring name) {
+	for (size_t i = 0; i < functionSet_.func.size(); i++) if (functionSet_.func[i].name == name) return true;
+	for (const auto& x : sets) {
+		if (x.name == functionSet_.name) continue;
+		for (const auto& y : x.func) if ((!x.isClass || y.publiced) && y.name == name) return true;
+	}
+	for (const auto& x : ExtraFunctions.func) if (x.name == name) return true;
 }

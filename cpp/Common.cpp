@@ -159,8 +159,8 @@ namespace MLang {
     }
     lstring getDictionary(lstring path) {
 		size_t p = path.find_last_of(R("/\\"));
-        	if (p == std::string::npos) return R("");
+        	if (p == std::string::npos) return R(".");
         		return path.substr(0, p);
-        return R("");
+        return R(".");
     }
 }

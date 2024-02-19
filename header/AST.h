@@ -38,7 +38,7 @@ namespace MLang {
 		size_t size(type var);
 		bool getVarType(lstring name, lstring& type, lstring& var);
 		size_t getStructureSize(lstring type);
-		bool analyzeVar(std::vector<lstring> tk, type& var);
+		bool analyzeVar(functionSet& functionSet_, function& func, std::vector<lstring> tk, type& var, Tree<node>& TREE);
 		bool haveVar(functionSet functionSet_, function func, lstring name);
 		lstring getVarFullName(functionSet functionSet_, function func, lstring name);
 		bool analyzeArg(functionSet& functionSet_, function& func, Tree<node>& EX, std::vector<lstring> tk);
@@ -47,5 +47,6 @@ namespace MLang {
 		bool bracketIsMatched(lstring tk1, lstring tk2);
 		lstring getFunctionFullName(lstring name, functionSet functionSet_);
 		void error(lstring err);
+		bool haveFunction(functionSet functionSet_, function func, lstring name);
 	};
 }
