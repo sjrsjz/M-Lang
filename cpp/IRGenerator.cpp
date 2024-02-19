@@ -83,7 +83,11 @@ void IRGenerator::generateFunction(analyzed_functionSet& functionSet, analyzed_f
 	ins(R("tmpEnd"));
 	for (size_t i = 0; i < func.codes.size(); i++) {
 		error_line = i;
+		ins(R("\n;") + functionSet.name + DIVISION + func.name + R(" Line:") + to_lstring(error_line));
+		ins(R("tmpBegin"));
+		tmpStack.clear();
 		generateLine(functionSet, func, func.codes[i]);
+		ins(R("tmpEnd"));
 	}
 	ins(R("#label_function_End_Local") + DIVISION + functionSet.name + DIVISION + func.name + buildFunctionTypeStr(func));
 	tmpStack.clear();
@@ -109,9 +113,8 @@ void IRGenerator::generateFunction(analyzed_functionSet& functionSet, analyzed_f
 
 }
 void IRGenerator::generateLine(analyzed_functionSet& functionSet, analyzed_function& func, Tree<node>& EX) {
-	ins(R("\n;") + functionSet.name + DIVISION + func.name + R(" Line:") + to_lstring(error_line));
-	ins(R("tmpBegin"));
-	tmpStack.clear();
+	need_return.push_back(false);
+	return_id.push_back(0);
 	tmpCodeStack.push_back(tmpCode);
 	destroyCodeStack.push_back(destroyCode);
 	initCodeStack.push_back(initCode);
@@ -128,8 +131,14 @@ void IRGenerator::generateLine(analyzed_functionSet& functionSet, analyzed_funct
 	tmpCodeStack.pop_back();
 	destroyCodeStack.pop_back();
 	initCodeStack.pop_back();
+	if (need_return.back()) {
+		ins(R("loadQ %") + to_lstring(return_id.back()));
+		ins(R("jmp #label_function_End_") + getFullName(func.name, functionSet) + buildFunctionTypeStr(func));
+	}
+	need_return.pop_back();
+	return_id.pop_back();
 	//for (auto& x : destroyCode) ins(x);
-	ins(R("tmpEnd"));
+	
 }
 type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_function& func, Tree<node>& EX, std::optional<lstring> ExtraInfo) {
 	//initCodeStack.push_back(initCode);
@@ -444,6 +453,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 					A.id = id1;
 
 					buildThisCall(functionSet, func, EX, tk, *func0, A, args, ret);
+					EX.parent();
 					goto RET;
 				}
 			}
@@ -747,13 +757,13 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 			if(ExtraInfo.has_value())
 				do
 				{
-					ret = compileTree(functionSet, func, EX, ExtraInfo);
+					generateLine(functionSet, func, EX);
 					error_line++;
 				} while (EX.next());
 			else
 				do
 				{
-					ret = compileTree(functionSet, func, EX, {});
+					generateLine(functionSet, func, EX);
 					error_line++;
 				} while (EX.next());
 			error_line = error_lineStack.back();
@@ -1003,12 +1013,12 @@ label_handleBuiltInFunctions_1:
 			ins(R("jz %") + to_lstring(id1) + R(" #label_if_B_") + to_lstring(label1));
 			//ins(R("#label_if_A_") + to_lstring(label1));
 			if (EX.next()) {
-				compileTree(functionSet, func, EX, {});
+				generateLine(functionSet, func, EX);
 				ins(R("jmp #label_if_End_") + to_lstring(label1));
 			}
 			ins(R("#label_if_B_") + to_lstring(label1));
 			if (EX.next()) {
-				compileTree(functionSet, func, EX, {});
+				generateLine(functionSet, func, EX);
 				//ins(R("jmp #label_if_End_") + to_lstring(label1));
 			}
 			ins(R("#label_if_End_") + to_lstring(label1));
@@ -1039,7 +1049,7 @@ label_handleBuiltInFunctions_1:
 			loopEndStack.push_back(R("#label_while_End_") + to_lstring(label1));
 
 			if (EX.next()) {
-				compileTree(functionSet, func, EX, {});
+				generateLine(functionSet, func, EX);
 			}
 			loopStartStack.pop_back();
 			loopEndStack.pop_back();
@@ -1074,7 +1084,7 @@ label_handleBuiltInFunctions_1:
 			ins(R("#label_do_while_A_") + to_lstring(label1));
 			loopStartStack.push_back(R("#label_do_while_Start_") + to_lstring(label1));
 			loopEndStack.push_back(R("#label_do_while_End_") + to_lstring(label1));
-			compileTree(functionSet, func, EX, {});
+			generateLine(functionSet, func, EX);
 			loopStartStack.pop_back();
 			loopEndStack.pop_back();
 			ins(R("jmp #label_do_while_Start_") + to_lstring(label1));
@@ -1097,7 +1107,11 @@ label_handleBuiltInFunctions_1:
 				type B = func_ret;
 				generateImplictConversion(B, A, functionSet, func, EX);
 				ins(R("ret %") + to_lstring(B.id) + R(" ") + to_lstring(size(B)));
-				ins(R("jmp #label_function_End_") + getFullName(func.name, functionSet) + buildFunctionTypeStr(func));
+				return_id.back() = allocTmpID(Type_R);
+				ins(R("storeQ %") + to_lstring(return_id.back()));
+				need_return.back() = true;
+
+				//ins(R("jmp #label_function_End_") + getFullName(func.name, functionSet) + buildFunctionTypeStr(func));
 				EX.parent();
 				return true;
 			}
@@ -1123,7 +1137,7 @@ label_handleBuiltInFunctions_1:
 				analyzed_function* func0{};
 				if (haveFunction(tk1) && (func0 = getFunction(functionSet, tk1, args, {}))) {
 					if (func0->args.size() == 1) {
-						size_t id1 = allocTmpID(func_ret);
+						size_t id1 = allocTmpID(func0->ret);
 						type C = func0->args[0];
 						generateImplictConversion(C, A, functionSet, func, EX);
 						ret = func0->ret;
@@ -1148,7 +1162,10 @@ label_handleBuiltInFunctions_1:
 							ret.id = id2;
 							ret.address = true;
 						}
-						ins(R("jmp #label_function_End_") + getFullName(func.name, functionSet) + buildFunctionTypeStr(func));
+						return_id.back() = allocTmpID(Type_R);
+						ins(R("storeQ %") + to_lstring(return_id.back()));
+						need_return.back() = true;
+//						ins(R("jmp #label_function_End_") + getFullName(func.name, functionSet) + buildFunctionTypeStr(func));
 						EX.parent();
 						return true;
 					}
@@ -1158,7 +1175,10 @@ label_handleBuiltInFunctions_1:
 				ins(R("address %") + to_lstring(id1) + R(" !") + to_lstring(getVarOffset(functionSet, func, R("Arg") + DIVISION + R("[ret]"))));
 				ins(R("load %") + to_lstring(id1) + R(" %") + to_lstring(id1) + R(" ") + to_lstring(getStructureSize(R("N"))));
 				ins(R("mov %") + to_lstring(id1) + R(" %") + to_lstring(A.id) + R(" ") + to_lstring(size(A)));
-				ins(R("jmp #label_function_End_") + getFullName(func.name, functionSet));
+				return_id.back() = allocTmpID(Type_R);
+				ins(R("storeQ %") + to_lstring(return_id.back()));
+				need_return.back() = true;
+				//ins(R("jmp #label_function_End_") + getFullName(func.name, functionSet));
 				EX.parent();
 				return true;
 			}

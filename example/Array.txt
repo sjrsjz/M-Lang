@@ -33,7 +33,7 @@ Class:Array{
 		if(init!=0 and ptr!=0){
 			while(i<size0){
 				data_init(ptr+i*typeSize);
-                i=i+1	
+                		i=i+1;	
 			}
 		};
 		
@@ -80,7 +80,7 @@ Main{
 	f()->A:={
 		A:a;
 		a.a=114;
-		a.b=514;        
+		a.b=514; 
 		return(a)
 	}
 	main()->N:={

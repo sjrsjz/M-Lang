@@ -207,7 +207,6 @@ Class:string{
         ad=0;size=0
     }
     _destroy_()->N:={
-        //printN(ad);
         if(ad!=0){free(ad);ad=0};
         size=0;
     }
@@ -215,7 +214,6 @@ Class:string{
         N:ad,N:size
     }
     [Public]"return(string)"(string:s)->N:={//prevent RAII destroys data
-
         _destroy_();
         ad=new(s.size);
         size=s.size;
@@ -223,11 +221,9 @@ Class:string{
     }
     [Public]=(string:s)->string:={
         _destroy_();
-        ad=new(s.size);
-        
+        ad=new(s.size); 
         size=s.size;
         memcopy(ad,s.ad,s.size);
-
         return(this)
     }
     [Public]const(N:str)->N:={
@@ -430,6 +426,7 @@ bool process_command(std::vector<lstring> args) {
 		if (err) return false;
 		ByteArray<unsigned char> mexe;
 		err = !IR2MEXE(ir.IR, mexe);
+        std_lcout << ir.IR;
 		if (err) return false;
 #ifdef _WIN32
         x86Runner::LoadMEXE(mexe);

@@ -38,7 +38,7 @@ Window{
         WndClass.hCursor=LoadCursor (0,"32512");
         WndClass.hbrBackground=GetStockObject(0);
         WndClass.lpszMenuName=&"";
-        WndClass.lpszClassName=AppName;
+        WndClass.lpszClassName=AppName;print("ready");
         if(RegisterClass(WndClass)==0){
             msgbox(0,"error","This program requires Windows NT!",0);
         };
@@ -51,6 +51,7 @@ Window{
             DispatchMessage(Msg);
             OnMsg(Msg);
         };
+	
         return(Msg.wParam);
     }
 }

@@ -46,6 +46,9 @@ namespace MLang {
 		type Type_B{};
 		type Type_Boolen{};
 
+		std::vector<size_t> return_id{};
+		std::vector<bool> need_return{};
+
 		size_t GlobalSize0{};
 		intptr_t GlobalOffset{};
 		size_t currLocalSize{};
