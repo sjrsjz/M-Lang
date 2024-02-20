@@ -153,7 +153,7 @@ namespace MLang {
 #endif // UNICODE
         fout.open(path, std::ios::out);
         if (!fout.is_open()) return false;
-        fout.write(str.c_str(), str.size() * sizeof(lchar));
+        fout << str;
         fout.close();
         return true;
     }
