@@ -440,9 +440,9 @@ int main(int argn, char* argv[]) {
 #ifdef G_UNICODE_
     std::wcout.imbue(std::locale("zh_CN"));
 #endif 
-#if _DEBUG
-    test(argn, argv);
-#else
+//#if _DEBUG
+//    test(argn, argv);
+//#else
     if (argn == 1) {
         std::cout << "Usage:\n";
 		std::cout << "runIR <IR file>\n";
@@ -458,6 +458,6 @@ int main(int argn, char* argv[]) {
         args.push_back(to_wide_string(argv[i]));
     }
     process_command(args);
-#endif // _DEBUG
+//#endif // _DEBUG
 	return 0;
 }

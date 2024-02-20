@@ -1,4 +1,4 @@
-#include "../header/IRGenerator.h"
+ï»¿#include "../header/IRGenerator.h"
 using namespace MLang;
 inline bool IRGenerator::ins(lstring tk) {
 	IR += tk + R("\n"); return true;
@@ -7,24 +7,24 @@ inline bool IRGenerator::ins(lstring tk) {
 void IRGenerator::error(lstring err) {
 	lstring err_{};
 	for (const auto& x : error_lineStack) {
-		err_ += R("[ĞĞ:") + to_lstring(x + 1) + R("]");
+		err_ += R("[è¡Œ:") + to_lstring(x + 1) + R("]");
 	}
-	std_lcout << RED << R("[´íÎó]") << CYAN << R("[ÖĞ¼ä´úÂëÉú³É]") << R("[³ÌĞò¼¯/Àà:") << error_functionSet << R("][º¯Êı/·½·¨:") << error_function << R("]") << err_ << R("[ĞĞ:") << error_line + 1 << R("]") << RESET << err << std::endl;
+	std_lcout << RED << R("[é”™è¯¯]") << CYAN << R("[ä¸­é—´ä»£ç ç”Ÿæˆ]") << R("[ç¨‹åºé›†/ç±»:") << error_functionSet << R("][å‡½æ•°/æ–¹æ³•:") << error_function << R("]") << err_ << R("[è¡Œ:") << error_line + 1 << R("]") << RESET << err << std::endl;
 	Error = true;
 }
 void IRGenerator::warning(lstring warn) {
 	if (!enableWarning) return;
 	lstring err_{};
 	for (const auto& x : error_lineStack) {
-		err_ += R("[ĞĞ:") + to_lstring(x + 1) + R("]");
+		err_ += R("[è¡Œ:") + to_lstring(x + 1) + R("]");
 	}
-	std_lcout << YELLOW << R("[¾¯¸æ]") << CYAN << R("[ÖĞ¼ä´úÂëÉú³É]") << R("[³ÌĞò¼¯/Àà:") << error_functionSet << R("][º¯Êı/·½·¨:") << error_function << R("]") << err_ << R("[ĞĞ:") << error_line + 1 << R("]") << RESET << warn << std::endl;
+	std_lcout << YELLOW << R("[è­¦å‘Š]") << CYAN << R("[ä¸­é—´ä»£ç ç”Ÿæˆ]") << R("[ç¨‹åºé›†/ç±»:") << error_functionSet << R("][å‡½æ•°/æ–¹æ³•:") << error_function << R("]") << err_ << R("[è¡Œ:") << error_line + 1 << R("]") << RESET << warn << std::endl;
 }
 
 bool IRGenerator::getFunctionType(lstring fullName, lstring& type, lstring& super, lstring& name) {
 	std::vector<lstring> t = split(fullName, DIVISION);
 	if (t.size() < 2 || t.size() > 3) {
-		error(R("´íÎóµÄº¯ÊıÈ«³Æ")); return false;
+		error(R("é”™è¯¯çš„å‡½æ•°å…¨ç§°")); return false;
 	}
 	if (t.size() == 2) {
 		type = R("Local");
@@ -155,16 +155,16 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 	if (type_ == R("Operator")) {
 		if (tk == R("=")) {
 			if (!EX.child()) {
-				error(R("¸³Öµ²ÎÊı¹ıÉÙ"));
+				error(R("èµ‹å€¼å‚æ•°è¿‡å°‘"));
 				goto RET;
 			} 
 			type A = compileTree(functionSet, func, EX, {});
 			if (!A.address) {
-				error(R("¸³Öµ×óÖµ±ØĞëÌá¹©Ö¸Õë"));
+				error(R("èµ‹å€¼å·¦å€¼å¿…é¡»æä¾›æŒ‡é’ˆ"));
 				goto RET;
 			}
 			if (!EX.next()) {
-				error(R("¸³Öµ²ÎÊı¹ıÉÙ"));
+				error(R("èµ‹å€¼å‚æ•°è¿‡å°‘"));
 				EX.parent();
 				goto RET;
 			}
@@ -176,7 +176,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 				args.push_back(B);
 				analyzed_function* func0 = getFunction(functionSet, tk1, args, {});
 				if (func0 && args.size() == 1 && func0->args.size() == 1) {
-					buildThisCall(functionSet, func, EX, tk1, *func0, A, args, ret);
+					buildThisCall(functionSet, func, EX, tk1, *func0, A, args, ret, false);
 					EX.parent();
 					goto RET;
 				}
@@ -191,7 +191,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 					ins(R("store %") + to_lstring(ret.id) + R(" %") + to_lstring(C.id) + R(" ") + to_lstring(getStructureSize(C.typeName)));
 				}
 				else {
-					error(R("²»Ö§³ÖµÄ¸³ÖµÀàĞÍ"));
+					error(R("ä¸æ”¯æŒçš„èµ‹å€¼ç±»å‹"));
 				}
 			}
 			EX.parent();
@@ -199,11 +199,11 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 		}
 		else if (cmpTK(tk, { R("+"),R("-"),R("*"),R("/"),R("%"),R("\\"),R(">"),R("<"),R(">="),R("<="),R("!="),R("==") })) {
 			if (!EX.child()) {
-				error(R("¶şÔªÔËËã²ÎÊı¹ıÉÙ")); goto RET;
+				error(R("äºŒå…ƒè¿ç®—å‚æ•°è¿‡å°‘")); goto RET;
 			}
 			type A = compileTree(functionSet, func, EX, {});
 			if (!EX.next()) {
-				error(R("¶şÔªÔËËã²ÎÊı¹ıÉÙ")); EX.parent(); goto RET;
+				error(R("äºŒå…ƒè¿ç®—å‚æ•°è¿‡å°‘")); EX.parent(); goto RET;
 			}
 			type B = compileTree(functionSet, func, EX, {});
 			type C{};
@@ -213,7 +213,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 				args.push_back(B);
 				analyzed_function* func0 = getFunction(functionSet, tk1, args, {});
 				if (func0 && args.size() == 1 && func0->args.size() == 1) {
-					buildThisCall(functionSet, func, EX, tk1, *func0, A, args, ret);
+					buildThisCall(functionSet, func, EX, tk1, *func0, A, args, ret, false);
 					EX.parent();
 					goto RET;
 				}
@@ -243,18 +243,18 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 				ins(R("opB ") + tk + R(" %") + to_lstring(ret.id) + R(" %") + to_lstring(id1) + R(" %") + to_lstring(id2));
 			}
 			else {
-				error(R("²»Ö§³ÖµÄÀàĞÍ:") + tk + R(" ") + A.typeName + R(" ") + B.typeName);
+				error(R("ä¸æ”¯æŒçš„ç±»å‹:") + tk + R(" ") + A.typeName + R(" ") + B.typeName);
 			}
 			EX.parent();
 			goto RET;
 		}
 		else if (cmpTK(tk, { R("and"),R("or"),R("xor") })) {
 			if (!EX.child()) {
-				error(R("¶şÔªÔËËã²ÎÊı¹ıÉÙ")); goto RET;
+				error(R("äºŒå…ƒè¿ç®—å‚æ•°è¿‡å°‘")); goto RET;
 			}
 			type A = compileTree(functionSet, func, EX, {});
 			if (!EX.next()) {
-				error(R("¶şÔªÔËËã²ÎÊı¹ıÉÙ"));
+				error(R("äºŒå…ƒè¿ç®—å‚æ•°è¿‡å°‘"));
 				EX.parent();
 				goto RET;
 			}
@@ -266,7 +266,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 				args.push_back(B);
 				analyzed_function* func0 = getFunction(functionSet, tk1, args, {});
 				if (func0 && args.size() == 1 && func0->args.size() == 1) {
-					buildThisCall(functionSet, func, EX, tk1, *func0, A, args, ret);
+					buildThisCall(functionSet, func, EX, tk1, *func0, A, args, ret, false);
 					EX.parent();
 					goto RET;
 				}
@@ -288,7 +288,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 		}
 		else if (cmpTK(tk, { R("Minus"),R("Abs"),R("not") })) {
 			if (!EX.child()) {
-				error(R("Ò»ÔªÔËËã²ÎÊı¹ıÉÙ")); goto RET;
+				error(R("ä¸€å…ƒè¿ç®—å‚æ•°è¿‡å°‘")); goto RET;
 			}
 			type A = compileTree(functionSet, func, EX, {});
 			lstring tk1=R("Local") + DIVISION + A.typeName + DIVISION + tk;
@@ -296,7 +296,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 				std::vector<type> args{};
 				analyzed_function* func0 = getFunction(functionSet, tk1, {}, {});
 				if (func0 && args.size() == 0 && func0->args.size() == 0) {
-					buildThisCall(functionSet, func, EX, tk1, *func0, A, args, ret);
+					buildThisCall(functionSet, func, EX, tk1, *func0, A, args, ret, false);
 					EX.parent();
 					goto RET;
 				}
@@ -327,18 +327,18 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 				ins(R("opBoolen ") + tk + R(" %") + to_lstring(ret.id) + R(" %") + to_lstring(id1) + R(" %") + to_lstring(id1));
 			}
 			else {
-				error(R("²»Ö§³ÖµÄÀàĞÍ:") + tk + R(" ") + A.typeName);
+				error(R("ä¸æ”¯æŒçš„ç±»å‹:") + tk + R(" ") + A.typeName);
 			}
 			EX.parent();
 			goto RET;
 		}
 		else if (tk == R("&")) {
 			if (!EX.child()) {
-				error(R("Ò»ÔªÔËËã²ÎÊı¹ıÉÙ")); goto RET;
+				error(R("ä¸€å…ƒè¿ç®—å‚æ•°è¿‡å°‘")); goto RET;
 			}
 			type A = compileTree(functionSet, func, EX, {});
 			if (!A.address) {
-				error(R("²»ÄÜÈ¡µÃ·ÇÖ¸ÕëÀàĞÍµÄµØÖ·")); goto RET;
+				error(R("ä¸èƒ½å–å¾—éæŒ‡é’ˆç±»å‹çš„åœ°å€")); goto RET;
 			}
 			ret = A;
 			ret.typeName = R("N");
@@ -348,7 +348,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 			return ret;
 		}
 		else {
-			error(R("Î´ÖªÔËËã·û")); goto RET;
+			error(R("æœªçŸ¥è¿ç®—ç¬¦")); goto RET;
 		}
 	}
 	else if (type_==R("Var")) {
@@ -427,7 +427,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 			ret = A;
 			goto RET;
 		}
-		error(R("Î´Öª±äÁ¿:") + tk);
+		error(R("æœªçŸ¥å˜é‡:") + tk);
 		goto RET;
 	}
 	else if (type_ == R("Call")) {
@@ -452,31 +452,41 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 					A.array = false;
 					A.id = id1;
 
-					buildThisCall(functionSet, func, EX, tk, *func0, A, args, ret);
+					buildThisCall(functionSet, func, EX, tk, *func0, A, args, ret, false);
 					EX.parent();
 					goto RET;
 				}
 			}
-
-			lstring tk1 = R("Local") + DIVISION + tk + DIVISION + R("_new_");
-
+			std::vector<lstring> funcType = split(tk, DIVISION);
+			lstring tk1{};
+			if (funcType.size() == 3 && funcType[0] == R("Unknown") && funcType[1] == R("Unknown")) {
+				tk1 = R("Local") + DIVISION + funcType[2] + DIVISION + R("_new_");
+			}
+			DebugOutput(">>", tk1);
 			if (haveFunction(tk1)) {
 				analyzed_function* func0 = getFunction(functionSet, tk1, args, {});
-				if (func0 && buildThisCall(functionSet, func, EX, tk1, *func0, A, args, ret)) {
-					EX.parent();
-					goto RET;
+				if (func0) {
+					A.typeName = funcType[2];
+					A.address = true;
+					A.array = false;
+					A.id = allocTmpID(A);
+					
+					if (buildThisCall(functionSet, func, EX, tk1, *func0, A, args, ret, true)) {
+						EX.parent();
+						goto RET;
+					}
 				}
 			}
 
 			func0 = getFunction(functionSet, tk, args, {});
 			if (!func0) {
-				error(R("ÕÒ²»µ½¿ÉÒÔÆ¥ÅäµÄº¯Êı/·½·¨"));
+				error(R("æ‰¾ä¸åˆ°å¯ä»¥åŒ¹é…çš„å‡½æ•°/æ–¹æ³•"));
 				goto RET;
 			}
 			size_t i = 0;
 			for (; i < func0->args.size(); i++) {
 				if (i >= args.size()) {
-					error(R("º¯Êıµ÷ÓÃ²ÎÊı¹ıÉÙ"));
+					error(R("å‡½æ•°è°ƒç”¨å‚æ•°è¿‡å°‘"));
 					goto RET;
 				}
 				generateImplictConversion(func0->args[i], args[i], functionSet, func, EX);
@@ -496,7 +506,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 		else {
 			func0 = getFunction(functionSet, tk, args, {});
 			if (!func0) {
-				error(R("ÕÒ²»µ½¿ÉÒÔÆ¥ÅäµÄº¯Êı/·½·¨"));
+				error(R("æ‰¾ä¸åˆ°å¯ä»¥åŒ¹é…çš„å‡½æ•°/æ–¹æ³•"));
 				goto RET;
 			}
 		}
@@ -534,14 +544,14 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 			tk1 = R("Local") + DIVISION + A.typeName + DIVISION + tk;
 			func0 = getFunction(functionSet, tk1, args, {});
 			if (!func0) {
-				error(R("ÕÒ²»µ½¿ÉÒÔÆ¥ÅäµÄ·½·¨"));
+				error(R("æ‰¾ä¸åˆ°å¯ä»¥åŒ¹é…çš„æ–¹æ³•"));
 				goto RET;
 			}
-			buildThisCall(functionSet, func, EX, tk1, *func0, A, args, ret);
+			buildThisCall(functionSet, func, EX, tk1, *func0, A, args, ret, false);
 			EX.parent();
 		}
 		else {
-			error(R("·½·¨ÒıÓÃ±ØĞëÌá¹©±»ÒıÓÃ½á¹¹"));
+			error(R("æ–¹æ³•å¼•ç”¨å¿…é¡»æä¾›è¢«å¼•ç”¨ç»“æ„"));
 		}
 		goto RET;
 	}
@@ -565,7 +575,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 	}
 	else if (type_ == R("typeof")) {
 		if (!EX.child()) {
-			error(R("typeof±ØĞë×÷ÓÃÓÚ±í´ïÊ½"));
+			error(R("typeofå¿…é¡»ä½œç”¨äºè¡¨è¾¾å¼"));
 			goto RET;
 		}
 		type A = compileTree(functionSet, func, EX, {});
@@ -579,7 +589,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 			//thiscall
 			analyzed_function* func0 = getFunction(functionSet, tk1, args, true);
 			if (func0) {
-				buildThisCall(functionSet, func, EX, tk1, *func0, A, args, ret);
+				buildThisCall(functionSet, func, EX, tk1, *func0, A, args, ret, false);
 				goto RET;
 			}
 		}
@@ -595,7 +605,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 	}
 	else if (type_ == R("sizeof")) {
 		if (!EX.child()) {
-			error(R("sizeof±ØĞë×÷ÓÃÓÚ±í´ïÊ½"));
+			error(R("sizeofå¿…é¡»ä½œç”¨äºè¡¨è¾¾å¼"));
 			goto RET;
 		}
 		type A = compileTree(functionSet, func, EX, {});
@@ -607,7 +617,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 			}
 			analyzed_function* func0 = getFunction(functionSet, tk1, args, {});
 			if (func0) {
-				buildThisCall(functionSet, func, EX, tk1, *func0, A, args, ret);
+				buildThisCall(functionSet, func, EX, tk1, *func0, A, args, ret, false);
 				EX.parent();
 				goto RET;
 			}
@@ -669,10 +679,10 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 			ins(R("num %") + to_lstring(B.id) + R(" ?uI") + to_lstring(args.size()));
 			arg_T = R(" %") + to_lstring(B.id) + arg_T;
 			if (func0->call_type != R("cdecl")) {
-				error(R("²»Ö§³ÖµÄµ÷ÓÃ·½Ê½:") + func0->call_type);
+				error(R("ä¸æ”¯æŒçš„è°ƒç”¨æ–¹å¼:") + func0->call_type);
 			}
 			else if (!func0->use_arg_size) {
-				error(R("Î´ÉùÃ÷´«Èë²ÎÊı¸öÊı"));
+				error(R("æœªå£°æ˜ä¼ å…¥å‚æ•°ä¸ªæ•°"));
 			}
 			if (ifNotRef(ret)) {
 				ins(R("Call_cdecl #label_function_") + tk1 + buildFunctionTypeStr(*func0) + R(" %") + to_lstring(C.id) + R(" %") + to_lstring(ret.id) + arg_T);
@@ -683,7 +693,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 		}
 		else {
 			if (!ret0.array) {
-				error(R("ÏÂ±êµÄ×÷ÓÃ¶ÔÏó±ØĞëÎªÊı×é"));
+				error(R("ä¸‹æ ‡çš„ä½œç”¨å¯¹è±¡å¿…é¡»ä¸ºæ•°ç»„"));
 				goto RET;
 			}
 			type B{};
@@ -724,7 +734,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 	}
 	else if (type_ == R("ad_v")) {
 		if (!EX.child()) {
-			error(R("´íÎóµÄÖ¸ÕëÓÃ·¨")); goto RET;
+			error(R("é”™è¯¯çš„æŒ‡é’ˆç”¨æ³•")); goto RET;
 		}
 		type A = compileTree(functionSet, func, EX, {});
 		lstring tmp = process_quotation_mark(tk);
@@ -733,10 +743,10 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 		std::vector<type> args{};
 		if (haveFunction(tk1) && (func0 = getFunction(functionSet, tk1, args, {}))) {
 			if (func0->args.size() != 1) {
-				error(R("´íÎóµÄÖ¸ÕëÓÃ·¨"));
+				error(R("é”™è¯¯çš„æŒ‡é’ˆç”¨æ³•"));
 				goto RET;
 			}
-			buildThisCall(functionSet, func, EX, tk1, *func0, A, args, ret);
+			buildThisCall(functionSet, func, EX, tk1, *func0, A, args, ret, false);
 			EX.parent();
 			goto RET;
 		}
@@ -776,10 +786,10 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 		if (EX.child()) {
 			type A = compileTree(functionSet, func, EX, {});
 			if (A.array) {
-				error(R("±»ÒıÓÃµÄ¶ÔÏó²»ÄÜÎªÊı×é"));
+				error(R("è¢«å¼•ç”¨çš„å¯¹è±¡ä¸èƒ½ä¸ºæ•°ç»„"));
 			}
 			else if (!A.address) {
-				error(R("±»ÒıÓÃµÄ¶ÔÏó±ØĞëÎªÖ¸Õë"));
+				error(R("è¢«å¼•ç”¨çš„å¯¹è±¡å¿…é¡»ä¸ºæŒ‡é’ˆ"));
 			}
 			else {
 				ins(R("offset %") + to_lstring(A.id) + R(" ") + to_lstring(getElementOffset(functionSet, A.typeName, tk)));
@@ -790,7 +800,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 			EX.parent();
 		}
 		else {
-			error(R("ÒıÓÃµÄ¶ÔÏó²»ÄÜÎª¿Õ"));
+			error(R("å¼•ç”¨çš„å¯¹è±¡ä¸èƒ½ä¸ºç©º"));
 		}
 		goto RET;
 	}
@@ -812,7 +822,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 	else if (type_ == R("")) return ret;
 	else
 	{
-		error(R("²»Ö§³ÖµÄ½á¹¹:Type = ") + type_ + R(" Token = ") + tk);
+		error(R("ä¸æ”¯æŒçš„ç»“æ„:Type = ") + type_ + R(" Token = ") + tk);
 		ret.can_be_ignored = false;
 		goto RET;
 	}
@@ -829,14 +839,14 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 bool IRGenerator::ifMethod(lstring FullName) {
 	lstring type, className, name;
 	if (!getFunctionType(FullName, type, className, name)) {
-		error(R("´íÎóµÄº¯ÊıÃû³Æ¸ñÊ½:") + FullName);
+		error(R("é”™è¯¯çš„å‡½æ•°åç§°æ ¼å¼:") + FullName);
 		return false;
 	}
 	if (type == R("Local")) {
 		for (const auto& x : analyzed_functionSets) {
 			if (x.name == className) return x.isClass;
 		}
-		error(R("Î´Öªº¯Êı:") + FullName);
+		error(R("æœªçŸ¥å‡½æ•°:") + FullName);
 	}
 	return false;
 }
@@ -853,13 +863,13 @@ type IRGenerator::getElement(analyzed_functionSet& functionSet, lstring struct_,
 		if (x.name == struct_) {
 			for (auto& y : x.elements) {
 				if (y.name != functionSet.name && x.isClass && !y.publiced) {
-					error(R("ÊÔÍ¼ÔÚ ") + struct_ + R(" ÖĞÒıÓÃÎ´¹«¿ªµÄ³ÉÔ± ") + element);
+					error(R("è¯•å›¾åœ¨ ") + struct_ + R(" ä¸­å¼•ç”¨æœªå…¬å¼€çš„æˆå‘˜ ") + element);
 				}
 				return y;
 			}
 		}
 	}
-	error(R("ÊÔÍ¼ÔÚ ") + struct_ + R(" ÖĞÒıÓÃ²»´æÔÚµÄ³ÉÔ± ") + element);
+	error(R("è¯•å›¾åœ¨ ") + struct_ + R(" ä¸­å¼•ç”¨ä¸å­˜åœ¨çš„æˆå‘˜ ") + element);
 	type ret{};
 	return ret;
 } 
@@ -870,7 +880,7 @@ size_t IRGenerator::getElementOffset(analyzed_functionSet& functionSet, lstring 
 			for (const auto& y : x.elements) {
 				if (y.name == element) {
 					if (x.name != functionSet.name && x.isClass && !y.publiced) {
-						error(R("ÊÔÍ¼ÔÚ ") + struct_ + R(" ÖĞÒıÓÃÎ´¹«¿ªµÄ³ÉÔ± ") + element);
+						error(R("è¯•å›¾åœ¨ ") + struct_ + R(" ä¸­å¼•ç”¨æœªå…¬å¼€çš„æˆå‘˜ ") + element);
 						return 0;
 					}
 					return k;
@@ -879,7 +889,7 @@ size_t IRGenerator::getElementOffset(analyzed_functionSet& functionSet, lstring 
 			}
 		}
 	}
-	error(R("ÊÔÍ¼ÔÚ ") + struct_ + R(" ÖĞÒıÓÃ²»´æÔÚµÄ³ÉÔ± ") + element);
+	error(R("è¯•å›¾åœ¨ ") + struct_ + R(" ä¸­å¼•ç”¨ä¸å­˜åœ¨çš„æˆå‘˜ ") + element);
 	return 0;
 }
 void IRGenerator::initGenerator(type local, size_t tmp, size_t offset, lstring tk, bool localMode) {
@@ -890,7 +900,7 @@ void IRGenerator::initGenerator(type local, size_t tmp, size_t offset, lstring t
 			goto label_initGenerator_1;
 		}
 	}
-	error(R("±äÁ¿/³ÉÔ± ") + local.name + R(" µÄÀàĞÍÎ´Öª:") + local.typeName);
+	error(R("å˜é‡/æˆå‘˜ ") + local.name + R(" çš„ç±»å‹æœªçŸ¥:") + local.typeName);
 	return;
 label_initGenerator_1:
 	if (local.name == R("[this]")) return;
@@ -922,7 +932,7 @@ void IRGenerator::destroyGenerator(type local, size_t tmp, size_t offset, lstrin
 			goto label_destroyGenerator_1;
 		}
 	}
-	error(R("±äÁ¿/³ÉÔ± ") + local.name + R(" µÄÀàĞÍÎ´Öª:") + local.typeName);
+	error(R("å˜é‡/æˆå‘˜ ") + local.name + R(" çš„ç±»å‹æœªçŸ¥:") + local.typeName);
 	return;
 label_destroyGenerator_1:
 	if (local.name == R("[this]")) return;
@@ -990,14 +1000,14 @@ bool IRGenerator::handleBuiltInFunctions(analyzed_functionSet& functionSet, anal
 			goto label_handleBuiltInFunctions_1;
 		}
 	}
-	error(R("Î´ÕÒµ½ÄÚ½¨º¯Êı¼¯: [System]"));
+	error(R("æœªæ‰¾åˆ°å†…å»ºå‡½æ•°é›†: [System]"));
 	return false;
 label_handleBuiltInFunctions_1:
 	if (name == getFullName(R("if"), *functionSet0)) {
 		if (EX.child()) {
 			type A = compileTree(functionSet, func, EX, {});
 			if (A.typeName != R("Boolen") || A.array) {
-				error(R("ifÓï¾äµÄÌõ¼ş±ØĞëÎªBoolenÀàĞÍ"));
+				error(R("ifè¯­å¥çš„æ¡ä»¶å¿…é¡»ä¸ºBoolenç±»å‹"));
 				EX.parent();
 				return false;
 			}
@@ -1025,7 +1035,7 @@ label_handleBuiltInFunctions_1:
 			EX.parent();
 			return true;
 		}
-		error(R("ifÓï¾äµÄÌõ¼ş²»ÄÜÎª¿Õ"));
+		error(R("ifè¯­å¥çš„æ¡ä»¶ä¸èƒ½ä¸ºç©º"));
 		return false;
 	}
 	else if (name == getFullName(R("while"), *functionSet0)) {
@@ -1035,7 +1045,7 @@ label_handleBuiltInFunctions_1:
 			ins(R("#label_while_Start_") + to_lstring(label1));
 			type A = compileTree(functionSet, func, EX, {});
 			if (A.typeName != R("Boolen") || A.array) {
-				error(R("whileÓï¾äµÄÌõ¼ş±ØĞëÎªBoolenÀàĞÍ"));
+				error(R("whileè¯­å¥çš„æ¡ä»¶å¿…é¡»ä¸ºBoolenç±»å‹"));
 				EX.parent();
 				return false;
 			}
@@ -1067,7 +1077,7 @@ label_handleBuiltInFunctions_1:
 			ins(R("#label_do_while_Start_") + to_lstring(label1));
 			type A = compileTree(functionSet, func, EX, {});
 			if (A.typeName != R("Boolen") || A.array) {
-				error(R("do_whileÓï¾äµÄÌõ¼ş±ØĞëÎªBoolenÀàĞÍ"));
+				error(R("do_whileè¯­å¥çš„æ¡ä»¶å¿…é¡»ä¸ºBoolenç±»å‹"));
 				EX.parent();
 				return false;
 			}
@@ -1078,7 +1088,7 @@ label_handleBuiltInFunctions_1:
 			}
 			ins(R("jz %") + to_lstring(A.id) + R(" #label_do_while_End_") + to_lstring(label1));
 			if (!EX.next()) {
-				error(R("do_whileÓï¾äµÄÑ­»·Ìå²»ÄÜÎª¿Õ"));
+				error(R("do_whileè¯­å¥çš„å¾ªç¯ä½“ä¸èƒ½ä¸ºç©º"));
 				return false;
 			}
 			ins(R("#label_do_while_A_") + to_lstring(label1));
@@ -1117,17 +1127,17 @@ label_handleBuiltInFunctions_1:
 			}
 			else {
 				if (!A.address) {
-					error(R("·µ»ØÖµ±ØĞëÎªÖ¸Õë"));
+					error(R("è¿”å›å€¼å¿…é¡»ä¸ºæŒ‡é’ˆ"));
 					EX.parent();
 					return false;
 				}
 				if (func_ret.array != A.array) {
-					error(R("·µ»ØÖµµÄÊı×éĞÔÖÊÓëº¯ÊıÉùÃ÷²»·û"));
+					error(R("è¿”å›å€¼çš„æ•°ç»„æ€§è´¨ä¸å‡½æ•°å£°æ˜ä¸ç¬¦"));
 					EX.parent();
 					return false;
 				}
 				if (size(func_ret) != size(A)) {
-					error(R("·µ»ØÖµµÄ´óĞ¡Óëº¯ÊıÉùÃ÷²»·û"));
+					error(R("è¿”å›å€¼çš„å¤§å°ä¸å‡½æ•°å£°æ˜ä¸ç¬¦"));
 					EX.parent();
 					return false;
 				}
@@ -1190,7 +1200,7 @@ label_handleBuiltInFunctions_1:
 			return true;
 		}
 		else {
-			error(R("breakÓï¾ä±ØĞëÔÚÑ­»·ÌåÄÚ"));
+			error(R("breakè¯­å¥å¿…é¡»åœ¨å¾ªç¯ä½“å†…"));
 			return false;
 		}
 	}
@@ -1200,7 +1210,7 @@ label_handleBuiltInFunctions_1:
 			return true;
 		}
 		else {
-			error(R("continueÓï¾ä±ØĞëÔÚÑ­»·ÌåÄÚ"));
+			error(R("continueè¯­å¥å¿…é¡»åœ¨å¾ªç¯ä½“å†…"));
 			return false;
 		}
 	}
@@ -1267,7 +1277,7 @@ label_handleBuiltInFunctions_1:
 				ins(A.name);
 				return true;
 			}
-			error(R("_IR_º¯ÊıµÄ²ÎÊı±ØĞëÎª×Ö·û´®"));
+			error(R("_IR_å‡½æ•°çš„å‚æ•°å¿…é¡»ä¸ºå­—ç¬¦ä¸²"));
 			return false;
 		}
 	}
@@ -1294,7 +1304,7 @@ bool IRGenerator::generateImplictConversion(type& A, type& B, analyzed_functionS
 		std::vector<type> args{}, args2{};
 		analyzed_function* func0 = getFunction(functionSet, t, args, {});
 		if (func0 && func0->args.size() == 0) {
-			buildThisCall(functionSet, func, EX, t, *func0, B, args, A);
+			buildThisCall(functionSet, func, EX, t, *func0, B, args, A, false);
 			return true;
 		}
 	}
@@ -1306,22 +1316,22 @@ bool IRGenerator::generateImplictConversion(type& A, type& B, analyzed_functionS
 		return true;
 	}
 	if (A.array && B.array && A.typeName == B.typeName) {
-		warning(R("³¢ÊÔ¶ÔÀàĞÍÏàÍ¬µ«ĞÔÖÊ²»Í¬µÄÊı×é½øĞĞÇ¿ÖÆ×ª»»"));
+		warning(R("å°è¯•å¯¹ç±»å‹ç›¸åŒä½†æ€§è´¨ä¸åŒçš„æ•°ç»„è¿›è¡Œå¼ºåˆ¶è½¬æ¢"));
 		A.id = B.id;
 		return true;
 	}
 	if (A.array && !B.array && B.typeName==R("N")) {
-		warning(R("³¢ÊÔ½«ÎŞ·ûºÅÕûÊı/µØÖ·×ª»»³ÉÊı×é"));
+		warning(R("å°è¯•å°†æ— ç¬¦å·æ•´æ•°/åœ°å€è½¬æ¢æˆæ•°ç»„"));
 		A.id = B.id;
 		return true;
 	}
 	if (!A.array && B.array && A.typeName == R("N")) {
-		warning(R("³¢ÊÔ½«Êı×é×ª»»³ÉÎŞ·ûºÅÕûÊı/µØÖ·"));
+		warning(R("å°è¯•å°†æ•°ç»„è½¬æ¢æˆæ— ç¬¦å·æ•´æ•°/åœ°å€"));
 		A.id = B.id;
 		return true;
 	}
 	if (A.array || B.array) {
-		error(R("·Ç·¨Ç¿ÖÆ×ª»»:Êı×é"));
+		error(R("éæ³•å¼ºåˆ¶è½¬æ¢:æ•°ç»„"));
 		return false;
 	}
 	if (B.address && ifBaseType(B)) {
@@ -1451,7 +1461,7 @@ bool IRGenerator::generateImplictConversion(type& A, type& B, analyzed_functionS
 	}
 	else {
 		Error:
-		error(R("²»Ö§³ÖµÄÇ¿ÖÆ×ª»»ÀàĞÍ:") + (B.typeName == R("") ? R("[Unknown]") : B.typeName) + R("->") + A.typeName);
+		error(R("ä¸æ”¯æŒçš„å¼ºåˆ¶è½¬æ¢ç±»å‹:") + (B.typeName == R("") ? R("[Unknown]") : B.typeName) + R("->") + A.typeName);
 		return false;
 	}
 	return true;
@@ -1486,7 +1496,7 @@ size_t IRGenerator::allocTmpID(type A) {
 }
 size_t IRGenerator::tmpOffset(size_t id, const std::vector<size_t>& stack) {
 	if (stack.size() <= id) {
-		error(R("ÁÙÊ±±äÁ¿IDÒç³ö"));
+		error(R("ä¸´æ—¶å˜é‡IDæº¢å‡º"));
 		return 0;
 	}
 	size_t offset{};
@@ -1532,7 +1542,7 @@ type IRGenerator::getLocalType(lstring name, const analyzed_function& func) {
 		if (x.name == name) return x;
 	}
 	type t{};
-	error(R("Î´Öª¾Ö²¿±äÁ¿:") + name);
+	error(R("æœªçŸ¥å±€éƒ¨å˜é‡:") + name);
 	return t;
 }
 type IRGenerator::getConstType(lstring name) {
@@ -1540,7 +1550,7 @@ type IRGenerator::getConstType(lstring name) {
 		if (x.name == name) return x;
 	}
 	type t{};
-	error(R("Î´Öª³£Á¿:") + name);
+	error(R("æœªçŸ¥å¸¸é‡:") + name);
 	return t;
 }
 type IRGenerator::getArgType(const analyzed_functionSet& functionSet, lstring name, const analyzed_function& func) {
@@ -1554,7 +1564,7 @@ type IRGenerator::getArgType(const analyzed_functionSet& functionSet, lstring na
 	for (auto& x : func.args) {
 		if (x.name == name) return x;
 	}
-	error(R("Î´Öª²ÎÊı:") + name);
+	error(R("æœªçŸ¥å‚æ•°:") + name);
 	return t;
 }
 structure IRGenerator::getStructure(lstring name) {
@@ -1562,7 +1572,7 @@ structure IRGenerator::getStructure(lstring name) {
 		if (x.name == name) return x;
 	}
 	structure t{};
-	error(R("Î´ÖªÊı¾İ½á¹¹:") + name);
+	error(R("æœªçŸ¥æ•°æ®ç»“æ„:") + name);
 	return t;
 }
 type IRGenerator::getSetVarType(lstring name, const analyzed_functionSet& functionSet) {
@@ -1570,7 +1580,7 @@ type IRGenerator::getSetVarType(lstring name, const analyzed_functionSet& functi
 		if (x.name == name) return x;
 	}
 	type t{};
-	error(R("Î´Öª³ÌĞò¼¯±äÁ¿/Àà³ÉÔ±:") + name);
+	error(R("æœªçŸ¥ç¨‹åºé›†å˜é‡/ç±»æˆå‘˜:") + name);
 	return t;
 }
 type IRGenerator::getGlobalVarType(lstring name) {
@@ -1578,14 +1588,14 @@ type IRGenerator::getGlobalVarType(lstring name) {
 		if (x.name == name) return x;
 	}
 	type t{};
-	error(R("Î´ÖªÈ«¾Ö±äÁ¿:") + name);
+	error(R("æœªçŸ¥å…¨å±€å˜é‡:") + name);
 	return t;
 }
 analyzed_function* IRGenerator::getFunction(const analyzed_functionSet& functionSet, lstring fullName, const std::optional<std::vector<type>>& args, std::optional<bool> variable) {
 	lstring type{}, className{}, name{};
 	analyzed_function tfunc{};
 	if (!getFunctionType(fullName, type, className, name)) {
-		error(R("´íÎóµÄº¯ÊıÃû³Æ¸ñÊ½:") + fullName);
+		error(R("é”™è¯¯çš„å‡½æ•°åç§°æ ¼å¼:") + fullName);
 		return nullptr;
 	}
 	if (type == R("Local")) {
@@ -1602,17 +1612,17 @@ analyzed_function* IRGenerator::getFunction(const analyzed_functionSet& function
 			}
 			if (k) {
 				if (x.isClass && !a) {
-					err = R("ÊÔÍ¼µ÷ÓÃ ") + x.name + R(" ÖĞÎ´¹«¿ªµÄ·½·¨:") + k->name;
+					err = R("è¯•å›¾è°ƒç”¨ ") + x.name + R(" ä¸­æœªå…¬å¼€çš„æ–¹æ³•:") + k->name;
 					continue;
 				}
 				if (!cmpArgNum(k->args, args) && !variable && !k->use_arg_size) {
-					err = R("²ÎÊı¹ı¶à»ò¹ıÉÙ:") + fullName;
+					err = R("å‚æ•°è¿‡å¤šæˆ–è¿‡å°‘:") + fullName;
 					continue;
 				}
 				return k;
 			}
 		}
-		error(err == R("") ? R("Î´Öªº¯Êı:") + fullName : err);
+		error(err == R("") ? R("æœªçŸ¥å‡½æ•°:") + fullName : err);
 	}
 	else if (type == R("Extra")) {
 		for (auto& x : ExtraFunctions.func) {
@@ -1620,10 +1630,10 @@ analyzed_function* IRGenerator::getFunction(const analyzed_functionSet& function
 				return &x;
 			}
 		}
-		error(R("Î´ÖªÍâ²¿º¯Êı:") + fullName);
+		error(R("æœªçŸ¥å¤–éƒ¨å‡½æ•°:") + fullName);
 	}
 	else {
-		error(R("Î´Öªº¯Êı:") + fullName);
+		error(R("æœªçŸ¥å‡½æ•°:") + fullName);
 	}
 	return nullptr;
 }
@@ -1681,7 +1691,7 @@ lstring IRGenerator::getFullName(const lstring& name, const analyzed_functionSet
 		func = t[1];
 	}
 	else {
-		error(R("´íÎóµÄº¯ÊıÃû³Æ¸ñÊ½") + name);
+		error(R("é”™è¯¯çš„å‡½æ•°åç§°æ ¼å¼") + name);
 		return R("");
 	}
 	if (className != R("") && functionSet.name == className || className == R("")) {
@@ -1693,7 +1703,7 @@ lstring IRGenerator::getFullName(const lstring& name, const analyzed_functionSet
 			if (y.name == func) {
 				if (x.isClass && x.name != className) continue;
 				if (x.isClass && !y.publiced) {
-					error(R("ÊÔÍ¼µ÷ÓÃ ") + className + R(" ÖĞÎ´¹«¿ªµÄ·½·¨:") + func);
+					error(R("è¯•å›¾è°ƒç”¨ ") + className + R(" ä¸­æœªå…¬å¼€çš„æ–¹æ³•:") + func);
 					return R("");
 				}
 				return R("Local") + DIVISION + x.name + DIVISION + func;
@@ -1731,7 +1741,7 @@ size_t IRGenerator::countArgSize(const analyzed_functionSet& functionSet, const 
 }
 size_t IRGenerator::getLocalOffset(const analyzed_function& func, size_t id) {
 	if (id >= func.local.size()) {
-		error(R("¾Ö²¿±äÁ¿IDÒç³ö"));
+		error(R("å±€éƒ¨å˜é‡IDæº¢å‡º"));
 		return 0;
 	}
 	size_t offset{};
@@ -1754,7 +1764,7 @@ size_t IRGenerator::getVarOffset(const analyzed_functionSet& functionSet, const 
 				offset += size(x);
 			if (x.name == var) return offset;
 		}
-		error(R("Î´Öª¾Ö²¿±äÁ¿:") + var);
+		error(R("æœªçŸ¥å±€éƒ¨å˜é‡:") + var);
 	}
 	if (type == R("Arg")) {
 		if (var == R("[ret]")) return offset;
@@ -1763,37 +1773,37 @@ size_t IRGenerator::getVarOffset(const analyzed_functionSet& functionSet, const 
 			if (x.name == var) return offset;
 			offset += argSize(x);
 		}
-		error(R("Î´Öª²ÎÊı:") + var);
+		error(R("æœªçŸ¥å‚æ•°:") + var);
 	}
 	if (type == R("Class")) {
 		for (auto& x : functionSet.local) {
 			if (x.name == var) return offset;
 			offset += size(x);
 		}
-		error(R("Î´ÖªÀà³ÉÔ±:") + var);
+		error(R("æœªçŸ¥ç±»æˆå‘˜:") + var);
 	}
 	if (type == R("Set")) {
 		for (auto& x : functionSet.local) {
 			if (x.name == var) return offset;
 			offset += size(x);
 		}
-		error(R("Î´Öª³ÌĞò¼¯±äÁ¿:") + var);
+		error(R("æœªçŸ¥ç¨‹åºé›†å˜é‡:") + var);
 	}
 	if (type == R("Global")) {
 		for (auto& x : globalVars) {
 			if (x.name == var) return offset;
 			offset += size(x);
 		}
-		error(R("Î´ÖªÈ«¾Ö±äÁ¿:") + var);
+		error(R("æœªçŸ¥å…¨å±€å˜é‡:") + var);
 	}
 	if (type == R("Const")) {
 		for (auto& x : functionSet.local) {
 			if (x.name == var) return offset;
 			offset += size(x);
 		}
-		error(R("Î´Öª³£Á¿:") + var);
+		error(R("æœªçŸ¥å¸¸é‡:") + var);
 	}
-	else error(R("Î´Öª±äÁ¿ÀàĞÍ:") + name);
+	else error(R("æœªçŸ¥å˜é‡ç±»å‹:") + name);
 	return 0;
 }
 size_t IRGenerator::constSize(const type& A) {
@@ -1805,7 +1815,7 @@ size_t IRGenerator::size(const type& A) {
 bool IRGenerator::getVarType(lstring name, lstring& type, lstring& var) {
 	std::vector<lstring> t = split(name, DIVISION);
 	if (t.size() != 2) {
-		error(R("´íÎóµÄ±äÁ¿Ãû³Æ¸ñÊ½:") + name);
+		error(R("é”™è¯¯çš„å˜é‡åç§°æ ¼å¼:") + name);
 		return false;
 	}
 	type = t[0];
@@ -1827,7 +1837,7 @@ size_t IRGenerator::getStructureSize(lstring type) {
 	for (auto& x : structures) {
 		if (x.name == type) return x.size;
 	}
-	error(R("Î´ÖªÊı¾İÀàĞÍ:") + type);
+	error(R("æœªçŸ¥æ•°æ®ç±»å‹:") + type);
 	return 0;
 }
 bool IRGenerator::analyze(
@@ -1966,20 +1976,20 @@ bool IRGenerator::analyze(
 	return Error;
 }
 bool IRGenerator::buildThisCall(analyzed_functionSet& functionSet, analyzed_function& func, Tree<node>& EX,const lstring& fullname, analyzed_function& callfunc
-	, type& object, std::vector<type>& args, type& ret) {
+	, type& object, std::vector<type>& args, type& ret, bool tmpObject) {
 	lstring arg_T{};
 	if (object.array) {
-		error(R("·½·¨µÄ±»ÒıÓÃ½á¹¹²»ÄÜÎªÊı×é"));
+		error(R("æ–¹æ³•çš„è¢«å¼•ç”¨ç»“æ„ä¸èƒ½ä¸ºæ•°ç»„"));
 		return false;
 	}
 	if (!object.address) {
-		error(R("·½·¨µÄ±»ÒıÓÃ½á¹¹±ØĞëÎªÖ¸Õë"));
+		error(R("æ–¹æ³•çš„è¢«å¼•ç”¨ç»“æ„å¿…é¡»ä¸ºæŒ‡é’ˆ"));
 		return false;
 	}
 	size_t i = 0;
 	for (; i < callfunc.args.size(); i++) {
 		if (i >= args.size()) {
-			error(R("·½·¨ÒıÓÃ²ÎÊı¹ıÉÙ"));
+			error(R("æ–¹æ³•å¼•ç”¨å‚æ•°è¿‡å°‘"));
 			return false;
 		}
 		generateImplictConversion(callfunc.args[i], args[i], functionSet, func, EX);
@@ -2005,10 +2015,10 @@ bool IRGenerator::buildThisCall(analyzed_functionSet& functionSet, analyzed_func
 		argSize_T = R(" %") + to_lstring(argSize_ID);
 	}
 	if (ifNotRef(ret)) {
-		ins(R("Call") + tk2 + R(" #label_function_") + fullname + buildFunctionTypeStr(callfunc) + R(" %") + to_lstring(object.id) + R(" %") + to_lstring(ret.id) + argSize_T + arg_T);
+		ins(R("Call") + tk2 + R(" #label_function_") + fullname + buildFunctionTypeStr(callfunc) + (tmpObject ? R(" &%") : R(" %")) +to_lstring(object.id) + R(" %") + to_lstring(ret.id) + argSize_T + arg_T);
 	}
 	else {
-		ins(R("CallA") + tk2 + R(" #label_function_") + fullname + buildFunctionTypeStr(callfunc) + R(" %") + to_lstring(object.id) + R(" &%") + to_lstring(ret.id) + argSize_T + arg_T);
+		ins(R("CallA") + tk2 + R(" #label_function_") + fullname + buildFunctionTypeStr(callfunc) + (tmpObject ? R(" &%") : R(" %")) + to_lstring(object.id) + R(" &%") + to_lstring(ret.id) + argSize_T + arg_T);
 		size_t id1 = allocTmpID(Type_N);
 		ins(R("address %") + to_lstring(id1) + R(" &%") + to_lstring(ret.id));
 		ret.id = id1;

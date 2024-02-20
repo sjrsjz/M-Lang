@@ -101,8 +101,8 @@ Main{
 		printN(A[1][0]->A.b);print("|");
 		printN(A[1][1]->A.a);print("|");
 		printN(A[1][2]->A.b);
-		print("\n");
-		printN(sizeof:(A,0));
+		print("\nindex1:");printN(sizeof:(A,0));//取数组下标（A,0）
+		print("\nindex2:");printN(sizeof:(A,1));
 		print("\n");
 	}
 }

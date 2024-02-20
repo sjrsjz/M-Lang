@@ -64,7 +64,7 @@ namespace MLang {
 		std::vector<lstring> loopStartStack{};
 		std::vector<lstring> loopEndStack{};
 
-		bool buildThisCall(analyzed_functionSet& functionSet, analyzed_function& func, Tree<node>& EX,const lstring& fullname, analyzed_function& callfunc, type& object, std::vector<type>& args, type& ret);
+		bool buildThisCall(analyzed_functionSet& functionSet, analyzed_function& func, Tree<node>& EX,const lstring& fullname, analyzed_function& callfunc, type& object, std::vector<type>& args, type& ret, bool tmpObject);
 		void error(lstring err);
 		void warning(lstring warn);
 		bool getFunctionType(lstring fullName,lstring& type,lstring& super,lstring& name);

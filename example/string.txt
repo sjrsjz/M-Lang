@@ -15,7 +15,6 @@ Class:string{
         ad=0;size=0
     }
     _destroy_()->N:={
-        //printN(ad);
         if(ad!=0){free(ad);ad=0};
         size=0;
     }
@@ -23,7 +22,6 @@ Class:string{
         N:ad,N:size
     }
     [Public]"return(string)"(string:s)->N:={//prevent RAII destroys data
-
         _destroy_();
         ad=new(s.size);
         size=s.size;
@@ -79,6 +77,19 @@ Class:string{
     [Public]"N()"()->N:={
         return(ad)
     }
+    [Public]"sizeof()"()->N:={
+        return(size/2)
+    }
+    [Public]"="(B:str[0])->N:={
+        const(str)
+    }
+    [Public]"="(R:data)->N:={
+        this=R2Str(data)
+    }
+    [Public]_new_(B:str[0])->string:={
+        const(str);
+        return(this)
+    }
 }
 
 Extra:"user32.dll"{
@@ -90,12 +101,12 @@ Main{
         string:A.const("test");
         return(A);
     }
-        main()->N:={
-        string:A.const("Hello. ");
-        string:B.const("World!");
-        string:C.const("\n");
+    main()->N:={
+        string:A=string("Hello ");
+        string:B="World!";
+        string:C="\n";
         string:D=f()+C+R2Str(0.5)+C+(A+B+C)*10;
-        MessageBoxW(0,D,"Title",0);
-        print(D);
+        MessageBoxW(0,D,string("Title"),0);
+        print(D);printN(sizeof:(D));
     }
 }

@@ -13,7 +13,7 @@ namespace MLang {
     lstring subreplace(lstring resource_str, lstring sub_str, lstring new_str)
     {
         lstring dst_str = resource_str;
-        lstring::size_type; intptr_t pos = 0;
+        intptr_t pos = 0;
         while ((pos = dst_str.find(sub_str)) != lstring::npos)   //替换所有指定子串
         {
             dst_str.replace(pos, sub_str.length(), new_str);
