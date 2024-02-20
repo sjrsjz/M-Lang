@@ -91,22 +91,3 @@ Class:string{
         return(this)
     }
 }
-
-Extra:"user32.dll"{
-    MessageBoxW(N:HWND,N:Text,N:Caption,N:Type)->N:=MessageBoxW;
-}
-
-Main{
-    f()->string:={
-        string:A.const("test");
-        return(A);
-    }
-    main()->N:={
-        string:A=string("Hello ");
-        string:B="World!";
-        string:C="\n";
-        string:D=f()+C+R2Str(0.5)+C+(A+B+C)*10;
-        MessageBoxW(0,D,string("Title"),0);
-        print(D);printN(sizeof:(D));
-    }
-}

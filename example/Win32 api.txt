@@ -1,0 +1,3 @@
+Extra:"user32.dll"{
+    MessageBoxW(N:HWND,N:Text,N:Caption,N:Type)->N:=MessageBoxW;
+}
