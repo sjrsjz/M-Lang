@@ -1765,10 +1765,16 @@ namespace MLang::x86Runner {
 		}
 		ProgramAddress = VirtualAlloc(NULL, tcode.size, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 		memcpy(ProgramAddress, tcode.ptr, tcode.size);
+		Program = tcode;
 		DebugOutput(tcode, ProgramAddress);
 	}
 	void run() {
 		srand(100);
+#ifdef _WIN32
+		OutputDebugString((R("[Program]GlobalPos ") + to_lstring((size_t)GlobalAddress) + R(" ") + to_lstring(GlobalSize)).c_str());
+		OutputDebugString((R("[Program]CodePos ") + to_lstring((size_t)ProgramAddress) + R(" ") + to_lstring(Program.size)).c_str());
+#endif // _WIN32
+
 		try {
 			void (__stdcall *func)() = (void(__stdcall *)())ProgramAddress;
 			func();
