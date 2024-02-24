@@ -1,0 +1,33 @@
+Class:a_ptr{
+	N:ptr;Boolen:origin;
+	_init_()->N:={
+		origin=false;ptr=0;
+	}
+	_destroy_()->N:={
+		if(origin and ptr!=0){
+			free(ptr)
+		}
+	}
+	[Public]"="(N:addr)->N:={
+		_destroy_();
+		origin=true;
+		ptr=addr;
+	}
+	[Public]"="(a_ptr:o)->N:={
+		_destroy_();
+		origin=false;
+		ptr=o
+	}
+	[Public]"return(a_ptr)"(a_ptr:o)->N:={
+		this=o;
+	}
+	[Public]"N()"()->N:={
+		return(ptr)
+	}
+	[Public]_new_(N:size)->N:={
+		this=new(size)
+	}
+	[Public]destroy()->N:={
+		_destroy_()
+	}
+}

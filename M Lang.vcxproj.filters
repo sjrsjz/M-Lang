@@ -45,6 +45,9 @@
     <ClCompile Include="cpp\x86.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="cpp\vm.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="header\AST.h">
@@ -78,6 +81,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="header\x86.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="header\caller.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="header\vm.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

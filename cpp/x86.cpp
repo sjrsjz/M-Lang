@@ -1613,7 +1613,12 @@ namespace MLang::x86Runner {
 		return (unsigned int)GlobalAddress + offset;
 	}
 	unsigned int __stdcall input(unsigned int str, unsigned int size) {
+#ifdef G_UNICODE_
+		wscanf_s(L"%s", (wchar_t*)str, size);
+#else
 		scanf_s("%s", (char*)str, size);
+#endif // 
+
 		return str;
 	}
 	float __stdcall CmpStr(unsigned int A, unsigned int B) {

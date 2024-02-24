@@ -1604,7 +1604,7 @@ analyzed_function* IRGenerator::getFunction(const analyzed_functionSet& function
 			analyzed_function* k{};
 			bool a{};
 			for (auto& y : x.func) {
-				if (y.name == name) {
+				if (y.name == name && className==x.name) {
 					k = &y;
 					a =x.isClass && (y.publiced && x.name != functionSet.name || x.name == functionSet.name);
 					if (a && cmpArg(y.args, args)) return &y;

@@ -1,6 +1,8 @@
 #include<"Array.txt">;
 #include<"string.txt">;
 #include<"Win32 api.txt">;
+#include<"Auto Pointer.txt">;
+
 
 Class:A{
     [Public]N:a;
@@ -26,6 +28,9 @@ Main{
         return(a)
     }
     main()->N:={
+	a_ptr:p=new(1024);
+	input(p,1024);
+	print(p,"\n");
         string:strA=string("Hello ");
         string:strB="World!";
         string:strC="\n";
