@@ -1108,7 +1108,7 @@ label_handleBuiltInFunctions_1:
 		if (EX.child()) {
 			type A = compileTree(functionSet, func, EX, {});
 			if (ifNotRef(func_ret)) {
-				if (A.address) {
+				if (A.address && A.name!=R("[this]")) {
 					size_t id1 = allocTmpID(func_ret);
 					ins(R("load %") + to_lstring(id1) + R(" %") + to_lstring(A.id) + R(" ") + to_lstring(size(A)));
 					A.id = id1;

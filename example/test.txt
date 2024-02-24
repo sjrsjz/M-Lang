@@ -29,8 +29,9 @@ Main{
     }
     main()->N:={
 	a_ptr:p=new(1024);
-	input(p,1024);
+	input(p,512);
 	print(p,"\n");
+	input(a_ptr(1024),512);
         string:strA=string("Hello ");
         string:strB="World!";
         string:strC="\n";
