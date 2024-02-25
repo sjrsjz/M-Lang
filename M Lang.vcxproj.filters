@@ -48,6 +48,9 @@
     <ClCompile Include="cpp\vm.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="cpp\caller.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="header\AST.h">
