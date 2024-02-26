@@ -1,4 +1,4 @@
-#include "../header/caller.h"
+﻿#include "../header/caller.h"
 
 using namespace MLang;
 
@@ -42,10 +42,10 @@ MLang::BuildVMInterfaceFunction(const void (*function)(void*, const void* , cons
 		ret << 103 << 138 << 133; ret += (int)(i + sizeof(int)); ret << 136 << 4 << 37; ret += (int)(arg_offset + i);
 	}
 	ret << X86_PUSH; ret += (int)retType;
-	ret << X86_PUSH; ret += (int)&argType;
-	ret << X86_PUSH; ret += (int)retBuffer;
-	ret << X86_PUSH; ret += (int)argBuffer;
-	ret << 184; ret += (int)function;
+	ret << X86_PUSH; ret += (int)(size_t)&argType;
+	ret << X86_PUSH; ret += (int)(size_t)retBuffer;
+	ret << X86_PUSH; ret += (int)(size_t)argBuffer;
+	ret << 184; ret += (int)(size_t)function;
 
 #endif
 #if defined(_WIN64)

@@ -1,13 +1,15 @@
 ﻿#pragma once
+
 #ifndef _COMMON_HEAD_
 #define _COMMON_HEAD_
 #include <iostream>
 #include <stdlib.h>
 #include <assert.h>
 #include <string>
+#include <cstring>
 #include <optional>
 #include <vector>
-#include <sstream>
+#include <sstream> 
 #include <fstream>
 #include <codecvt>
 
@@ -49,6 +51,17 @@ typedef std::stringstream lstringstream;
 
 #define foreach(x, y) for(auto y=x.begin();y<x.end();y++)
 
+#if defined _MSC_VER
+#define _stdcall __stdcall
+#define _cdecl __cdecl
+
+#elif defined __GNUC__
+#define _stdcall __attribute__((__stdcall__))
+#define _cdecl __attribute__((__cdecl__))
+
+#endif // _MSC_VER
+
+
 #define RESET   R("\033[0m")
 #define BLACK   R("\033[30m")      /* Black */
 #define RED     R("\033[31m")      /* Red */
@@ -88,12 +101,13 @@ namespace MLang {
     bool isNum_(lstring str);
     void output(std::vector<lstring> tk,lstring str,intptr_t pos);
     lstring gather(std::vector<lstring> tks, size_t c);
-    lstring readFileString(lstring path);
+    lstring readFileString(const lstring& path);
     lstring getDictionary(lstring path);
-    template<typename T>
-    inline ByteArray<T> readFileByteArray(lstring path) {
+    template <typename T>
+    inline ByteArray<T> readFileByteArray(const lstring &path)
+    {
         std::ifstream fin{};
-        fin.open(path, std::ios::in | std::ios::binary);
+        fin.open(path.c_str(), std::ios::in | std::ios::binary);
         if (!fin.is_open()) return ByteArray<T>{};
         fin.seekg(0, std::ios::end);
         size_t size = fin.tellg();
@@ -104,10 +118,10 @@ namespace MLang {
         return buf;
     }
 
-    bool writeFileString(lstring path, lstring str);
+    bool writeFileString(const lstring &path, lstring str);
     bool inline writeFileByteArray(lstring path, ByteArray<> data) {
         std::ofstream fout{};
-        fout.open(path, std::ios::out | std::ios::binary);
+        fout.open(path.c_str(), std::ios::out | std::ios::binary);
         if (!fout.is_open()) return false;
         fout.write(reinterpret_cast<char*>(data.ptr), data.size * sizeof(data.ptr[0]));
         fout.close();
@@ -120,22 +134,31 @@ namespace MLang {
     //convert string to wstring
     inline std::wstring to_wide_string(const std::string& input)
     {
-#pragma warning(suppress : 4996)
-        std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-#pragma warning(suppress : 4996)
-        return converter.from_bytes(input);
+
+        std::mbstate_t state = std::mbstate_t();
+        std::wstring ret(input.size(), 0);
+        const char *data = input.data();
+        wchar_t *ptr = &ret[0];
+        std::locale loc;
+        size_t res = std::use_facet<std::codecvt<wchar_t, char, std::mbstate_t>>(loc).in(state, data, data + input.size(), data, ptr, ptr + ret.size(), ptr);
+        ret.resize(ptr - &ret[0]);
+        return ret;
+
     }
     inline std::wstring to_wide_string(const std::wstring& input) {
         return input;
     }
-
     //convert wstring to string 
     inline std::string to_byte_string(const std::wstring& input)
     {
-#pragma warning(suppress : 4996)
-        std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-#pragma warning(suppress : 4996)
-        return converter.to_bytes(input);
+        std::mbstate_t state = std::mbstate_t();
+        std::string ret(input.size(), 0);
+        const wchar_t *data = input.data();
+        char *ptr = &ret[0];
+        std::locale loc;
+        size_t res = std::use_facet<std::codecvt<wchar_t, char, std::mbstate_t>>(loc).out(state, data, data + input.size(), data, ptr, ptr + ret.size(), ptr);
+        ret.resize(ptr - &ret[0]);
+        return ret;
     }
     inline std::string to_byte_string(const std::string& input) {
         return input;

@@ -109,9 +109,9 @@ namespace MLang {
         return head;
     }
 
-    lstring readFileString(lstring path) {
+    lstring readFileString(const lstring& path) {
         std::ifstream fin{};
-        fin.open(path, std::ios::in);
+        fin.open(path.c_str(), std::ios::in);
         if (!fin.is_open()) return R("");
         std::string buf;
         lstring buf2{};
@@ -145,13 +145,14 @@ namespace MLang {
         tmp.push_back(str.substr(lp, str.size() - lp + 1));
         return tmp;
     }
-    bool writeFileString(lstring path, lstring str) {
+    bool writeFileString(const lstring &path, lstring str)
+    {
 #if G_UNICODE_
         std::wofstream fout{};
 #else
         std::ofstream fout{};
 #endif // UNICODE
-        fout.open(path, std::ios::out);
+        fout.open(path.c_str(), std::ios::out);
         if (!fout.is_open()) return false;
         fout << str;
         fout.close();

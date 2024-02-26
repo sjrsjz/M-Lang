@@ -1,0 +1,93 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="D:\VS Projects\M Lang\cpp\AST.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\VS Projects\M Lang\cpp\base64.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\VS Projects\M Lang\cpp\ByteArray.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\VS Projects\M Lang\cpp\caller.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\VS Projects\M Lang\cpp\Common.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\VS Projects\M Lang\cpp\IRGenerator.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\VS Projects\M Lang\cpp\Lexer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\VS Projects\M Lang\cpp\M Lang.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\VS Projects\M Lang\cpp\SectionManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\VS Projects\M Lang\cpp\vm.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\VS Projects\M Lang\cpp\x64.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\VS Projects\M Lang\cpp\x86.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="D:\VS Projects\M Lang\header\AST.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\VS Projects\M Lang\header\base64.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\VS Projects\M Lang\header\ByteArray.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\VS Projects\M Lang\header\caller.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\VS Projects\M Lang\header\Common.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\VS Projects\M Lang\header\IRGenerator.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\VS Projects\M Lang\header\Lexer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\VS Projects\M Lang\header\SectionManager.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\VS Projects\M Lang\header\Struct.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\VS Projects\M Lang\header\Tree.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\VS Projects\M Lang\header\vm.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\VS Projects\M Lang\header\x86.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\VS Projects\M Lang\header\x64.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\VS Projects\M Lang\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{C72D0D84-B6F1-3057-BC96-A5CE440EB0ED}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{D28F301D-4F8D-3159-8C63-3BAEA76C4E27}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
