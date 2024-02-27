@@ -322,7 +322,7 @@ Main{
     ByteArray<unsigned char> mexe;
     err = !IR2MEXE(ir.IR, mexe);
     if (err) return 0;
-#ifdef _WIN32
+#if _WIN32 and !(defined _WIN64)
     x86Runner::LoadMEXE(mexe);
     x86Runner::run();
 #endif // _WIN32
@@ -428,7 +428,7 @@ bool process_command(std::vector<lstring> args) {
 		err = !IR2MEXE(ir.IR, mexe);
         //std_lcout << ir.IR;
 		if (err) return false;
-#ifdef _WIN32
+#if _WIN32 and !(defined _WIN64)
         x86Runner::LoadMEXE(mexe);
         x86Runner::run();
 #endif // _WIN32

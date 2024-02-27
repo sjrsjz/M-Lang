@@ -35,7 +35,7 @@ MLang::BuildVMInterfaceFunction(const void (*function)(void*, const void* , cons
 	size_t offset{};
 	size_t arg_offset = (size_t)argBuffer;
 	size_t arg_index{};
-#ifdef _WIN32
+#ifdef _WIN32 and !(defined _WIN64)
 	size_t argSize{};
 	for (const auto& x : argType) argSize += argTypeSize[x];
 	for (size_t i = 0; i < argSize; i++) {

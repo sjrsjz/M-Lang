@@ -1990,7 +1990,7 @@ namespace MLang::x86Runner
 	{
 		float a = (float)rand() / RAND_MAX;
 
-#if defined _MSC_VER and defined _WIN32
+#if defined _MSC_VER and !(defined _WIN64)
 		__asm {
 			mov eax, dword ptr[a]
 			mov edx, dword ptr[a + 4]
@@ -2016,7 +2016,7 @@ namespace MLang::x86Runner
 	double _stdcall random2()
 	{
 		double a = (double)rand() / RAND_MAX;
-#if defined _MSC_VER
+#if defined _MSC_VER and !(defined _WIN64)
 		__asm {
 			mov eax, dword ptr[a]
 			mov edx, dword ptr[a + 4]
