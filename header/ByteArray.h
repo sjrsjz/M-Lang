@@ -20,7 +20,7 @@
 #include <Windows.h>
 #endif // _WIN32 || _WIN64
 
-#ifdef G_UNICODE_
+#if G_UNICODE_
 typedef std::wstring lstring;
 typedef std::wstringstream lstringstream;
 typedef wchar_t lchar;

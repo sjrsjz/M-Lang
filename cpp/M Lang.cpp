@@ -11,6 +11,8 @@
 #include "../header/x86.h"
 #endif // WIN32
 
+#define LOCALE std::wcout.imbue(std::locale("zh_CN"));
+
 using namespace MLang;
 
 void NewType(std::vector<structure>& structure_, lstring name, bool publiced, size_t size) {
@@ -140,7 +142,7 @@ void PrepareLexer(Lexer& lex) {
 }
 
 bool IR2MEXE(const lstring& ir,ByteArray<unsigned char>& mexe) {
-#ifdef _WIN32
+#if _WIN32 and !(defined _WIN64)
     x86Generator x86{};
     x86.generate(ir);
     if (x86.Error) {
@@ -174,14 +176,15 @@ bool IR2MEXE(const lstring& ir,ByteArray<unsigned char>& mexe) {
     mexe = sm.build();
     return true;
 #endif
+    return false;
 }
 
 int test(int argn,char* argv[])
 {
     Lexer lex{};
 
-#ifdef G_UNICODE_
-	std::wcout.imbue(std::locale("zh_CN"));
+#if G_UNICODE_
+    LOCALE
 #endif 
 
     bool err = lex.analyze(R(R"ABC(
@@ -437,9 +440,9 @@ bool process_command(std::vector<lstring> args) {
 }
 
 int main(int argn, char* argv[]) {
-#ifdef G_UNICODE_
-    std::wcout.imbue(std::locale("zh_CN"));
-#endif 
+#if G_UNICODE_
+    LOCALE
+#endif
 #if _DEBUG
     test(argn, argv);
 #else

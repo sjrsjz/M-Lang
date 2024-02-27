@@ -116,7 +116,7 @@ namespace MLang {
         std::string buf;
         lstring buf2{};
         while (std::getline(fin, buf, '\0')) {//?
-#ifdef  G_UNICODE_
+#if  G_UNICODE_
             buf2 += to_wide_string(buf);
 #else
             buf2 += buf;

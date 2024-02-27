@@ -1819,7 +1819,7 @@ namespace MLang::x86Runner
 	}
 	void *InitApi(lstring lib, lstring api)
 	{
-#ifdef G_UNICODE_
+#if G_UNICODE_
 		return (void *)GetProcAddress((HMODULE)GetModuleHandle(lib.c_str()), to_byte_string(api).c_str());
 #else
 		return (void *)GetProcAddress((HMODULE)GetModuleHandle(lib.c_str()), api.c_str());
@@ -1893,7 +1893,7 @@ namespace MLang::x86Runner
 	}
 	unsigned int _stdcall input(unsigned int str, unsigned int size)
 	{
-#ifdef G_UNICODE_
+#if G_UNICODE_
 		wscanf_s(L"%s", (wchar_t *)str, size);
 #else
 		scanf_s("%s", (char *)str, size);
@@ -1925,7 +1925,7 @@ namespace MLang::x86Runner
 	}
 	unsigned int _stdcall R2T(double data, unsigned int str)
 	{
-#ifdef G_UNICODE_
+#if G_UNICODE_
 		swprintf_s((lchar *)str, 256, R("%lf"), data);
 #else
 		sprintf_s((lchar *)str, 256, R("%lf"), data);
@@ -2123,7 +2123,7 @@ namespace MLang::x86Runner
 		}
 		catch (std::exception e)
 		{
-#ifdef G_UNICODE_
+#if G_UNICODE_
 			error(to_wide_string((std::string)e.what()));
 #else
 			error((std::string)e.what());
