@@ -50,7 +50,7 @@ M Lang支持自动类型转换，默认转换方向是 **B** -> **N/Z** -> **R**
 
 M Lang支持如下运算符，按优先级排序为
 
-1. **&** *取地址*    **~** *取函数地址/当前地址*     **.** *成员访问/方法调用*
+1. **&** *取地址*    **~** *取函数地址/当前地址*     **.** *成员访问/方法调用*     **sizeof:type / sizeof:(expr)** *计算类型大小*    **typeof:expr / typeof:(expr)** *计算类型字符串* 
 
 2. **->** *指针到类型*     **+** *绝对值*     **-** *相反数*     **not** *逻辑非*
 
@@ -120,16 +120,27 @@ SetName{
 
 *SetName* 是程序集的名称，*body* 是定义的程序集变量和函数
 
+M Lang支持动态链接库的声明，格式为：
+
+```
+Extra:"DLL Path"{
+    Name(Type:Arg1,Type:Arg2,...)->RetType:=ApiName;
+    ...
+}
+```
+
+
+
 ###### 变量
 
 M Lang是静态类型的，变量在使用前必须定义，定义格式为：
 
 ```
-[Public/Private]Type:VarName    //定义类型为Type，名称为VarName的变量
-[Public/Private]Type:VarName[dimension1][dimension2][...]    //定义类型为Type，名称为VarName的数组
+Public/Private Type:VarName    //定义类型为Type，名称为VarName的变量
+Public/Private Type:VarName[dimension1][dimension2][...]    //定义类型为Type，名称为VarName的数组
 ```
 
-*Type* 可以是基础类型，也可以是自定义的数据类型或类。[Public/Private]为可访问性，仅在类中生效,可忽略
+*Type* 可以是基础类型，也可以是自定义的数据类型或类。Public/Private为可访问性，仅在类中生效,可忽略
 
 变量的定义格式在程序集，函数，类，数据结构通用，参数声明也使用该格式
 
@@ -140,12 +151,12 @@ M Lang是静态类型的，变量在使用前必须定义，定义格式为：
 M Lang的函数定义格式如下
 
 ```
-[Transit][ThisArg][stdcall/cdecl][Public/Private]Name(Type:Arg1,Type:Arg2,...)->RetType:={
+Transit ThisArg stdcall/cdecl Public/Private Name(Type:Arg1,Type:Arg2,...)->RetType:={
     body
 }
 ```
 
-*RetType* 为返回类型，可以为定长数组。[Public/Private]为可访问性，仅在类中生效，可忽略。[stdcall/cdecl]为函数平栈方式，默认为stdcall。[Transit]为是否为中转函数，带上该定义的函数函数体返回值类型是 **N** ，返回值必须是有效的函数地址，在执行结束后会直接跳转到返回的函数地址，[ThisArg]是中转后的this指针，[Transit]可忽略。
+*RetType* 为返回类型，可以为定长数组。Public/Private为可访问性，仅在类中生效，可忽略。stdcall/cdecl为函数平栈方式，默认为stdcall。Transit为是否为中转函数，带上该定义的函数函数体返回值类型是 **N** ，返回值必须是有效的函数地址，在执行结束后会直接跳转到返回的函数地址，ThisArg是中转后的this指针，Transit可忽略。
 
 **注意：** 函数必须在程序集/类中定义，当在程序集中定义时，函数对全局公开，当在类中定义时，函数默认是私有的，可以通过加前缀控制其可访问性
 
@@ -162,11 +173,23 @@ Class:Name{
     _destroy_()->N:={
         //destroy
     }
-    [Public]"return(Type)"(TypeA:RetType)->N:={
+    Public "return(Type)"(TypeA:RetType)->N:={
         //return自动调用函数，用于防止自动释放机制破坏数据导致无法返回正确结果
     }
-    [Public]"Type()"->Type:={
+    Public "Type()"()->Type:={
         //自动类型转换调用
+    }
+    Public _new_(args)->Type:={
+        //用于创建临时对象，即 ClassName(args) 的写法
+    }
+    Public "sizeof()"(args)->Type:={
+        //重载 sizeof:(o,args)
+    }
+    Public "typeof()"(args)->Type:={
+        //重载 typeof:(o,args)
+    }
+    Public operator(args)->Type:={
+        //重载运算符
     }
 }
 ```
@@ -189,3 +212,59 @@ World!"
 ```
 
 当 "\" 后不匹配转义的时候，解释为原始字面量
+
+
+
+###### 内置函数
+
+break()
+
+continue()
+
+Pause()
+
+_IR\_(){"ir code"};
+
+rand()->R
+
+if(Boolen:bool){code};
+
+if(Boolen:bool){codeA}{codeB};
+
+while(Boolen:condition){code};
+
+do_while(Boolen:condition){code};
+
+return(object)
+
+print(N:str1,N:str2,...)
+
+printN(N:data)
+
+printR(R:data)
+
+printZ(Z:data)
+
+printB(B:data)
+
+printBoolen(Boolen:data)    true/false/unclear
+
+srand(N:seed)
+
+new(N:size)->N
+
+free(N:ptr)
+
+DebugOutput(N:str)
+
+T2R(N:data)->R    string to real
+
+CmpStr(N:str1,N:str2)->N
+
+R2T(R:data,N:buffer)->N
+
+input(N:buffer,N:num)->N
+
+memcopy(N:dist,N:src,N:size)->N
+
+CmpMem(N:ptrA,N:ptrB,N:size)->N
