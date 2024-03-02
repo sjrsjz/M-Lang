@@ -40,8 +40,8 @@ namespace MLang {
 
 		void NewSysFunction();
 		void NewSysFunction(const lstring& name, void* func);
-		void LoadMEXE(const ByteArray<unsigned char>& mexe);
-		void Load(const ByteArray<unsigned char>& mexe, const std::vector<lstring>& constStr, const std::vector<redirection>& redirections, size_t GlobalSize_, const std::vector<lstring> apiTable);
+		bool LoadMEXE(const ByteArray<unsigned char>& mexe);
+		bool Load(const ByteArray<unsigned char>& mexe, const std::vector<lstring>& constStr, const std::vector<redirection>& redirections, size_t GlobalSize_, const std::vector<lstring> apiTable);
 		void release();
 		void run();
 	}

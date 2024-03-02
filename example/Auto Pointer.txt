@@ -8,26 +8,26 @@ Class:a_ptr{
 			free(ptr)
 		}
 	}
-	[Public]"="(N:addr)->N:={
+	Public "="(N:addr)->N:={
 		_destroy_();
 		origin=true;
 		ptr=addr;
 	}
-	[Public]"="(a_ptr:o)->N:={
+	Public "="(a_ptr:o)->N:={
 		_destroy_();
 		origin=false;
 		ptr=o
 	}
-	[Public]"return(a_ptr)"(a_ptr:o)->N:={
+	Public "return(a_ptr)"(a_ptr:o)->N:={
 		this=o;
 	}
-	[Public]"N()"()->N:={
+	Public "N()"()->N:={
 		return(ptr)
 	}
-	[Public]_new_(N:size)->N:={
+	Public _new_(N:size)->N:={
 		this=new(size);return(this)
 	}
-	[Public]destroy()->N:={
+	Public destroy()->N:={
 		_destroy_()
 	}
 }

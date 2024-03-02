@@ -12,6 +12,12 @@
 #include <sstream> 
 #include <fstream>
 #include <codecvt>
+#include <unordered_set>
+
+#define LOCALE(x) imbue(std::locale(x));
+#define LOCALE_WCOUT std::wcout.LOCALE("zh-CN")
+#define LOCALE_FIN fin.LOCALE("zh-CN.utf8")
+
 
 #define G_X64_ _WIN64
 #define G_UNICODE_ UNICODE
@@ -42,8 +48,8 @@ typedef std::stringstream lstringstream;
 #define st_size_t(x) std::stoull(x)
 #define st_intptr_t(x) std::stoll(x)
 #else
-#define st_size_t(x) std::stoul(x)
-#define st_intptr_t(x) std::stol(x)
+#define st_size_t(x) std::stoull(x)
+#define st_intptr_t(x) std::stoll(x)
 #endif // X64
 #endif // !_COMMON_HEAD_
 
@@ -191,9 +197,20 @@ namespace MLang {
             ss << "}";
         }
         else {
-            if constexpr (std::is_same<decltype(data), const lstring&>::value) {
-				ss << R("\"") << data << R("\"");
-			}
+            if constexpr (std::is_same<decltype(data), const std::string&>::value) {
+#ifdef G_UNICODE_
+                ss << R("\"") << to_wide_string(data) << R("\"");
+#else
+                ss << R("\"") << data << R("\"");
+#endif // G_UNICODE_
+            }
+            else if constexpr (std::is_same<decltype(data), const std::wstring&>::value) {
+#ifdef G_UNICODE_
+                ss << R("\"") << data << R("\"");
+#else
+                ss << R("\"") << to_byte_string(data) << R("\"");
+#endif // G_UNICODE_
+            }
             else {
 				ss << data;
 			}

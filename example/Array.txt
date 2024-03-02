@@ -13,10 +13,10 @@ Class:Array{
 	_destroy_()->N:={
 		Destroy()
 	}
-	[Public]set_init_destroy(N:I,N:D)->N:={
+	Public set_init_destroy(N:I,N:D)->N:={
 		init=I;destroy=D
 	}
-	[Public][cdecl][ArgSize]ReDim(N:ArgSize,N:size)->Boolen:={
+	Public cdecl ArgSize ReDim(N:ArgSize,N:size)->Boolen:={
 		Destroy();
 		typeSize=size;
 		DimPtr=new((ArgSize-1)*sizeof:N);
@@ -39,9 +39,9 @@ Class:Array{
 		
 		return(true)
 	}
-	[Transit][ptr]data_init(N:ptr)->N:={return(init)}
-	[Transit][ptr]data_destroy(N:ptr)->N:={return(destroy)}
-	[Public][cdecl][ArgSize]"[]"(N:ArgSize)->N:={		
+	Transit ptr data_init(N:ptr)->N:={return(init)}
+	Transit ptr data_destroy(N:ptr)->N:={return(destroy)}
+	Public cdecl ArgSize "[]"(N:ArgSize)->N:={		
         N:i=0;
         N:offset=0;
         while(i<ArgSize){
@@ -63,7 +63,7 @@ Class:Array{
 		if(ptr!=0){free(ptr)};
 		DimPtr=0;ptr=0;
 	}
-	[Public]"sizeof()"(N:index)->N:={
+	Public "sizeof()"(N:index)->N:={
 		return((DimPtr+index*sizeof:N)->N)
 	}
 }

@@ -10,7 +10,7 @@ _string_{
     }
 }
 Class:string{
-    [Public]N:ad;[Public]N:size;
+    Public N:ad;Public N:size;
     _init_()->N:={
         ad=0;size=0
     }
@@ -21,13 +21,13 @@ Class:string{
     _string_:={
         N:ad,N:size
     }
-    [Public]"return(string)"(string:s)->N:={//prevent RAII destroys data
+    Public "return(string)"(string:s)->N:={//prevent RAII destroys data
         _destroy_();
         ad=new(s.size);
         size=s.size;
         memcopy(ad,s.ad,size);
     }
-    [Public]=(string:s)->string:={
+    Public =(string:s)->string:={
         _destroy_();
         ad=new(s.size);
         
@@ -36,7 +36,7 @@ Class:string{
 
         return(this)
     }
-    [Public]const(N:str)->N:={
+    Public const(N:str)->N:={
         _destroy_();
         N:i=0;
         while(N(str+i)->B!=0 or N(str+i+1)->B!=0){i=i+2};
@@ -44,7 +44,7 @@ Class:string{
         ad=new(size);
         memcopy(ad,str,size);
     }
-    [Public]+(string:s)->string:={
+    Public +(string:s)->string:={
         string:tmp;
         if(size!=0){
             tmp.size=s.size+size-2;
@@ -56,7 +56,7 @@ Class:string{
         };
         return(tmp)
     }
-    [Public]*(N:times)->string:={
+    Public *(N:times)->string:={
         string:tmp;
         N:i=0;
         while(i<times){
@@ -65,28 +65,28 @@ Class:string{
         };
         return(tmp)
     }
-    [Public]"R()"()->R:={
+    Public "R()"()->R:={
         return(T2R(ad))
     }
-    [Public]==(string:s)->Boolen:={
+    Public ==(string:s)->Boolen:={
         return(CmpStr(ad,s.ad))
     }
-    [Public]!=(string:s)->Boolen:={
+    Public !=(string:s)->Boolen:={
         return(not CmpStr(ad,s.ad))
     }
-    [Public]"N()"()->N:={
+    Public "N()"()->N:={
         return(ad)
     }
-    [Public]"sizeof()"()->N:={
+    Public "sizeof()"()->N:={
         return(size/2)
     }
-    [Public]"="(B:str[0])->N:={
+    Public "="(B:str[0])->N:={
         const(str)
     }
-    [Public]"="(R:data)->N:={
+    Public "="(R:data)->N:={
         this=R2Str(data)
     }
-    [Public]_new_(B:str[0])->string:={
+    Public _new_(B:str[0])->string:={
         const(str);
         return(this)
     }

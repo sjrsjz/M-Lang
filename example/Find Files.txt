@@ -1,0 +1,128 @@
+#include<"string.txt">;
+
+Struct{
+	FILETIME:={
+		N:dwLowDateTime,
+		N:dwHighDateTime
+	}
+	
+	WIN32_FIND_DATAW:={
+		N:dwFileAttributes,
+		FILETIME:ftCreationTime,
+		FILETIME:ftLastAccessTime,
+		FILETIME:ftLastWriteTime,
+		N:nFileSizeHigh,
+		N:nFileSizeLow,
+		N:dwReserved0,
+		N:dwReserved1,
+		B:cFileName[512],// 256 * 2
+		B:cAlternateFileName[28],// 14 * 2
+		N:dwFileType,
+		N:dwCreatorType,
+		B:wFinderFlags[2]// WORD
+	}
+	
+	CONSOLE_READCONSOLE_CONTROL:={
+		N:nLength,
+		N:nInitialChars,
+		N:dwCtrlWakeupMask,
+		N:dwControlKeyState
+	}
+}
+
+Extra:"Kernel32.dll"{
+	FindFirstFileW(
+		N:lpFileName,
+		WIN32_FIND_DATAW:lpFindFileData)->N:=FindFirstFileW;
+	FindNextFileW(
+		N:hFindFile,
+		WIN32_FIND_DATAW:lpFindFileData)->N:=FindNextFileW;
+	FindClose(
+		N:hFindFile)->N:=FindClose;
+	ReadConsoleW(
+		N:hConsoleInput,
+		N:lpBuffer,
+		N:nNumberOfCharsToRead,
+		N:lpNumberOfCharsRead,
+		N:pInputControl)->N:=ReadConsoleW;
+	GetStdHandle(
+		N:nStdHandle)->N:=GetStdHandle;
+	SetConsoleOutputCP(
+		N:wCodePageID)->N:=SetConsoleOutputCP;
+}
+
+Class:Console{
+	Public N:buffersize;
+	_init_()->N:={
+		buffersize=1024;
+	}
+	_destroy_()->N:={
+		
+	}
+	InputEx(N:pszBuf,N:cchBuf)->N:={
+		N:hInput=GetStdHandle(-10);
+		N:cchRead=0;
+		CONSOLE_READCONSOLE_CONTROL:crcc;
+		
+		crcc.nLength=16;
+		crcc.nInitialChars=0;
+		crcc.dwCtrlWakeupMask=9217;
+		crcc.dwControlKeyState=0;
+		
+		ReadConsoleW(hInput,pszBuf,cchBuf,&cchRead,&crcc);
+		N:pEnd = pszBuf+(cchRead-1)*2;
+		if(cchRead!=0)
+		{
+			(pEnd->B)=0;
+			((pEnd+1)->B)=0;
+			cchRead=cchRead-1;
+		}
+		{
+			pszBuf->B=0;
+			((pszBuf+1)->B)=0;
+		};
+		
+		return(cchRead);
+	}
+}
+
+
+Main{
+main()->N:={
+	B:szInput[1024];
+	WIN32_FIND_DATAW:wfd;
+	N:hFind;
+	N:c=1;
+	N:cch=0;
+
+	cch=InputEx(szInput,512);
+	//printN(cch);
+	//print(szInput);
+
+	hFind=FindFirstFileW(szInput,wfd);
+	if(hFind==-1)
+	{
+		print("枚举文件失败！");
+		input("                         ",16);
+		return(0);
+	};
+	
+	print("\n");
+	print(&wfd.cFileName);
+	print("\n");
+	
+	while(FindNextFileW(hFind,wfd)!=0)
+	{
+		print(&wfd.cFileName);
+		print("\n");
+		c=c+1;
+	};
+	FindClose(hFind);
+	
+	print("枚举文件完成，共有 ");
+	printN(c);
+	print(" 个文件/文件夹");
+	input("                         ",16);
+	return(0);
+}
+}

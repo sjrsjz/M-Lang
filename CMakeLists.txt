@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 17)  # 使用 C++17
 
 set(CMAKE_SYSTEM_VERSION 10.0 CACHE STRING "" FORCE)
 
-project(M-Lang-CXX)
+project(M_Lang)
 
 ################################################################################
 # Set target arch type if empty. Visual studio solution generator provides it.

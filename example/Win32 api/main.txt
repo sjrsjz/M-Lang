@@ -37,7 +37,7 @@ Window{
         WndClass.hIcon=LoadIcon (0,"32512");
         WndClass.hCursor=LoadCursor (0,"32512");
         WndClass.hbrBackground=GetStockObject(0);
-        WndClass.lpszMenuName=&"";
+        WndClass.lpszMenuName="";
         WndClass.lpszClassName=AppName;
         if(RegisterClass(WndClass)==0){
             msgbox(0,"error","This program requires Windows NT!",0);

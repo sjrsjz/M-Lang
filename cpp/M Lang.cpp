@@ -11,7 +11,6 @@
 #include "../header/x86.h"
 #endif // WIN32
 
-#define LOCALE std::wcout.imbue(std::locale("zh_CN"));
 
 using namespace MLang;
 
@@ -184,7 +183,7 @@ int test(int argn,char* argv[])
     Lexer lex{};
 
 #if G_UNICODE_
-    LOCALE
+    LOCALE_WCOUT
 #endif 
 
     bool err = lex.analyze(R(R"ABC(
@@ -432,8 +431,8 @@ bool process_command(std::vector<lstring> args) {
         //std_lcout << ir.IR;
 		if (err) return false;
 #if _WIN32 and !(defined _WIN64)
-        x86Runner::LoadMEXE(mexe);
-        x86Runner::run();
+        if (x86Runner::LoadMEXE(mexe))
+            x86Runner::run();
 #endif // _WIN32
 		return true;	
     }
@@ -441,11 +440,11 @@ bool process_command(std::vector<lstring> args) {
 
 int main(int argn, char* argv[]) {
 #if G_UNICODE_
-    LOCALE
+    LOCALE_WCOUT
 #endif
-#if _DEBUG
-    test(argn, argv);
-#else
+///#if _DEBUG
+//    test(argn, argv);
+//#else
     if (argn == 1) {
         std::cout << "Usage:\n";
 		std::cout << "runIR <IR file>\n";
@@ -461,6 +460,6 @@ int main(int argn, char* argv[]) {
         args.push_back(to_wide_string(argv[i]));
     }
     process_command(args);
-#endif // _DEBUG
+//#endif // _DEBUG
 	return 0;
 }

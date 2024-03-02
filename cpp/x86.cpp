@@ -1840,7 +1840,7 @@ namespace MLang::x86Runner
 
 		strings.clear();
 	}
-	void LoadMEXE(const ByteArray<unsigned char> &mexe)
+	bool LoadMEXE(const ByteArray<unsigned char> &mexe)
 	{
 		SectionManager sm{}, data{};
 		sm.translate(mexe);
@@ -1856,7 +1856,7 @@ namespace MLang::x86Runner
 			redirections[i].name = data.names[i];
 			redirections[i].ip = data.bins[i].Get<int>(0);
 		}
-		Load(sm.Get(R("Code")), constStr, redirections, sm.Get(R("Global size")).Get<int>(0), apiTable);
+		return Load(sm.Get(R("Code")), constStr, redirections, sm.Get(R("Global size")).Get<int>(0), apiTable);
 	}
 	void LinkFunction(ByteArray<unsigned char> &code, lstring name, void *address, const std::vector<redirection> &redirections)
 	{
@@ -1894,7 +1894,7 @@ namespace MLang::x86Runner
 	unsigned int _stdcall input(unsigned int str, unsigned int size)
 	{
 #if G_UNICODE_
-		wscanf_s(L"%s", (wchar_t *)str, size);
+		wscanf_s(L"%ls", (wchar_t *)str, size);
 #else
 		scanf_s("%s", (char *)str, size);
 #endif //
@@ -2044,7 +2044,7 @@ namespace MLang::x86Runner
 		return srand(seed);
 	}
 
-	void Load(const ByteArray<unsigned char> &code, const std::vector<lstring> &constStr, const std::vector<redirection> &redirections, size_t GlobalSize_, const std::vector<lstring> apiTable)
+	bool Load(const ByteArray<unsigned char> &code, const std::vector<lstring> &constStr, const std::vector<redirection> &redirections, size_t GlobalSize_, const std::vector<lstring> apiTable)
 	{
 		release();
 		GlobalSize = GlobalSize_;
@@ -2073,13 +2073,14 @@ namespace MLang::x86Runner
 		LinkFunction(tcode, R("[Label]label_function_Local$[System]$T2R"), (void *)T2R, redirections);
 		LinkFunction(tcode, R("[Label]label_function_Local$[System]$R2T"), (void *)R2T, redirections);
 		LinkSysFunction(tcode, redirections);
-
+		bool noerr = true;
 		for (auto &x : apiTable)
 		{
 			std::vector<lstring> tk = split(x, R(" "));
 			if (tk.size() != 2)
 			{
 				error(R("API表错误"));
+				noerr = false;
 				continue;
 			}
 			lstring lib = base64_decode(tk[0]);
@@ -2090,7 +2091,8 @@ namespace MLang::x86Runner
 				void *handle = LoadLibrary_(lib);
 				if (!handle)
 				{
-					error(R("无法加载库:") + lib);
+					error(R("无法加载库:") + lib + R(" API:") + api);
+					noerr = false;
 					continue;
 				}
 				lib_h.push_back(handle);
@@ -2099,6 +2101,7 @@ namespace MLang::x86Runner
 			if (!addr)
 			{
 				error(R("无法加载API:") + api);
+				noerr = false;
 				continue;
 			}
 			LinkFunction(tcode, R("[API]") + x, addr, redirections);
@@ -2107,6 +2110,7 @@ namespace MLang::x86Runner
 		memcpy(ProgramAddress, tcode.ptr, tcode.size);
 		Program = tcode;
 		DebugOutput(tcode, ProgramAddress);
+		return noerr;
 	}
 	void run()
 	{

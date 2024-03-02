@@ -110,19 +110,30 @@ namespace MLang {
     }
 
     lstring readFileString(const lstring& path) {
+#if  G_UNICODE_
+        std::wifstream fin{};
+        LOCALE_FIN
+        std::wstring buf;
+#else
         std::ifstream fin{};
+        std::string buf;
+#endif
         fin.open(path.c_str(), std::ios::in);
         if (!fin.is_open()) return R("");
-        std::string buf;
-        lstring buf2{};
-        while (std::getline(fin, buf, '\0')) {//?
-#if  G_UNICODE_
-            buf2 += to_wide_string(buf);
-#else
-            buf2 += buf;
-#endif //  UNICODE
+#if G_UNICODE_
+        // Check for BOM
+        wchar_t bom[1];
+        fin.read(bom, 1);
+        if (bom[0] != 65279) {
+            // If it's not a BOM, put the bytes back into the stream
+            fin.seekg(0);
         }
+#endif
+        lstring buf2{};
+        while (std::getline(fin, buf, R('\0')))
+            buf2 += buf;
         fin.close();
+        DebugOutput(buf2);
         return buf2;
     }
 
