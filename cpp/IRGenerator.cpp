@@ -440,74 +440,67 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 				args.push_back(compileTree(functionSet, func, EX, {}));
 			} while (EX.next());
 
-			type A{};
-			if (ifMethod(tk)) {
-				analyzed_function* func0 = getFunction(functionSet, tk, args, true);
-				if (func0) {
-					size_t id1 = allocTmpID(Type_N);
-					ins(R("address %") + to_lstring(id1) + R(" &") + to_lstring(getVarOffset(functionSet, func, R("Local") + DIVISION + R("[this]"))));
-					ins(R("load %") + to_lstring(id1) + R(" %") + to_lstring(id1) + R(" ") + to_lstring(getStructureSize(R("N"))));
-					A.typeName = functionSet.name;
-					A.address = true;
-					A.array = false;
-					A.id = id1;
 
-					buildThisCall(functionSet, func, EX, tk, *func0, A, args, ret, false);
-					EX.parent();
-					goto RET;
-				}
-			}
-			std::vector<lstring> funcType = split(tk, DIVISION);
-			lstring tk1{};
-			if (funcType.size() == 3 && funcType[0] == R("Unknown") && funcType[1] == R("Unknown")) {
-				tk1 = R("Local") + DIVISION + funcType[2] + DIVISION + R("_new_");
-			}
-			DebugOutput(">>", tk1);
-			if (haveFunction(tk1)) {
-				analyzed_function* func0 = getFunction(functionSet, tk1, args, {});
-				if (func0) {
-					A.typeName = funcType[2];
-					A.address = true;
-					A.array = false;
-					A.id = allocTmpID(A);
-					
-					if (buildThisCall(functionSet, func, EX, tk1, *func0, A, args, ret, true)) {
-						EX.parent();
-						goto RET;
-					}
-				}
-			}
-
-			func0 = getFunction(functionSet, tk, args, {});
-			if (!func0) {
-				error(R("找不到可以匹配的函数/方法"));
-				goto RET;
-			}
-			size_t i = 0;
-			for (; i < func0->args.size(); i++) {
-				if (i >= args.size()) {
-					error(R("函数调用参数过少"));
-					goto RET;
-				}
-				generateImplictConversion(func0->args[i], args[i], functionSet, func, EX);
-				arg_T += R(" %") + to_lstring(func0->args[i].id);
-			}
-			if (func0->use_arg_size) {
-				while (i < args.size())
-				{
-					type tmp = func0->args[func0->args.size() - 1];
-					generateImplictConversion(tmp, args[i], functionSet, func, EX);
-					arg_T += R(" %") + to_lstring(tmp.id);
-					i++;	
-				}
-			}
 			EX.parent();
 		}
-		else {
-			func0 = getFunction(functionSet, tk, args, {});
-			if (!func0) {
-				error(R("找不到可以匹配的函数/方法"));
+		type A{};
+		if (ifMethod(tk)) {
+			analyzed_function* func0 = getFunction(functionSet, tk, args, true);
+			if (func0) {
+				size_t id1 = allocTmpID(Type_N);
+				ins(R("address %") + to_lstring(id1) + R(" &") + to_lstring(getVarOffset(functionSet, func, R("Local") + DIVISION + R("[this]"))));
+				ins(R("load %") + to_lstring(id1) + R(" %") + to_lstring(id1) + R(" ") + to_lstring(getStructureSize(R("N"))));
+				A.typeName = functionSet.name;
+				A.address = true;
+				A.array = false;
+				A.id = id1;
+
+				buildThisCall(functionSet, func, EX, tk, *func0, A, args, ret, false);
+				
 				goto RET;
+			}
+		}
+		std::vector<lstring> funcType = split(tk, DIVISION);
+		lstring tk1{};
+		if (funcType.size() == 3 && funcType[0] == R("Unknown") && funcType[1] == R("Unknown")) {
+			tk1 = R("Local") + DIVISION + funcType[2] + DIVISION + R("_new_");
+		}
+		//DebugOutput(">>", tk1);
+		if (haveFunction(tk1)) {
+			analyzed_function* func0 = getFunction(functionSet, tk1, args, {});
+			if (func0) {
+				A.typeName = funcType[2];
+				A.address = true;
+				A.array = false;
+				A.id = allocTmpID(A);
+
+				if (buildThisCall(functionSet, func, EX, tk1, *func0, A, args, ret, true)) {
+					goto RET;
+				}
+			}
+		}
+
+		func0 = getFunction(functionSet, tk, args, {});
+		if (!func0) {
+			error(R("找不到可以匹配的函数/方法"));
+			goto RET;
+		}
+		size_t i = 0;
+		for (; i < func0->args.size(); i++) {
+			if (i >= args.size()) {
+				error(R("函数调用参数过少"));
+				goto RET;
+			}
+			generateImplictConversion(func0->args[i], args[i], functionSet, func, EX);
+			arg_T += R(" %") + to_lstring(func0->args[i].id);
+		}
+		if (func0->use_arg_size) {
+			while (i < args.size())
+			{
+				type tmp = func0->args[func0->args.size() - 1];
+				generateImplictConversion(tmp, args[i], functionSet, func, EX);
+				arg_T += R(" %") + to_lstring(tmp.id);
+				i++;
 			}
 		}
 		ret = func0->ret;

@@ -53,17 +53,27 @@ Extra:"Kernel32.dll"{
 
 Class:Console{
 	Public N:buffersize;
+	N:buffer;
 	_init_()->N:={
-		buffersize=1024;
+		buffersize=512;
+		buffer=new(buffersize*2);
 	}
 	_destroy_()->N:={
-		
+		if(buffer!=0){
+			free(buffer);
+			buffer=0;
+		}
 	}
-	InputEx(N:pszBuf,N:cchBuf)->N:={
+	Public resize(N:size)->N:={
+		_destroy_();
+		buffersize=size;
+		buffer=new(buffersize*2);
+	}
+	Public InputEx()->string:={
+		N:pszBuf=buffer;N:cchBuf=buffersize;
 		N:hInput=GetStdHandle(-10);
 		N:cchRead=0;
 		CONSOLE_READCONSOLE_CONTROL:crcc;
-		
 		crcc.nLength=16;
 		crcc.nInitialChars=0;
 		crcc.dwCtrlWakeupMask=9217;
@@ -81,36 +91,45 @@ Class:Console{
 			pszBuf->B=0;
 			((pszBuf+1)->B)=0;
 		};
-		
-		return(cchRead);
+		return(string(buffer));
+	}
+	Public _new_()->Console:={
+		resize(512);
+		return(this);
+	}
+	Public _new_(N:size)->Console:={
+		resize(size);
+		return(this);
+	}
+	Public =(Console:o)->Console:={
+		resize(o.buffersize);
+		memcopy(buffer,o.buffer,o.buffersize*2);
+		return(this);
+	}
+	Public "return(Console)"(Console:o)->N:={
+		resize(o.buffersize);
+		memcopy(buffer,o.buffer,o.buffersize*2);
 	}
 }
 
 
 Main{
 main()->N:={
-	B:szInput[1024];
 	WIN32_FIND_DATAW:wfd;
 	N:hFind;
-	N:c=1;
-	N:cch=0;
-
-	cch=InputEx(szInput,512);
-	//printN(cch);
-	//print(szInput);
-
-	hFind=FindFirstFileW(szInput,wfd);
+	string:cch=Console().InputEx();
+	hFind=FindFirstFileW(cch,wfd);
 	if(hFind==-1)
 	{
 		print("枚举文件失败！");
-		input("                         ",16);
+		Console().InputEx();
 		return(0);
 	};
 	
 	print("\n");
 	print(&wfd.cFileName);
 	print("\n");
-	
+	N:c=1;
 	while(FindNextFileW(hFind,wfd)!=0)
 	{
 		print(&wfd.cFileName);
@@ -122,7 +141,7 @@ main()->N:={
 	print("枚举文件完成，共有 ");
 	printN(c);
 	print(" 个文件/文件夹");
-	input("                         ",16);
+	Console().InputEx();
 	return(0);
 }
 }

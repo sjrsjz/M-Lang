@@ -90,4 +90,8 @@ Class:string{
         const(str);
         return(this)
     }
+    Public _new_(N:str)->string:={
+        const(str);
+        return(this)
+    }
 }
