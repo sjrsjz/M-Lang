@@ -108,7 +108,6 @@ analyzed_function AST::analyzeFunction(functionSet& functionSet_, function& func
 		EX.clear();
 		if (!tk.size()) { i++; continue; }
 		analyzeExper(functionSet_, func, EX, tk);
-		
 		//print AST
 		// 
 #if _DEBUG
@@ -141,17 +140,7 @@ bool AST::analyzeExper(functionSet& functionSet_, function& func, Tree<node>& EX
 	intptr_t end{};
 	std::vector<lstring> ctk{};
 	if (final == -1) {
-		if (tk[0] == R("(") && tk[tk.size() - 1] == R(")") || tk[0] == R("{") && tk[tk.size() - 1] == R("}")) {
-			end = matchBracket(tk, 1);
-			if (!end) {
-				error(R("括号不匹配")); return false;
-			}
-			SubTokens(tk, ctk, 2, end - 1);
-			return analyzeExper(functionSet_, func, EX, ctk);
-		}
-		else {
-			return analyze_0(functionSet_, func, EX, tk, OP_size);
-		}
+		return analyze_0(functionSet_, func, EX, tk, OP_size);
 	}
 	else {
 		SubTokens(tk, ctk, 1, final - 1);
@@ -329,19 +318,26 @@ bool AST::analyze_2(functionSet& functionSet_, function& func, Tree<node>& EX, s
 			t1.pop_back();
 			return analyzeExper(functionSet_, func, EX, t1);
 		}
-		if (pos == 2) {
+		if (pos >= 2 && !iftk(tk, R("."), pos - 2)) {
+			t1 = tk;
+			t1.erase(t1.begin() + pos - 2, t1.end());
+			bool p1 = analyze_2(functionSet_, func, EX, t1);
 			p.token = getFunctionFullName(process_quotation_mark(tk[pos - 2]), functionSet_);
 			p.type = R("Call");
+			bool p2{};
+
+			if (p2 = (EX.haveParent() && pos!=2)) EX.ToChildrenEnd();
 			EX.push_back(p);
 			EX.ToChildrenEnd();
 			t1 = tk;
-			t1.erase(t1.begin(), t1.begin() + 2);
+			t1.erase(t1.begin(), t1.begin() + pos);
 			t1.pop_back();
-			bool p1 = analyzeArg(functionSet_, func, EX, t1);
+			p1 |= analyzeArg(functionSet_, func, EX, t1);
+			if(p2) EX.parent();
 			EX.parent();
 			return p1;
 		}
-		if (pos > 2 && tk[pos - 3] == R(".")) {
+		if (pos > 2 && iftk(tk, R("."), pos - 2)) {			
 			p.token = process_quotation_mark(tk[pos - 2]);
 			p.type = R("thisCall");
 			EX.push_back(p);

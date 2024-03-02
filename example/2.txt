@@ -1,0 +1,12 @@
+
+Main{
+main()->N:={
+
+block()
+	match(true){
+	}
+	match(false){
+	};
+
+}
+}

@@ -356,6 +356,19 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 		if (!getVarType(tk, v_type, v_name)) goto RET;
 		type A{};
 		if (v_type == R("Local")) {
+			lstring tk1 = R("Local") + DIVISION + functionSet.name + DIVISION + func.name + DIVISION + R("get(") + v_name + R(")");
+			if (haveFunction(tk1)) {
+				analyzed_function* func0 = getFunction(functionSet, tk1, {}, {});
+				if (func0 && func0->args.size() == 0) {
+					std::vector<type> args{};
+					A = getLocalType(R("[this]"), func);
+					A.id = allocTmpID(Type_N);
+					ins(R("address %") + to_lstring(A.id) + R(" &") + to_lstring(getVarOffset(functionSet, func, tk)));
+					ins(R("load %") + to_lstring(A.id) + R(" %") + to_lstring(A.id) + R(" ") + to_lstring(getStructureSize(R("N"))));
+					buildThisCall(functionSet, func, EX, tk1, *func0, A, args, ret, false);
+					goto RET;
+				}
+			}
 			A = getLocalType(v_name, func);
 			A.id = allocTmpID(Type_N);
 			ins(R("address %") + to_lstring(A.id) + R(" &") + to_lstring(getVarOffset(functionSet, func, tk)));
@@ -785,6 +798,16 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 				error(R("被引用的对象必须为指针"));
 			}
 			else {
+				lstring tk1 = R("Local") + DIVISION + A.typeName + DIVISION + R("get(") + process_quotation_mark(tk) + R(")");
+				if (haveFunction(tk1)) {
+					analyzed_function* func0 = getFunction(functionSet, tk1, {}, {});
+					if (func0 && func0->args.size() == 0) {
+						std::vector<type> args{};
+						buildThisCall(functionSet, func, EX, tk1, *func0, A, args, ret, false);
+						EX.parent();
+						goto RET;
+					}
+				}
 				ins(R("offset %") + to_lstring(A.id) + R(" ") + to_lstring(getElementOffset(functionSet, A.typeName, tk)));
 				ret = getElement(functionSet, A.typeName, tk);
 				ret.id = A.id;
@@ -1186,6 +1209,9 @@ label_handleBuiltInFunctions_1:
 				return true;
 			}
 		}
+	}
+	else if (name == getFullName(R("block"), *functionSet0)) {
+		
 	}
 	else if (name == getFullName(R("break"), *functionSet0)) {
 		if (loopEndStack.size()) {
@@ -1921,6 +1947,7 @@ bool IRGenerator::analyze(
 	size_t tmp2 = allocTmpID(Type_R);
 	initSetVars(globalVars, tmp, 0, R("$"), false);
 	size_t j = countVarSize(globalVars);
+	size_t j_0 = j;
 	for (auto& x : analyzed_functionSets) {
 		if (!x.isClass) {
 			initSetVars(x.local, tmp, j, R("$"), false);
@@ -1931,6 +1958,14 @@ bool IRGenerator::analyze(
 	IR.insert(curr, tmpCode);
 	tmpCode = tmpCodeStack.back();
 	tmpCodeStack.pop_back();
+	destroySetVars(globalVars, tmp, 0, R("$"), false);
+	j = j_0;
+	for (auto& x : analyzed_functionSets) {
+		if (!x.isClass) {
+			destroySetVars(x.local, tmp, j, R("$"), false);
+			j += x.size;
+		}
+	}
 	//ins(R("loadQ %") + to_lstring(tmp2));
 	ins(R("tmpEnd"));
 	analyzed_functionSet* MainSet{};

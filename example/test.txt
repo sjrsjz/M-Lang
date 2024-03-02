@@ -43,6 +43,7 @@ Main{
         Array:A.set_init_destroy(~A$_init_,~A$_destroy_);
         A.ReDim(sizeof:A,2,3);
         A[0][0]->A=g();
+	N:a0;((&a0)->N)=((&a0+1)->N);
         A[0][1]->A.a=2;
         A[0][2]->A.a=3;
         A[1][0]->A.a=4;

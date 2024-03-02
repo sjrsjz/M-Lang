@@ -91,45 +91,36 @@ Class:Console{
 			pszBuf->B=0;
 			((pszBuf+1)->B)=0;
 		};
-		return(string(buffer));
-	}
-	Public _new_()->Console:={
-		resize(512);
-		return(this);
-	}
-	Public _new_(N:size)->Console:={
-		resize(size);
-		return(this);
-	}
-	Public =(Console:o)->Console:={
-		resize(o.buffersize);
-		memcopy(buffer,o.buffer,o.buffersize*2);
-		return(this);
-	}
-	Public "return(Console)"(Console:o)->N:={
-		resize(o.buffersize);
-		memcopy(buffer,o.buffer,o.buffersize*2);
+		
+		return(string(cchRead));
 	}
 }
 
 
 Main{
 main()->N:={
+	B:szInput[1024];
 	WIN32_FIND_DATAW:wfd;
 	N:hFind;
-	string:cch=Console().InputEx();
-	hFind=FindFirstFileW(cch,wfd);
+	N:c=1;
+	N:cch=0;
+
+	cch=InputEx(szInput,512);
+	//printN(cch);
+	//print(szInput);
+
+	hFind=FindFirstFileW(szInput,wfd);
 	if(hFind==-1)
 	{
 		print("枚举文件失败！");
-		Console().InputEx();
+		input("                         ",16);
 		return(0);
 	};
 	
 	print("\n");
 	print(&wfd.cFileName);
 	print("\n");
-	N:c=1;
+	
 	while(FindNextFileW(hFind,wfd)!=0)
 	{
 		print(&wfd.cFileName);
@@ -141,7 +132,7 @@ main()->N:={
 	print("枚举文件完成，共有 ");
 	printN(c);
 	print(" 个文件/文件夹");
-	Console().InputEx();
+	input("                         ",16);
 	return(0);
 }
 }
