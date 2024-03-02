@@ -369,3 +369,4 @@ FodyWeavers.xsd
 /build/
 .vscode/
 /example/Win32 api/run.bat
+/example/bass.dll
