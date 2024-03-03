@@ -113,7 +113,7 @@ intptr_t Lexer::analyze_function(functionSet& set, lstring space, std::vector<ls
     }
     SubTokens(tks, tk0, ip + 1, final - 1);
     ip0 = 1;
-    ip1 = search(tk0, R(";"), 0, ip0, 0);
+    ip1 = search(tk0, R(";"), 0, ip0 - 1, 0);
     func.codes.resize(0);
     func.local.resize(0);
     code code0{};
@@ -122,7 +122,7 @@ intptr_t Lexer::analyze_function(functionSet& set, lstring space, std::vector<ls
         code0.tokens = tk1;
         func.codes.push_back(code0);
         ip0 = ip1 + 1;
-        ip1 = search(tk0, R(";"), 0, ip0, 0);
+        ip1 = search(tk0, R(";"), 0, ip0 - 1, 0);
     }
     SubTokens(tk0, tk1, ip0, tk0.size());
     code0.tokens = tk1;

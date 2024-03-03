@@ -83,56 +83,70 @@ Class:Console{
 		N:pEnd = pszBuf+(cchRead-1)*2;
 		if(cchRead!=0)
 		{
-			(pEnd->B)=0;
-			((pEnd+1)->B)=0;
+			pEnd->B=0;
+			(pEnd+1)->B=0;
 			cchRead=cchRead-1;
 		}
 		{
 			pszBuf->B=0;
-			((pszBuf+1)->B)=0;
+			(pszBuf+1)->B=0;
 		};
 		
-		return(string(cchRead));
+		return(string(buffer));
 	}
+	Public =(Console:o)->Console:={
+		resize(o.buffersize);
+		memcopy(buffer,o.buffer,buffersize*2);
+		return(this)
+	}
+	Public "return(Console)"(Console:o)->N:={
+		resize(o.buffersize);
+		memcopy(buffer,o.buffer,buffersize*2);
+	}
+	Public _new_()->Console:={
+		resize(512);
+		return(this)
+	}
+	Public _new_(N:size)->Console:={
+		resize(size);
+		return(this)
+	}
+}
+System:System;
+Class:System{
+	Public Console:console;
 }
 
 
 Main{
-main()->N:={
-	B:szInput[1024];
-	WIN32_FIND_DATAW:wfd;
-	N:hFind;
-	N:c=1;
-	N:cch=0;
-
-	cch=InputEx(szInput,512);
-	//printN(cch);
-	//print(szInput);
-
-	hFind=FindFirstFileW(szInput,wfd);
-	if(hFind==-1)
-	{
-		print("枚举文件失败！");
-		input("                         ",16);
-		return(0);
-	};
-	
-	print("\n");
-	print(&wfd.cFileName);
-	print("\n");
-	
-	while(FindNextFileW(hFind,wfd)!=0)
-	{
+	main()->N:={
+		WIN32_FIND_DATAW:wfd;
+		string:cch=System.console.InputEx();
+		print("\n");
+		N:hFind=FindFirstFileW(cch,wfd);
+		if(hFind==-1)
+		{
+			print("枚举文件失败！");
+			System.console.InputEx();
+			return(0);
+		};
+		
+		print("\n");
 		print(&wfd.cFileName);
 		print("\n");
-		c=c+1;
-	};
-	FindClose(hFind);
-	
-	print("枚举文件完成，共有 ");
-	printN(c);
-	print(" 个文件/文件夹");
-	input("                         ",16);
-	return(0);
-}
+		
+		N:c=0;
+		while(FindNextFileW(hFind,wfd)!=0)
+		{
+			print(&wfd.cFileName);
+			print("\n");
+			c=c+1;
+		};
+		FindClose(hFind);
+		
+		print("枚举文件完成，共有 ");printN(c);print(" 个文件/文件夹");
+
+		System.console.InputEx();
+		return(0);
+	}
 }
