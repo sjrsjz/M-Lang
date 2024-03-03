@@ -1,4 +1,5 @@
 #include<"string.txt">;
+#include<"Array.txt">;
 
 Struct{
 	FILETIME:={
@@ -53,7 +54,7 @@ Extra:"Kernel32.dll"{
 
 Class:Console{
 	Public N:buffersize;
-	N:buffer;
+	Public N:buffer;
 	_init_()->N:={
 		buffersize=512;
 		buffer=new(buffersize*2);
@@ -112,9 +113,35 @@ Class:Console{
 		return(this)
 	}
 }
+Class:File{
+	Public EnumFiles(string:path,Array:arr)->N:={
+		WIN32_FIND_DATAW:wfd;
+		N:hFind=FindFirstFileW(path,wfd);
+		if(hFind==-1)
+		{
+			return(0);
+		};
+		N:c=1;
+		while(FindNextFileW(hFind,wfd)!=0)
+		{
+			c=c+1;
+		};
+		FindClose(hFind);
+		arr.ReDim(sizeof:string,c);
+		N:hFind=FindFirstFileW(path,wfd);
+		(arr[0]->string).const(&wfd.cFileName);
+		for(N:i=0;i<c;i=i+1){
+			FindNextFileW(hFind,wfd);
+			(arr[i]->string).const(&wfd.cFileName);
+		}
+		return(c);
+	}
+}
 System:System;
 Class:System{
 	Public Console:console;
+	Public File:file;
+	_init_()->N:={}
 }
 
 
@@ -123,26 +150,9 @@ Main{
 		WIN32_FIND_DATAW:wfd;
 		string:cch=System.console.InputEx();
 		print("\n");
-		N:hFind=FindFirstFileW(cch,wfd);
-		if(hFind==-1)
-		{
-			print("枚举文件失败！");
-			System.console.InputEx();
-			return(0);
-		};
-		
-		print("\n");
-		print(&wfd.cFileName);
-		print("\n");
-		
-		N:c=0;
-		while(FindNextFileW(hFind,wfd)!=0)
-		{
-			print(&wfd.cFileName);
-			print("\n");
-			c=c+1;
-		};
-		FindClose(hFind);
+
+		Array:arr;
+		N:c=System.file.EnumFiles(cch,arr);
 		
 		print("枚举文件完成，共有 ");printN(c);print(" 个文件/文件夹");
 

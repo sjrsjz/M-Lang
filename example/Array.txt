@@ -1,11 +1,11 @@
 Class:Array{
-	N:ptr;
-	N:DimSize;
-	N:DimPtr;
-	N:typeSize;
-	N:init;
-	N:destroy;
-	N:TotalSize;
+	Public N:ptr;
+	Public N:DimSize;
+	Public N:DimPtr;
+	Public N:typeSize;
+	Public N:init;
+	Public N:destroy;
+	Public N:TotalSize;
 	_init_()->N:={
 		init=0;destroy=0;TotalSize=0;
 		DimSize=0;typeSize=0;DimPtr=0;ptr=0;
@@ -65,5 +65,24 @@ Class:Array{
 	}
 	Public "sizeof()"(N:index)->N:={
 		return((DimPtr+index*sizeof:N)->N)
+	}
+	Public =(Array:o)->N:={
+		Destroy();
+		DimSize=o.DimSize;
+		DimPtr=new(o.DimSize*sizeof:N);
+		typeSize=o.typeSize;
+		init=o.init;
+		destroy=o.destroy;
+		TotalSize=o.TotalSize;
+		
+		ptr=new(typeSize*TotalSize);
+		N:i=0;
+		if(init!=0 and ptr!=0){
+			while(i<TotalSize){
+				data_init(ptr+i*typeSize);
+                		i=i+1;	
+			}
+		};
+		
 	}
 }

@@ -810,6 +810,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 				}
 				ins(R("offset %") + to_lstring(A.id) + R(" ") + to_lstring(getElementOffset(functionSet, A.typeName, tk)));
 				ret = getElement(functionSet, A.typeName, tk);
+				DebugOutput(">>", ret.typeName,A.typeName,tk);
 				ret.id = A.id;
 				ret.address = true;
 			}
@@ -881,7 +882,7 @@ type IRGenerator::getElement(analyzed_functionSet& functionSet, lstring struct_,
 				if (y.name != functionSet.name && x.isClass && !y.publiced) {
 					error(R("试图在 ") + struct_ + R(" 中引用未公开的成员 ") + element);
 				}
-				return y;
+				if (y.name == element) return y;
 			}
 		}
 	}

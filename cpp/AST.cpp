@@ -75,6 +75,7 @@ void AST::analyzeStructureSize() {
 	for (size_t i = 0; i < structures.size(); i++) {
 		error_functionSet = structures[i].name;
 		list.resize(structures.size(), 0);
+		for (size_t i = 0; i < list.size(); i++) list[i] = false;
 		countStructureSize(structures[i].name);
 	}
 
