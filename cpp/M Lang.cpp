@@ -360,6 +360,10 @@ bool process_command(std::vector<lstring> args) {
 		if (err) return false;
 		ByteArray<unsigned char> mexe;
 		err = !IR2MEXE(ir.IR, mexe);
+#ifdef _DEBUG
+        std_lcout << ir.IR << std::endl;
+#endif // _DEBUG
+
 		if (err) return false;
 #ifdef _WIN32
         x86Runner::LoadMEXE(mexe);
@@ -430,7 +434,9 @@ bool process_command(std::vector<lstring> args) {
 		if (err) return false;
 		ByteArray<unsigned char> mexe;
 		err = !IR2MEXE(ir.IR, mexe);
-        //std_lcout << ir.IR;
+#ifdef _DEBUG
+        std_lcout << ir.IR << std::endl;
+#endif // _DEBUG
 		if (err) return false;
 #if _WIN32 and !(defined _WIN64)
         if (x86Runner::LoadMEXE(mexe))

@@ -11,10 +11,10 @@ _string_{
 }
 Class:string{
     Public N:ad;Public N:size;
-    _init_()->N:={
+    Public _init_()->N:={
         ad=0;size=0
     }
-    _destroy_()->N:={
+    Public _destroy_()->N:={
         if(ad!=0){free(ad);ad=0};
         size=0;
     }

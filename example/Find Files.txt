@@ -127,13 +127,15 @@ Class:File{
 			c=c+1;
 		};
 		FindClose(hFind);
+		arr.set_init_destroy(~string$_init_,~string$_destroy_);
 		arr.ReDim(sizeof:string,c);
 		N:hFind=FindFirstFileW(path,wfd);
 		(arr[0]->string).const(&wfd.cFileName);
-		for(N:i=0;i<c;i=i+1){
-			FindNextFileW(hFind,wfd);
+		N:i=0;
+		while(i<c-1){i=i+1;
+			FindNextFileW(hFind,wfd);printN(i);
 			(arr[i]->string).const(&wfd.cFileName);
-		}
+		};
 		return(c);
 	}
 }
@@ -154,6 +156,10 @@ Main{
 		Array:arr;
 		N:c=System.file.EnumFiles(cch,arr);
 		
+		for(N:i=0;i<c;i=i+1){Pause()
+			//print(arr[i]->string,"\n");
+		};
+		print("C");
 		print("枚举文件完成，共有 ");printN(c);print(" 个文件/文件夹");
 
 		System.console.InputEx();

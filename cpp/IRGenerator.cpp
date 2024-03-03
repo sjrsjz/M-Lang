@@ -1212,8 +1212,8 @@ label_handleBuiltInFunctions_1:
 		}
 	}
 	else if (name == getFullName(R("Block"), *functionSet0)) {
-		size_t label1 = label;
 		label++;
+		size_t label1 = label;
 		if (EX.child()) {
 			ins(R("#label_Block_Start_") + to_lstring(label1));
 			loopStartStack.push_back(R("#label_Block_Start_") + to_lstring(label1));
@@ -1247,8 +1247,8 @@ label_handleBuiltInFunctions_1:
 				ins(R("load %") + to_lstring(id1) + R(" %") + to_lstring(A.id) + R(" ") + to_lstring(getStructureSize(R("Boolen"))));
 				A.id = id1;
 			}
-			size_t label1 = label;
 			label++;
+			size_t label1 = label;
 			ins(R("jz %") + to_lstring(A.id) + R(" #label_case_") + to_lstring(label1));
 			while (EX.next()) {
 				generateLine(functionSet, func, EX);
@@ -1263,8 +1263,8 @@ label_handleBuiltInFunctions_1:
 		if (EX.child()) {
 			type A = compileTree(functionSet, func, EX, {});
 			if (EX.next()) {
-				size_t label1 = label;
 				label++;
+				size_t label1 = label;
 				ins(R("#label_Block_Start_") + to_lstring(label1));
 				loopStartStack.push_back(R("#label_Block_Start_") + to_lstring(label1));
 				loopEndStack.push_back(R("#label_Block_End_") + to_lstring(label1));
