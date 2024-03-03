@@ -715,7 +715,7 @@ void x86Generator::generate(lstring IR)
 			{
 				codes << 139 << 157;
 				codes += (int)offset3;
-				codes << 153 << 247 << 243 << 137 << 216;
+				codes << 153 << 247 << 243 << 137 << 208;
 			}
 			else if (tk[1] == R("Minus"))
 			{

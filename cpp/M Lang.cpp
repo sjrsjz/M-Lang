@@ -56,7 +56,7 @@ void PrepareLexer(Lexer& lex) {
     type ret{};
     functionSet builtIn{};
     ret.typeName = R("N");
-    NewBuiltInFunction(builtIn, R("block"), args, ret, false);
+    NewBuiltInFunction(builtIn, R("Block"), args, ret, false);
     NewBuiltInFunction(builtIn, R("break"), args, ret, false);
     NewBuiltInFunction(builtIn, R("continue"), args, ret, false);
     NewBuiltInFunction(builtIn, R("Pause"), args, ret, false);
@@ -70,7 +70,7 @@ void PrepareLexer(Lexer& lex) {
     NewBuiltInFunction(builtIn, R("if"), args, ret, false);
     NewBuiltInFunction(builtIn, R("while"), args, ret, false);
     NewBuiltInFunction(builtIn, R("do_while"), args, ret, false);
-    NewBuiltInFunction(builtIn, R("match"), args, ret, false);
+    NewBuiltInFunction(builtIn, R("case"), args, ret, false);
     args[0].typeName = R("N");
     NewBuiltInFunction(builtIn, R("return"), args, ret, false);
     NewBuiltInFunction(builtIn, R("print"), args, ret, true);
@@ -126,7 +126,8 @@ void PrepareLexer(Lexer& lex) {
     NewBuiltInFunction(builtIn, R("memcopy"), args, ret, false);
     ret.typeName = R("Boolen");
     NewBuiltInFunction(builtIn, R("CmpMem"), args, ret, false);
-
+    args[2].typeName = R("Boolen");
+    NewBuiltInFunction(builtIn, R("for"), args, ret, false);
 
 
     Lexer lex2{};

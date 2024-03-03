@@ -185,4 +185,13 @@ public:
         while (next());
         return true;
     }
+    size_t getDepth() {
+        Tree* c = LocateCurrentTree();
+		size_t depth = 0;
+        while (c->haveParent()) {
+			c = c->LocateParentTree(nullptr);
+			depth++;
+		}
+		return depth;
+    }
 };

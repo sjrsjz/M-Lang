@@ -133,7 +133,6 @@ analyzed_function AST::analyzeFunction(functionSet& functionSet_, function& func
 	return func0;
 }
 bool AST::analyzeExper(functionSet& functionSet_, function& func, Tree<node>& EX, std::vector<lstring> tk) {
-	DebugOutput("!!!", tk);
 	size_t size = tk.size();
 	if (!size) return true;
 	intptr_t final = search(tk, R(";"), 0, 0, 0);
@@ -150,6 +149,28 @@ bool AST::analyzeExper(functionSet& functionSet_, function& func, Tree<node>& EX
 		return p1;
 	}
 }
+
+bool AST::analyzeExper_Array(functionSet& functionSet_, function& func, std::vector<Tree<node>>& EXs, std::vector<lstring> tk) {
+	size_t size = tk.size();
+	if (!size) return true;
+	intptr_t final = search(tk, R(";"), 0, 0, 0);
+	intptr_t end{};
+	std::vector<lstring> ctk{};
+	if (final == -1) {
+		Tree<node> temp_tree{};
+		bool a = analyze_0(functionSet_, func, temp_tree, tk, OP_size);
+		EXs.push_back(temp_tree);
+		return a;
+	}
+	else {
+		SubTokens(tk, ctk, 1, final - 1);
+		bool p1 = analyzeExper_Array(functionSet_, func, EXs, ctk);
+		SubTokens(tk, ctk, final + 1, tk.size());
+		p1 &= analyzeExper_Array(functionSet_, func, EXs, ctk);
+		return p1;
+	}
+}
+
 bool AST::analyze_0(functionSet& functionSet_, function& func, Tree<node>& EX, std::vector<lstring> tk, int num) {
 	node node{};
 	std::vector<lstring> t1{}, t2{};
@@ -200,6 +221,51 @@ bool AST::analyze_1(functionSet& functionSet_, function& func, Tree<node>& EX, s
 	return analyze_2(functionSet_, func, EX, tk);
 }
 bool AST::analyze_2(functionSet& functionSet_, function& func, Tree<node>& EX, std::vector<lstring> tk) {
+	intptr_t first = search(tk, R("{"), 0, 0, 1);
+	if (first != -1) {
+		intptr_t last = search(tk, R("}"), 0, first, -1);
+		if (last == -1) {
+			error(R("括号不匹配"));
+			return false;
+		}
+		std::vector<lstring> left = tk;
+		std::vector<lstring> right = tk;
+		std::vector<lstring> medium = tk;
+		SubTokens(tk, left, 1, first - 1);
+		SubTokens(tk, right, last + 1, tk.size());
+		SubTokens(tk, medium, first + 1, last - 1);		
+		bool a{};
+		if(left.size())
+			a = analyze_3(functionSet_, func, EX, left);
+		node p{};
+		p.type = R("Block");
+		size_t depth{};
+		while (EX.ToChildrenEnd()) depth++;
+		while (depth && EX.Get().type!=R("Call")) {
+			EX.parent();
+			depth--;
+		}
+		
+		EX.push_back(p);
+		EX.ToChildrenEnd();
+		std::vector<Tree<node>> tmp_trees{};
+
+		a = analyzeExper_Array(functionSet_, func, tmp_trees, medium) && a;
+		for(auto&x:tmp_trees)
+			EX.push_back(x);
+		EX.parent();
+		for (size_t i = 0; i < depth; i++) EX.parent();
+		Tree<node> tmp_tree{};
+		if (right.size()) {
+			a = analyze_2(functionSet_, func, tmp_tree, right) && a;
+			EX.push_back(tmp_tree);
+		}
+
+		return a;
+	}
+	return analyze_3(functionSet_, func, EX, tk);
+}
+bool AST::analyze_3(functionSet& functionSet_, function& func, Tree<node>& EX, std::vector<lstring> tk) {
 	node p{};
 	std::vector<lstring> t1{};
 	type var{};
@@ -234,7 +300,7 @@ bool AST::analyze_2(functionSet& functionSet_, function& func, Tree<node>& EX, s
 		EX.ToChildrenEnd();
 		t1 = tk;
 		t1.erase(t1.begin());
-		bool p1 = analyze_1(functionSet_, func, EX, t1);
+		bool p1 = analyze_3(functionSet_, func, EX, t1);
 		EX.parent();
 		return p1;
 	}
@@ -321,20 +387,21 @@ bool AST::analyze_2(functionSet& functionSet_, function& func, Tree<node>& EX, s
 		if (pos >= 2 && !iftk(tk, R("."), pos - 2)) {
 			t1 = tk;
 			t1.erase(t1.begin() + pos - 2, t1.end());
-			bool p1 = analyze_2(functionSet_, func, EX, t1);
+			bool p1 = analyze_3(functionSet_, func, EX, t1);
 			p.token = getFunctionFullName(process_quotation_mark(tk[pos - 2]), functionSet_);
 			p.type = R("Call");
 			bool p2{};
+			size_t depth{};
+			//while (!EX.haveParent()) depth++;
 
-			if (p2 = (EX.haveParent() && pos!=2)) EX.ToChildrenEnd();
 			EX.push_back(p);
 			EX.ToChildrenEnd();
 			t1 = tk;
 			t1.erase(t1.begin(), t1.begin() + pos);
 			t1.pop_back();
 			p1 |= analyzeArg(functionSet_, func, EX, t1);
-			if(p2) EX.parent();
 			EX.parent();
+			//for (size_t i = 0; i < depth; i++) EX.parent();
 			return p1;
 		}
 		if (pos > 2 && iftk(tk, R("."), pos - 2)) {			
@@ -345,7 +412,7 @@ bool AST::analyze_2(functionSet& functionSet_, function& func, Tree<node>& EX, s
 			t1 = tk;
 			t1.erase(t1.begin() + pos - 1, t1.end());
 			t1.erase(t1.end() - 2, t1.end());
-			bool p1 = analyze_2(functionSet_, func, EX, t1);
+			bool p1 = analyze_3(functionSet_, func, EX, t1);
 			SubTokens(tk, t1, pos + 1, tk.size() - 1);
 			p1 = analyzeArg(functionSet_, func, EX, t1) || p1;
 			EX.parent();
@@ -396,29 +463,10 @@ bool AST::analyze_2(functionSet& functionSet_, function& func, Tree<node>& EX, s
 		EX.parent();
 		return p1;
 	}
-	if (tk[tk.size() - 1] == R("}")) {
-		intptr_t pos = search(tk, R("{"), 1, {}, 0);
-		t1 = tk;
-		t1.erase(t1.begin() + pos - 1, t1.end());
-		bool p1 = analyze_2(functionSet_, func, EX, t1);
-		bool p2{};
-		if (p2 = EX.haveParent()) EX.ToChildrenEnd();
-		p.token = R("");
-		p.type = R("Block");
-		EX.push_back(p);
-		EX.ToChildrenEnd();
-		t1 = tk;
-		t1.erase(t1.begin(), t1.begin() + pos);
-		t1.pop_back();
-		p1 = analyzeExper(functionSet_, func, EX, t1) && p1;
-		if (p2) EX.parent();
-		EX.parent();
-		return p1;
-	}
 	if (tk[tk.size() - 1] == R(".")) {
 		t1 = tk;
 		t1.pop_back();
-		return analyze_2(functionSet_, func, EX, t1);
+		return analyze_3(functionSet_, func, EX, t1);
 	}
 	return false;
 }

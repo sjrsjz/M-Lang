@@ -149,7 +149,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 
 	size_t curr = IR.length();
 	type ret{};
-	node p=EX.Get();
+	node p = EX.Get();
 	lstring tk = p.token, type_ = p.type;
 	if (Error) goto RET;
 	if (type_ == R("Operator")) {
@@ -1058,7 +1058,7 @@ label_handleBuiltInFunctions_1:
 		if (EX.child()) {
 			label++;
 			intptr_t label1 = label;
-			ins(R("#label_while_Start_") + to_lstring(label1));
+			ins(R("#label_Block_Start_") + to_lstring(label1));
 			type A = compileTree(functionSet, func, EX, {});
 			if (A.typeName != R("Boolen") || A.array) {
 				error(R("while语句的条件必须为Boolen类型"));
@@ -1070,17 +1070,17 @@ label_handleBuiltInFunctions_1:
 				ins(R("load %") + to_lstring(id1) + R(" %") + to_lstring(A.id) + R(" ") + to_lstring(getStructureSize(R("Boolen"))));
 				A.id = id1;
 			}
-			ins(R("jz %") + to_lstring(A.id) + R(" #label_while_End_") + to_lstring(label1));
-			loopStartStack.push_back(R("#label_while_Start_") + to_lstring(label1));
-			loopEndStack.push_back(R("#label_while_End_") + to_lstring(label1));
+			ins(R("jz %") + to_lstring(A.id) + R(" #label_Block_End_") + to_lstring(label1));
+			loopStartStack.push_back(R("#label_Block_Start_") + to_lstring(label1));
+			loopEndStack.push_back(R("#label_Block_End_") + to_lstring(label1));
 
 			if (EX.next()) {
 				generateLine(functionSet, func, EX);
 			}
 			loopStartStack.pop_back();
 			loopEndStack.pop_back();
-			ins(R("jmp #label_while_Start_") + to_lstring(label1));
-			ins(R("#label_while_End_") + to_lstring(label1));
+			ins(R("jmp #label_Block_Start_") + to_lstring(label1));
+			ins(R("#label_Block_End_") + to_lstring(label1));
 			EX.parent();
 			return true;
 		}
@@ -1089,8 +1089,8 @@ label_handleBuiltInFunctions_1:
 		if (EX.child()) {
 			label++;
 			intptr_t label1 = label;
-			ins(R("jmp #label_do_while_A_") + to_lstring(label1));
-			ins(R("#label_do_while_Start_") + to_lstring(label1));
+			ins(R("jmp #label_Block_A_") + to_lstring(label1));
+			ins(R("#label_Block_Start_") + to_lstring(label1));
 			type A = compileTree(functionSet, func, EX, {});
 			if (A.typeName != R("Boolen") || A.array) {
 				error(R("do_while语句的条件必须为Boolen类型"));
@@ -1102,19 +1102,19 @@ label_handleBuiltInFunctions_1:
 				ins(R("load %") + to_lstring(id1) + R(" %") + to_lstring(A.id) + R(" ") + to_lstring(getStructureSize(R("Boolen"))));
 				A.id = id1;
 			}
-			ins(R("jz %") + to_lstring(A.id) + R(" #label_do_while_End_") + to_lstring(label1));
+			ins(R("jz %") + to_lstring(A.id) + R(" #label_Block_End_") + to_lstring(label1));
 			if (!EX.next()) {
 				error(R("do_while语句的循环体不能为空"));
 				return false;
 			}
-			ins(R("#label_do_while_A_") + to_lstring(label1));
-			loopStartStack.push_back(R("#label_do_while_Start_") + to_lstring(label1));
-			loopEndStack.push_back(R("#label_do_while_End_") + to_lstring(label1));
+			ins(R("#label_Block_A_") + to_lstring(label1));
+			loopStartStack.push_back(R("#label_Block_Start_") + to_lstring(label1));
+			loopEndStack.push_back(R("#label_Block_End_") + to_lstring(label1));
 			generateLine(functionSet, func, EX);
 			loopStartStack.pop_back();
 			loopEndStack.pop_back();
-			ins(R("jmp #label_do_while_Start_") + to_lstring(label1));
-			ins(R("#label_do_while_End_") + to_lstring(label1));
+			ins(R("jmp #label_Block_Start_") + to_lstring(label1));
+			ins(R("#label_Block_End_") + to_lstring(label1));
 			EX.parent();
 			return true;
 		}
@@ -1210,9 +1210,100 @@ label_handleBuiltInFunctions_1:
 			}
 		}
 	}
-	else if (name == getFullName(R("block"), *functionSet0)) {
-		
+	else if (name == getFullName(R("Block"), *functionSet0)) {
+		size_t label1 = label;
+		label++;
+		if (EX.child()) {
+			ins(R("#label_Block_Start_") + to_lstring(label1));
+			loopStartStack.push_back(R("#label_Block_Start_") + to_lstring(label1));
+			loopEndStack.push_back(R("#label_Block_End_") + to_lstring(label1));
+			error_lineStack.push_back(error_line);
+			error_line = 0;
+			do
+			{
+				generateLine(functionSet, func, EX);
+				error_line++;
+			} while (EX.next());
+			error_line = error_lineStack.back();
+			error_lineStack.pop_back();
+			ins(R("#label_Block_End_") + to_lstring(label1));
+			loopEndStack.pop_back();
+			loopStartStack.pop_back();
+			EX.parent();
+			return true;
+		}
 	}
+	else if (name == getFullName(R("case"), *functionSet0)) {
+		if (EX.child()) {
+			type A = compileTree(functionSet, func, EX, {});
+			if (A.typeName != R("Boolen") || A.array) {
+				error(R("case语句的条件必须为Boolen类型"));
+				EX.parent();
+				return false;
+			}
+			if (A.address) {
+				size_t id1 = allocTmpID(Type_Boolen);
+				ins(R("load %") + to_lstring(id1) + R(" %") + to_lstring(A.id) + R(" ") + to_lstring(getStructureSize(R("Boolen"))));
+				A.id = id1;
+			}
+			size_t label1 = label;
+			label++;
+			ins(R("jz %") + to_lstring(A.id) + R(" #label_case_") + to_lstring(label1));
+			while (EX.next()) {
+				generateLine(functionSet, func, EX);
+			}
+			ins(R("jmp ") + loopEndStack.back());
+			ins(R("#label_case_") + to_lstring(label1));
+			EX.parent();
+			return true;
+		}
+	}
+	else if (name == getFullName(R("for"), *functionSet0)) {
+		if (EX.child()) {
+			type A = compileTree(functionSet, func, EX, {});
+			if (EX.next()) {
+				size_t label1 = label;
+				label++;
+				ins(R("#label_Block_Start_") + to_lstring(label1));
+				loopStartStack.push_back(R("#label_Block_Start_") + to_lstring(label1));
+				loopEndStack.push_back(R("#label_Block_End_") + to_lstring(label1));
+				type A = compileTree(functionSet, func, EX, {});
+				if (A.typeName != R("Boolen") || A.array) {
+					error(R("for语句的条件必须为Boolen类型"));
+					EX.parent();
+					return false;
+				}
+				if (A.address) {
+					size_t id1 = allocTmpID(Type_Boolen);
+					ins(R("load %") + to_lstring(id1) + R(" %") + to_lstring(A.id) + R(" ") + to_lstring(getStructureSize(R("Boolen"))));
+					A.id = id1;
+				}
+				ins(R("jz %") + to_lstring(A.id) + R(" ") + loopEndStack.back());
+				if (EX.next()) {
+					std::vector<Tree<node>> trees{};
+					Tree<node>* curr = EX.LocateCurrentTree();
+					while (EX.next()) {
+						trees.push_back(*curr);
+						trees.back().reset();
+						curr = EX.LocateCurrentTree();
+					}
+					generateLine(functionSet, func, EX);
+					for (size_t i = 0; i < trees.size(); i++) {
+						generateLine(functionSet, func, trees[i]);
+					}
+					
+					ins(R("jmp ") + loopStartStack.back());
+					
+				}
+				loopEndStack.pop_back();
+				loopStartStack.pop_back();
+				ins(R("#label_Block_End_") + to_lstring(label1));
+			}
+			EX.parent();
+			return true;
+		}
+	}
+
 	else if (name == getFullName(R("break"), *functionSet0)) {
 		if (loopEndStack.size()) {
 			ins(R("jmp ") + loopEndStack.back());
