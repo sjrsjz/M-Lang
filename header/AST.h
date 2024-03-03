@@ -36,7 +36,7 @@ namespace MLang {
 		bool analyze_0(functionSet& functionSet_, function& func, Tree<node>& EX, std::vector<lstring> tk, int num);
 		bool analyze_1(functionSet& functionSet_, function& func, Tree<node>& EX, std::vector<lstring> tk);
 		bool analyze_2(functionSet& functionSet_, function& func, Tree<node>& EX, std::vector<lstring> tk);
-		bool analyze_3(functionSet& functionSet_, function& func, Tree<node>& EX, std::vector<lstring> tk);
+		bool analyze_3(functionSet& functionSet_, function& func, Tree<node>& EX, std::vector<lstring> tk, std::optional<std::vector<size_t>*> list);
 		size_t size(type var);
 		bool getVarType(lstring name, lstring& type, lstring& var);
 		size_t getStructureSize(lstring type);

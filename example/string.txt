@@ -94,7 +94,5 @@ Class:string{
         const(str);
         return(this)
     }
-    Public cdecl ArgSize "[]"(N:ArgSize,N:index)->string:={
 
-    }
 }

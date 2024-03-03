@@ -194,4 +194,29 @@ public:
 		}
 		return depth;
     }
+
+    void LocateCurrentTree (std::vector<size_t>& list) {
+        if (located) return;
+        if (pointer >= (intptr_t)nodes.size() || pointer < 0) return;
+        list.push_back(pointer);
+        nodes[pointer].LocateCurrentTree(list);
+    }
+
+    std::vector<size_t> getLocationList() {
+        std::vector<size_t> list;
+        LocateCurrentTree(list);
+		return list;
+    }
+    bool setLocationList(const std::vector<size_t>& list) {
+		Tree* c = this;
+        c->located = false;
+        for (size_t i = 0; i < list.size(); i++) {
+			if (list[i] >= c->size()) return false;
+			c = &c->nodes[list[i]];
+            c->pointer=list[i];
+            c->located = false;
+		}
+		c->located = true;
+		return true;
+	}
 };

@@ -7,7 +7,7 @@ Main{
 					case(j % 4 == 0){print("A")}
 					case(j % 4 == 1){print("B")}					
 					case(j % 4 == 2){print("C")}
-					//case(j % 4 == 3){print("D")}
+					case(j % 4 == 3){print("D")}
 
 			};
 			print("\n")
