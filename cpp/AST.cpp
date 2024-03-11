@@ -100,9 +100,10 @@ analyzed_function AST::analyzeFunction(functionSet& functionSet_, function& func
 	std_lcout << std::endl << "[Function]" << func.name << std::endl ;
 #endif
 	size_t code_size = func.codes.size();
-	Tree<node> EX;
+	
 	while (i >= 0 && i < code_size)
 	{
+		Tree<node> EX;
 		error_line = i;
 		error_function = func.name;
 		error_functionSet = functionSet_.name;
@@ -112,7 +113,6 @@ analyzed_function AST::analyzeFunction(functionSet& functionSet_, function& func
 		if (!tk.size()) { i++; continue; }
 		analyzeExper(functionSet_, func, EX, tk);
 		//print AST
-		// 
 #if _DEBUG
 		outputNodes(EX, 0);
 #endif
@@ -249,12 +249,12 @@ bool AST::analyze_2(functionSet& functionSet_, function& func, Tree<node>& EX, s
 			std::vector<size_t> list{};
 			a = analyze_3(functionSet_, func, EX, left, &list) && a;
 
+
 			if (first_tree) {
 				list0 = EX.getLocationList();
-				EX.setLocationList(list);
 				first_tree = false;
 			}
-
+			EX.setLocationList(list);
 			std::vector<Tree<node>> trees{};
 			a = analyzeExper_Array(functionSet_, func, trees, medium) && a;
 			p.type = R("Block");
@@ -267,9 +267,9 @@ bool AST::analyze_2(functionSet& functionSet_, function& func, Tree<node>& EX, s
 			}
 			EX.parent();
 
-			a = analyze_3(functionSet_, func, EX, right, {}) && a;
 			ctk = right;
 	
+			EX.setLocationList(list0);
 		} while ((first = search(ctk, R("{"), 0, 0, 1)) != -1);
 		a = analyze_3(functionSet_, func, EX, ctk, {}) && a;
 		EX.setLocationList(list0);

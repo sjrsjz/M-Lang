@@ -25,7 +25,7 @@
 #endif
 
 #define G_X64_ _WIN64
-#define G_UNICODE_ 0
+#define G_UNICODE_ 1
 
 #if defined(_WIN32) || defined(_WIN64)
 #include <Windows.h>

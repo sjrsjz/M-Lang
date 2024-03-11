@@ -130,7 +130,6 @@ public:
     bool push_back(const T& o) {
         Tree* c = LocateCurrentTree();
         if (!c) { nodes.clear(); pointer = 0; data = o; located = true; return true; }
-        if (c->pointer > (intptr_t)c->nodes.size()) return false;
         Tree t;
         t.data = o;
         c->nodes.push_back(t);
@@ -148,7 +147,6 @@ public:
     bool push_back(const Tree& o) {
         Tree* c = LocateCurrentTree();
         if (!c) { pointer = 0; nodes = o.nodes; located = true; return true; }
-        if (c->pointer > (intptr_t)c->nodes.size()) return false;
         c->nodes.push_back(o);
         return true;
     }

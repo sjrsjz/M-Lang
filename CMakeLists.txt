@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.16.0 FATAL_ERROR)
 
+
 set(CMAKE_CXX_STANDARD 17)  # 使用 C++17
 set(CMAKE_BUILD_TYPE "Debug")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -g -O0 -Wall -ggdb")
@@ -18,7 +19,7 @@ endif()
 message("${CMAKE_VS_PLATFORM_NAME} architecture in use")
 
 if(NOT ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "x64"
-     OR "${CMAKE_VS_PLATFORM_NAME}" STREQUAL "x86"))
+     OR "${CMAKE_VS_PLATFORM_NAME}" STREQUAL "x86" OR "${CMAKE_VS_PLATFORM_NAME}" STREQUAL "win32"))
     message(FATAL_ERROR "${CMAKE_VS_PLATFORM_NAME} arch is not supported!")
 endif()
 
@@ -39,6 +40,9 @@ if(MSVC)
     set(CMAKE_CXX_FLAGS "")
     set(CMAKE_CXX_FLAGS_DEBUG "")
     set(CMAKE_CXX_FLAGS_RELEASE "")
+else()
+    set(ADDRESS_MODEL 32)
+    set(NODE_TARGET x86)
 endif()
 
 

@@ -451,7 +451,7 @@ int main(int argn, char* argv[]) {
     LOCALE_WCOUT
 #endif
 
-#if _DEBUG
+#if _DEBUG && false
     test(argn, argv);
 #else
     if (argn == 1) {
@@ -466,7 +466,11 @@ int main(int argn, char* argv[]) {
     }
     std::vector<lstring> args;
     for (int i = 1; i < argn; i++) {
+#if G_UNICODE_
         args.push_back(to_wide_string(argv[i]));
+#else
+        args.push_back(argv[i]);
+#endif
     }
     process_command(args);
 #endif // _DEBUG
