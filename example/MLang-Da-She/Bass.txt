@@ -1,0 +1,26 @@
+Extra:"Bass.dll"{
+	BASS_StreamFree(
+		N:hStream)->Z:=BASS_StreamFree;
+		
+	BASS_Init(
+		Z:iDevice,
+		N:dwFreq,
+		N:dwFlags,
+		N:hWnd,
+		N:pclsid)->N:=BASS_Init;
+
+	BASS_StreamCreateFile(
+		Z:bMem,
+		N:pFile,
+		N:ullOffsetLo,
+		N:ullOffsetHi,
+		N:ullLenLo,
+		N:ullLenHi,
+		N:dwFlags)->N:=BASS_StreamCreateFile;
+		
+	BASS_ChannelPlay(
+		N:hStream,
+		Z:bRestart)->Z:=BASS_ChannelPlay;
+		
+	BASS_Free()->Z:=BASS_Free;
+}

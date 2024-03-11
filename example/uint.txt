@@ -20,12 +20,16 @@ Class:uint{
 		return(tmp)
 	}
 	Public =(uint:o)->uint:={
-		uint:tmp.data=o.data;
-		return(tmp)
+		data=o.data;
+		return(this)
 	}
 	Public =(N:o)->uint:={
-		uint:tmp.data=o;
-		return(tmp)
+		data=o;
+		return(this)
+	}
+	Public =(Z:o)->uint:={
+		data=o;
+		return(this)
 	}
 	Public _new_(N:o)->uint:={
 		uint:tmp.data=o;
@@ -82,11 +86,5 @@ Class:uint{
 	}
 	Public "Z()"()->Z:={
 		return(data)
-	}
-}
-
-Main{
-	main()->N:={
-		printZ(uint(4) or uint(1)+uint(2))
 	}
 }
