@@ -447,11 +447,9 @@ bool process_command(std::vector<lstring> args) {
 }
 
 int main(int argn, char* argv[]) {
-    std::cout << "M Lang 1.0\n";
 #if G_UNICODE_
     LOCALE_WCOUT
 #endif
-    std::cout << "M Lang 1.0\n";
 
 #if _DEBUG
     test(argn, argv);

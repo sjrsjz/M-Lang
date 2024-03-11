@@ -45,15 +45,18 @@ namespace MLang {
         if (sin >> c) return false;
         return true;
     }
-    bool isNum_(lstring str) {
-        try {
-            std::stold(str);
-            return true;
+
+    bool isNum_(const lstring &s)
+    {
+        try{
+            std::stold(s);
         }
-        catch (std::exception e) {
+        catch (std::invalid_argument e) {
             return false;
         }
+        return true;
     }
+
     intptr_t search(std::vector<lstring>& tks, lstring str, int type, std::optional<intptr_t> begin, intptr_t offset) {
         if (!tks.size() || begin > tks.size()) return -1;
         if (!begin.has_value()) begin = type == 0 ? 0 : tks.size();

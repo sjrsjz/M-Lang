@@ -43,7 +43,7 @@ public:
         pointer = o.pointer;
         located = o.located;
     }
-    ~Tree() { data.~T(); }
+    ~Tree(){}
     bool next() {
         Tree* c = LocateParentTree(nullptr);
         Tree* curr = LocateCurrentTree();

@@ -109,7 +109,7 @@ namespace MLang {
     lstring RemoveSpaceLR(lstring str);
     lstring subreplace(lstring resource_str, lstring sub_str, lstring new_str);
     bool isNum(lstring str);
-    bool isNum_(lstring str);
+    bool isNum_(const lstring &s);
     void output(std::vector<lstring> tk,lstring str,intptr_t pos);
     lstring gather(std::vector<lstring> tks, size_t c);
     lstring readFileString(const lstring& path);
@@ -230,7 +230,7 @@ namespace MLang {
     void DebugOutput(const T& data, const Types&... args) {
 #if _DEBUG
         lstring tmp = DebugOutputString(data, args...).str();
-#if defined(_WIN32) || defined(_WIN64)
+#if (defined(_WIN32) || defined(_WIN64)) //&& defined(_MSC_VER)
 #if G_UNICODE_
         OutputDebugStringW(tmp.c_str());
         OutputDebugStringW(R("\n"));

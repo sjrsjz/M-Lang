@@ -45,6 +45,7 @@
             "ctestCommandArgs": "",
             "inheritEnvironments": [ "clang_cl_x86" ]
         },
+
         {
             "name": "Mingw64-Debug",
             "generator": "Ninja",

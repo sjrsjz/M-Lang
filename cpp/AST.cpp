@@ -99,13 +99,15 @@ analyzed_function AST::analyzeFunction(functionSet& functionSet_, function& func
 #if _DEBUG
 	std_lcout << std::endl << "[Function]" << func.name << std::endl ;
 #endif
-	while (i>=0 && i< func.codes.size())
+	size_t code_size = func.codes.size();
+	Tree<node> EX;
+	while (i >= 0 && i < code_size)
 	{
 		error_line = i;
 		error_function = func.name;
 		error_functionSet = functionSet_.name;
 		std::vector<lstring> tk = func.codes[i].tokens;
-		Tree<node> EX;
+		
 		EX.clear();
 		if (!tk.size()) { i++; continue; }
 		analyzeExper(functionSet_, func, EX, tk);
@@ -276,6 +278,7 @@ bool AST::analyze_2(functionSet& functionSet_, function& func, Tree<node>& EX, s
 	return analyze_3(functionSet_, func, EX, tk, {});
 }
 bool AST::analyze_3(functionSet& functionSet_, function& func, Tree<node>& EX, std::vector<lstring> tk, std::optional<std::vector<size_t>*> list) {
+	
 	node p{};
 	std::vector<lstring> t1{};
 	type var{};
