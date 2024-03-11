@@ -186,7 +186,7 @@ int test(int argn,char* argv[])
 
 #if G_UNICODE_
     LOCALE_WCOUT
-#endif 
+#endif
 
     bool err = lex.analyze(R(R"ABC(
 
@@ -206,7 +206,7 @@ _string_{
     }
 }
 Class:string{
-    [Public]N:ad;[Public]N:size;
+    Public N:ad;Public N:size;
     _init_()->N:={
         ad=0;size=0
     }
@@ -217,20 +217,20 @@ Class:string{
     _string_:={
         N:ad,N:size
     }
-    [Public]"return(string)"(string:s)->N:={//prevent RAII destroys data
+    Public "return(string)"(string:s)->N:={//prevent RAII destroys data
         _destroy_();
         ad=new(s.size);
         size=s.size;
         memcopy(ad,s.ad,size);
     }
-    [Public]=(string:s)->string:={
+    Public =(string:s)->string:={
         _destroy_();
-        ad=new(s.size); 
+        ad=new(s.size);
         size=s.size;
         memcopy(ad,s.ad,s.size);
         return(this)
     }
-    [Public]const(N:str)->N:={
+    Public const(N:str)->N:={
         _destroy_();
         N:i=0;
         while(N(str+i)->B!=0 or N(str+i+1)->B!=0){i=i+2};
@@ -238,7 +238,7 @@ Class:string{
         ad=new(size);
         memcopy(ad,str,size);
     }
-    [Public]+(string:s)->string:={
+    Public +(string:s)->string:={
         string:tmp;
         if(size!=0){
             tmp.size=s.size+size-2;
@@ -250,7 +250,7 @@ Class:string{
         };
         return(tmp)
     }
-    [Public]*(N:times)->string:={
+    Public *(N:times)->string:={
         string:tmp;
         N:i=0;
         while(i<times){
@@ -259,26 +259,26 @@ Class:string{
         };
         return(tmp)
     }
-    [Public]"R()"()->R:={
+    Public "R()"()->R:={
         return(T2R(ad))
     }
-    [Public]==(string:s)->Boolen:={
+    Public ==(string:s)->Boolen:={
         return(CmpStr(ad,s.ad))
     }
-    [Public]!=(string:s)->Boolen:={
+    Public !=(string:s)->Boolen:={
         return(not CmpStr(ad,s.ad))
     }
-    [Public]"N()"()->N:={
+    Public "N()"()->N:={
 		return(ad)
 	}
 }
 Class:test{
-    [Public]"sizeof()"(Z:arg)->N:={
+    Public "sizeof()"(Z:arg)->N:={
         print("Z");
 
         return(arg)
     }
-    [Public]"sizeof()"(R:arg)->N:={
+    Public "sizeof()"(R:arg)->N:={
         print("R");
         return(233)
     }
@@ -314,7 +314,7 @@ Main{
     PrepareLexer(lex);
 
     AST ast{};
-	
+
     ast.analyze(lex.importedLibs, lex.globals, lex.functionSets, lex.structures, lex.ExternFunctions, lex.constants);
 
 	IRGenerator ir{};
@@ -400,7 +400,7 @@ bool process_command(std::vector<lstring> args) {
         ByteArray<unsigned char> mexe;
 		if (!IR2MEXE(readFileString(args[1]), mexe)) return false;
 		writeFileByteArray(args[2], mexe);
-		return true;	
+		return true;
     }
     else if (args.size() == 3 && args[0] == R("build")) {
         workPath = getDictionary(args[1]) + R("\\");
@@ -442,17 +442,20 @@ bool process_command(std::vector<lstring> args) {
         if (x86Runner::LoadMEXE(mexe))
             x86Runner::run();
 #endif // _WIN32
-		return true;	
+		return true;
     }
 }
 
 int main(int argn, char* argv[]) {
+    std::cout << "M Lang 1.0\n";
 #if G_UNICODE_
     LOCALE_WCOUT
 #endif
-///#if _DEBUG
-//    test(argn, argv);
-//#else
+    std::cout << "M Lang 1.0\n";
+
+#if _DEBUG
+    test(argn, argv);
+#else
     if (argn == 1) {
         std::cout << "Usage:\n";
 		std::cout << "runIR <IR file>\n";
@@ -468,6 +471,6 @@ int main(int argn, char* argv[]) {
         args.push_back(to_wide_string(argv[i]));
     }
     process_command(args);
-//#endif // _DEBUG
+#endif // _DEBUG
 	return 0;
 }

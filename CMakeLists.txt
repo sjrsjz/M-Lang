@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16.0 FATAL_ERROR)
 
 set(CMAKE_CXX_STANDARD 17)  # 使用 C++17
-
+set(CMAKE_BUILD_TYPE "Debug")
 
 set(CMAKE_SYSTEM_VERSION 10.0 CACHE STRING "" FORCE)
 
@@ -38,6 +38,7 @@ if(MSVC)
     set(CMAKE_CXX_FLAGS_DEBUG "")
     set(CMAKE_CXX_FLAGS_RELEASE "")
 endif()
+
 
 ################################################################################
 # Global linker options

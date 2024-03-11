@@ -113,6 +113,7 @@ Class:Console{
 		return(this)
 	}
 }
+
 Class:File{
 	Public EnumFiles(string:path,Array:arr)->N:={
 		WIN32_FIND_DATAW:wfd;

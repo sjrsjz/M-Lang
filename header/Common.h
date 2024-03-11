@@ -9,18 +9,23 @@
 #include <cstring>
 #include <optional>
 #include <vector>
-#include <sstream> 
+#include <sstream>
 #include <fstream>
 #include <codecvt>
 #include <unordered_set>
 
+#ifdef _MSC_VER
 #define LOCALE(x) imbue(std::locale(x));
 #define LOCALE_WCOUT std::wcout.LOCALE("zh-CN")
 #define LOCALE_FIN fin.LOCALE("zh-CN.utf8")
-
+#else
+#define LOCALE(x) ;
+#define LOCALE_WCOUT ;
+#define LOCALE_FIN ;
+#endif
 
 #define G_X64_ _WIN64
-#define G_UNICODE_ UNICODE
+#define G_UNICODE_ 0
 
 #if defined(_WIN32) || defined(_WIN64)
 #include <Windows.h>
@@ -154,7 +159,7 @@ namespace MLang {
     inline std::wstring to_wide_string(const std::wstring& input) {
         return input;
     }
-    //convert wstring to string 
+    //convert wstring to string
     inline std::string to_byte_string(const std::wstring& input)
     {
         std::mbstate_t state = std::mbstate_t();
@@ -169,7 +174,7 @@ namespace MLang {
     inline std::string to_byte_string(const std::string& input) {
         return input;
     }
-   
+
     // 默认情况：is_vector为false
     template<typename T,typename... Types>
     struct is_vector : std::false_type {};
@@ -198,7 +203,7 @@ namespace MLang {
         }
         else {
             if constexpr (std::is_same<decltype(data), const std::string&>::value) {
-#ifdef G_UNICODE_
+#if G_UNICODE_
                 ss << R("\"") << to_wide_string(data) << R("\"");
 #else
                 ss << R("\"") << data << R("\"");
@@ -226,8 +231,13 @@ namespace MLang {
 #if _DEBUG
         lstring tmp = DebugOutputString(data, args...).str();
 #if defined(_WIN32) || defined(_WIN64)
-        OutputDebugString(tmp.c_str());
-        OutputDebugString(R("\n"));
+#if G_UNICODE_
+        OutputDebugStringW(tmp.c_str());
+        OutputDebugStringW(R("\n"));
+#else
+        OutputDebugStringA(tmp.c_str());
+        OutputDebugStringA(R("\n"));
+#endif // G_UNICODE_
 #else
         std::cout << tmp << std::endl;
 #endif

@@ -1815,14 +1815,18 @@ namespace MLang::x86Runner
 
 	void *LoadLibrary_(lstring lib)
 	{
-		return (void *)LoadLibrary(lib.c_str());
+#if G_UNICODE_
+		return (void *)LoadLibraryW(lib.c_str());
+#else
+		return (void *)LoadLibraryA(lib.c_str());
+#endif
 	}
 	void *InitApi(lstring lib, lstring api)
 	{
 #if G_UNICODE_
-		return (void *)GetProcAddress((HMODULE)GetModuleHandle(lib.c_str()), to_byte_string(api).c_str());
+		return (void *)GetProcAddress((HMODULE)GetModuleHandleW(lib.c_str()), to_byte_string(api).c_str());
 #else
-		return (void *)GetProcAddress((HMODULE)GetModuleHandle(lib.c_str()), api.c_str());
+		return (void *)GetProcAddress((HMODULE)GetModuleHandleA(lib.c_str()), api.c_str());
 #endif // G_UNICODE_
 	}
 	void FreeLibrary_(void *lib)
@@ -2116,8 +2120,14 @@ namespace MLang::x86Runner
 	{
 		srand(100);
 #ifdef _WIN32
-		OutputDebugString((R("[Program]GlobalPos ") + to_lstring((size_t)GlobalAddress) + R(" ") + to_lstring(GlobalSize)).c_str());
-		OutputDebugString((R("[Program]CodePos ") + to_lstring((size_t)ProgramAddress) + R(" ") + to_lstring(Program.size)).c_str());
+#if G_UNICODE_
+		OutputDebugStringW((R("[Program]GlobalPos ") + to_lstring((size_t)GlobalAddress) + R(" ") + to_lstring(GlobalSize)).c_str());
+		OutputDebugStringW((R("[Program]CodePos ") + to_lstring((size_t)ProgramAddress) + R(" ") + to_lstring(Program.size)).c_str());
+#else
+		OutputDebugStringA((R("[Program]GlobalPos ") + to_lstring((size_t)GlobalAddress) + R(" ") + to_lstring(GlobalSize)).c_str());
+		OutputDebugStringA((R("[Program]CodePos ") + to_lstring((size_t)ProgramAddress) + R(" ") + to_lstring(Program.size)).c_str());
+#endif // G_UNICODE_
+
 #endif // _WIN32
 
 		try
