@@ -219,7 +219,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 				}
 			}
 			C = maxPrecision(A, B);
-			C.typeName = cmpTK(tk, { R("/"),R("\\") }) ? R("R") : C.typeName;
+			C.typeName = cmpTK(tk, { R("/") }) ? R("R") : C.typeName;
 			C.address = false;
 			type D = C;
 			ret.typeName = cmpTK(tk, { R(">"),R("<"),R(">="),R("<="),R("!="),R("==") }) ? R("Boolen") : C.typeName;
@@ -643,6 +643,16 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 		A.array = false;
 		A.id = allocTmpID(Type_Z);
 		ins(R("num %") + to_lstring(A.id) + R(" ?I") + tk);
+		ret = A;
+		goto RET;
+	}
+	else if (type_ == R("uInt")) {
+		type A{};
+		A.typeName = R("N");
+		A.address = false;
+		A.array = false;
+		A.id = allocTmpID(Type_Z);
+		ins(R("num %") + to_lstring(A.id) + R(" ?uI") + tk);
 		ret = A;
 		goto RET;
 	}
@@ -1624,7 +1634,7 @@ bool IRGenerator::setHasFunction(const analyzed_functionSet& functionSet, lstrin
 }
 type IRGenerator::maxPrecision(const type& A, const type& B) {
 	type t{};
-	t.typeName = precisionLevelToType(max_(precisionLevel(A), precisionLevel(B)));
+	t.typeName = A.typeName==R("N") && B.typeName == R("N") ? R("N") : precisionLevelToType(max_(precisionLevel(A), precisionLevel(B)));
 	return t;
 }
 int IRGenerator::precisionLevel(const type& A) {

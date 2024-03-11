@@ -1,0 +1,92 @@
+Class:uint{
+	Public N:data;
+	_init_()->N:={
+		data=0;
+	}
+	Public +(uint:o)->uint:={
+		uint:tmp.data=o.data+data;
+		return(tmp)
+	}
+	Public -(uint:o)->uint:={
+		uint:tmp.data=data-o.data;
+		return(tmp)
+	}
+	Public *(uint:o)->uint:={
+		uint:tmp.data=o.data*data;
+		return(tmp)
+	}
+	Public /(uint:o)->uint:={
+		uint:tmp.data=o.data/data;
+		return(tmp)
+	}
+	Public =(uint:o)->uint:={
+		uint:tmp.data=o.data;
+		return(tmp)
+	}
+	Public =(N:o)->uint:={
+		uint:tmp.data=o;
+		return(tmp)
+	}
+	Public _new_(N:o)->uint:={
+		uint:tmp.data=o;
+		return(tmp)
+	}
+	Public _new_(Z:o)->uint:={
+		uint:tmp.data=o;
+		return(tmp)
+	}
+	Public and(uint:o)->uint:={
+		N:sum=0;
+		for({N:i=0;N:j=1};i<32;{i=i+1;j=j*2}){
+			sum=sum+(((data\j)%2)*((o.data\j)%2))*j
+		};
+		uint:tmp.data=sum;
+		return(tmp)
+	}
+	Public or(uint:o)->uint:={
+		return(not (not this and not o))
+	}
+	Public xor(uint:o)->uint:={
+		return(not ((not this and o) and (this and not o)))
+	}
+	Public not()->uint:={
+		uint:tmp.data=-data-1;
+		return(tmp)
+	}
+	Public ==(uint:o)->uint:={
+		uint:tmp.data=(o.data==data);
+		return(tmp)
+	}
+	Public !=(uint:o)->uint:={
+		uint:tmp.data=(o.data!=data);
+		return(tmp)
+	}
+	Public <=(uint:o)->uint:={
+		uint:tmp.data=(o.data<=data);
+		return(tmp)
+	}
+	Public >=(uint:o)->uint:={
+		uint:tmp.data=(o.data>=data);
+		return(tmp)
+	}
+	Public >(uint:o)->uint:={
+		uint:tmp.data=(o.data>data);
+		return(tmp)
+	}
+	Public <(uint:o)->uint:={
+		uint:tmp.data=(o.data<data);
+		return(tmp)
+	}
+	Public "N()"()->N:={
+		return(data)
+	}
+	Public "Z()"()->Z:={
+		return(data)
+	}
+}
+
+Main{
+	main()->N:={
+		printZ(uint(4) or uint(1)+uint(2))
+	}
+}

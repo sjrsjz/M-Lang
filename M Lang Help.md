@@ -54,9 +54,9 @@ M Lang支持如下运算符，按优先级排序为
 
 2. **->** *指针到类型*     **+** *绝对值*     **-** *相反数*     **not** *逻辑非*
 
-3. ***** *乘法*     **/** *除法* 
+3. **\* ** *乘法*     **/** *除法* 
 
-4. **%** *求余*    **\\.** *整除*
+4. **%** *求余*   **\\** *整除*
 
 5. **+** *加法*     **-** *减法*
 
@@ -128,8 +128,6 @@ Extra:"DLL Path"{
     ...
 }
 ```
-
-
 
 ###### 变量
 
@@ -213,8 +211,6 @@ World!"
 
 当 "\" 后不匹配转义的时候，解释为原始字面量
 
-
-
 ###### 内置函数
 
 break()
@@ -222,6 +218,10 @@ break()
 continue()
 
 Pause()
+
+Block()
+
+case(Boolen:condition){}
 
 _IR\_(){"ir code"};
 
@@ -234,6 +234,8 @@ if(Boolen:bool){codeA}{codeB};
 while(Boolen:condition){code};
 
 do_while(Boolen:condition){code};
+
+for(init code;Boolen:condition;iterator){code};
 
 return(object)
 
@@ -268,3 +270,49 @@ input(N:buffer,N:num)->N
 memcopy(N:dist,N:src,N:size)->N
 
 CmpMem(N:ptrA,N:ptrB,N:size)->N
+
+
+
+###### 注意:
+
+在M Lang中分号之间的语句算一整个语句（即使语句里包含大括号包括的代码块），因而以下语句是不同的语句：
+
+```
+if(a){    //if a then A else B
+    A
+}{
+    B
+};
+```
+
+```
+if(a){    //if a then A
+    A
+};{
+    B
+};
+```
+
+```
+if(a)    //if a then A() else B()
+    A()
+    B()
+```
+
+
+
+这在 **case** 函数也有体现，具体为：
+
+```
+Block()    //不要在Block()后加分号！
+    case(a){
+    
+    }
+    case(b){
+    
+    }
+    ...
+    case(n){
+    
+    };    //一定要加分号(除了该语句是最后一句)结尾！！！
+```

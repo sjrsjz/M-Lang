@@ -715,7 +715,7 @@ void x86Generator::generate(lstring IR)
 			{
 				codes << 139 << 157;
 				codes += (int)offset3;
-				codes << 153 << 247 << 243 << 137 << 208;
+				codes << 153 << 247 << 251 << 137 << 208;
 			}
 			else if (tk[1] == R("Minus"))
 			{
@@ -775,7 +775,7 @@ void x86Generator::generate(lstring IR)
 			}
 			else if (tk[1] == R("/") || tk[1] == R("\\"))
 			{
-				codes << 153 << 247 << 189;
+				codes << 49 << 210 << 247 << 181;
 				codes += (int)offset3;
 			}
 			else if (tk[1] == R(">"))
@@ -804,7 +804,9 @@ void x86Generator::generate(lstring IR)
 			}
 			else if (tk[1] == R("%"))
 			{
-				codes << 153 << 247 << 243 << 137 << 216;
+				codes << 139 << 157;
+				codes += (int)offset3;
+				codes << 49 << 210 << 247 << 243 << 137 << 208;
 			}
 			else
 			{

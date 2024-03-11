@@ -298,7 +298,7 @@ bool AST::analyze_3(functionSet& functionSet_, function& func, Tree<node>& EX, s
 		if(isNum_(tk[0]) || tk[0].substr(0,1)==R("0")|| tk[0].substr(0, 1) == R("\"")|| tk[0].substr(0, 1) == R("-")){
 			p.token = tk[0];
 			if (isNum_(tk[0]) || tk[0].substr(0, 1) == R("0")) 
-				p.type = (tk[0].find(R(".")) != std::string::npos) ? R("Double") : R("Int");
+				p.type = (tk[0].find(R(".")) != std::string::npos) ? R("Double") : ((tk[0].find(R("-")) != std::string::npos) ? R("Int") : R("uInt"));
 			else 
 				p.type = R("Const");
 			EX.push_back(p);
@@ -382,7 +382,7 @@ bool AST::analyze_3(functionSet& functionSet_, function& func, Tree<node>& EX, s
 			else {
 				var.typeName = var.name;
 				p.token = to_lstring(size(var));
-				p.type = R("Int");
+				p.type = R("uInt");
 				EX.push_back(p);
 				EX.ToChildrenEnd();
 				if (list.has_value()) {
