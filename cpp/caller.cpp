@@ -28,7 +28,7 @@ using namespace MLang;
 
 
 ByteArray<unsigned char>
-MLang::BuildVMInterfaceFunction(const void (*function)(void*, const void* , const std::vector<enum argType>&, const enum argType),
+MLang::BuildVMInterfaceFunction(size_t uid,const void (*function)(size_t, void*, void* , const std::vector<enum argType>&, const enum argType),
 	void* argBuffer, const void* retBuffer, const std::vector<argType>& argType, const enum argType retType, bool cdeclmode) {
 	
 	ByteArray<unsigned char> ret{};
@@ -45,13 +45,16 @@ MLang::BuildVMInterfaceFunction(const void (*function)(void*, const void* , cons
 	ret << X86_PUSH; ret += (int)(size_t)&argType;
 	ret << X86_PUSH; ret += (int)(size_t)retBuffer;
 	ret << X86_PUSH; ret += (int)(size_t)argBuffer;
+	ret << X86_PUSH; ret += (int)(size_t)uid;
 	ret << 184; ret += (int)(size_t)function;
 
 #endif
 #if defined(_WIN64)
+	arg_index = 1;
+
 	for (const auto& x : argType)
 	{
-
+		ret << X64_MOV_RCX << (__int64)uid;
 #ifdef _WIN64
 		arg_offset += ARG_MAX_SIZE;
 		ret << X64_MOV_RAX;
