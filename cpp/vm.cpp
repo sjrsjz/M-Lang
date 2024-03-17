@@ -26,3 +26,5 @@ void MLang::VM::VMInterfaceFunction(size_t uid, void* argBuffer, void* retBuffer
 	}
 
 }
+MLang::VM::VM() {}
+MLang::VM::~VM() {}

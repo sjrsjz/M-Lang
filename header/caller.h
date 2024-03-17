@@ -18,7 +18,7 @@ namespace MLang {
 		ARG_CHAR,
 		ARG_BOOL,
 	};
-	size_t argTypeSize[] = {
+	static size_t argTypeSize[] = {
 		sizeof(int),
 		sizeof(unsigned int),
 		sizeof(short int),
