@@ -1,0 +1,103 @@
+# depslib dependency file v1.0
+1709039644 source:d:\vs projects\m lang\cpp\vm.cpp
+
+1702211739 source:d:\vs projects\m lang\cpp\bytearray.cpp
+
+1709041248 source:d:\vs projects\m lang\cpp\caller.cpp
+
+1710146338 source:d:\vs projects\m lang\cpp\m lang.cpp
+	"../header/Common.h"
+	"../header/Tree.h"
+	"../header/ByteArray.h"
+	"../header/SectionManager.h"
+	"../header/AST.h"
+	"../header/Lexer.h"
+	"../header/IRGenerator.h"
+	"../header/x86.h"
+
+1710146828 d:\vs projects\m lang\header\common.h
+	<iostream>
+	<stdlib.h>
+	<assert.h>
+	<string>
+	<cstring>
+	<optional>
+	<vector>
+	<sstream>
+	<fstream>
+	<codecvt>
+	<unordered_set>
+	<Windows.h>
+	"ByteArray.h"
+
+1709041857 d:\vs projects\m lang\header\bytearray.h
+	<iostream>
+	<stdlib.h>
+	<assert.h>
+	<string>
+	<cstring>
+	<optional>
+	<vector>
+	<sstream>
+	<fstream>
+	<codecvt>
+	<Windows.h>
+
+1710146235 d:\vs projects\m lang\header\tree.h
+	"Common.h"
+
+1706844860 d:\vs projects\m lang\header\sectionmanager.h
+	"Common.h"
+	"ByteArray.h"
+
+1709459802 d:\vs projects\m lang\header\ast.h
+	"Common.h"
+	"Struct.h"
+
+1708340409 d:\vs projects\m lang\header\struct.h
+	"Common.h"
+	"Tree.h"
+
+1700718815 d:\vs projects\m lang\header\lexer.h
+	"Common.h"
+	"Struct.h"
+
+1708395613 d:\vs projects\m lang\header\irgenerator.h
+	"Common.h"
+	"Struct.h"
+	"Tree.h"
+	"AST.h"
+	"base64.h"
+	"ByteArray.h"
+
+1710084272 d:\vs projects\m lang\header\base64.h
+	"Common.h"
+
+1709357918 d:\vs projects\m lang\header\x86.h
+	"SectionManager.h"
+	"Struct.h"
+	"ByteArray.h"
+
+1707036485 source:d:\vs projects\m lang\cpp\sectionmanager.cpp
+
+1702953907 source:d:\vs projects\m lang\cpp\x64.cpp
+	"../header/x64.h"
+
+1702953490 d:\vs projects\m lang\header\x64.h
+	"SectionManager.h"
+
+1710084309 source:d:\vs projects\m lang\cpp\base64.cpp
+
+1710147213 source:d:\vs projects\m lang\cpp\ast.cpp
+
+1710146439 source:d:\vs projects\m lang\cpp\common.cpp
+
+1709477607 source:d:\vs projects\m lang\cpp\irgenerator.cpp
+
+1709471258 source:d:\vs projects\m lang\cpp\lexer.cpp
+
+1710134803 source:d:\vs projects\m lang\cpp\x86.cpp
+	"../header/Common.h"
+	"../header/x86.h"
+	"../header/base64.h"
+

@@ -149,7 +149,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 
 	size_t curr = IR.length();
 	type ret{};
-	node p=EX.Get();
+	node p = EX.Get();
 	lstring tk = p.token, type_ = p.type;
 	if (Error) goto RET;
 	if (type_ == R("Operator")) {
@@ -219,7 +219,7 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 				}
 			}
 			C = maxPrecision(A, B);
-			C.typeName = cmpTK(tk, { R("/"),R("\\") }) ? R("R") : C.typeName;
+			C.typeName = cmpTK(tk, { R("/") }) ? R("R") : C.typeName;
 			C.address = false;
 			type D = C;
 			ret.typeName = cmpTK(tk, { R(">"),R("<"),R(">="),R("<="),R("!="),R("==") }) ? R("Boolen") : C.typeName;
@@ -356,6 +356,19 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 		if (!getVarType(tk, v_type, v_name)) goto RET;
 		type A{};
 		if (v_type == R("Local")) {
+			lstring tk1 = R("Local") + DIVISION + functionSet.name + DIVISION + func.name + DIVISION + R("get(") + v_name + R(")");
+			if (haveFunction(tk1)) {
+				analyzed_function* func0 = getFunction(functionSet, tk1, {}, {});
+				if (func0 && func0->args.size() == 0) {
+					std::vector<type> args{};
+					A = getLocalType(R("[this]"), func);
+					A.id = allocTmpID(Type_N);
+					ins(R("address %") + to_lstring(A.id) + R(" &") + to_lstring(getVarOffset(functionSet, func, tk)));
+					ins(R("load %") + to_lstring(A.id) + R(" %") + to_lstring(A.id) + R(" ") + to_lstring(getStructureSize(R("N"))));
+					buildThisCall(functionSet, func, EX, tk1, *func0, A, args, ret, false);
+					goto RET;
+				}
+			}
 			A = getLocalType(v_name, func);
 			A.id = allocTmpID(Type_N);
 			ins(R("address %") + to_lstring(A.id) + R(" &") + to_lstring(getVarOffset(functionSet, func, tk)));
@@ -440,74 +453,67 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 				args.push_back(compileTree(functionSet, func, EX, {}));
 			} while (EX.next());
 
-			type A{};
-			if (ifMethod(tk)) {
-				analyzed_function* func0 = getFunction(functionSet, tk, args, true);
-				if (func0) {
-					size_t id1 = allocTmpID(Type_N);
-					ins(R("address %") + to_lstring(id1) + R(" &") + to_lstring(getVarOffset(functionSet, func, R("Local") + DIVISION + R("[this]"))));
-					ins(R("load %") + to_lstring(id1) + R(" %") + to_lstring(id1) + R(" ") + to_lstring(getStructureSize(R("N"))));
-					A.typeName = functionSet.name;
-					A.address = true;
-					A.array = false;
-					A.id = id1;
 
-					buildThisCall(functionSet, func, EX, tk, *func0, A, args, ret, false);
-					EX.parent();
-					goto RET;
-				}
-			}
-			std::vector<lstring> funcType = split(tk, DIVISION);
-			lstring tk1{};
-			if (funcType.size() == 3 && funcType[0] == R("Unknown") && funcType[1] == R("Unknown")) {
-				tk1 = R("Local") + DIVISION + funcType[2] + DIVISION + R("_new_");
-			}
-			DebugOutput(">>", tk1);
-			if (haveFunction(tk1)) {
-				analyzed_function* func0 = getFunction(functionSet, tk1, args, {});
-				if (func0) {
-					A.typeName = funcType[2];
-					A.address = true;
-					A.array = false;
-					A.id = allocTmpID(A);
-					
-					if (buildThisCall(functionSet, func, EX, tk1, *func0, A, args, ret, true)) {
-						EX.parent();
-						goto RET;
-					}
-				}
-			}
-
-			func0 = getFunction(functionSet, tk, args, {});
-			if (!func0) {
-				error(R("找不到可以匹配的函数/方法"));
-				goto RET;
-			}
-			size_t i = 0;
-			for (; i < func0->args.size(); i++) {
-				if (i >= args.size()) {
-					error(R("函数调用参数过少"));
-					goto RET;
-				}
-				generateImplictConversion(func0->args[i], args[i], functionSet, func, EX);
-				arg_T += R(" %") + to_lstring(func0->args[i].id);
-			}
-			if (func0->use_arg_size) {
-				while (i < args.size())
-				{
-					type tmp = func0->args[func0->args.size() - 1];
-					generateImplictConversion(tmp, args[i], functionSet, func, EX);
-					arg_T += R(" %") + to_lstring(tmp.id);
-					i++;	
-				}
-			}
 			EX.parent();
 		}
-		else {
-			func0 = getFunction(functionSet, tk, args, {});
-			if (!func0) {
-				error(R("找不到可以匹配的函数/方法"));
+		type A{};
+		if (ifMethod(tk)) {
+			analyzed_function* func0 = getFunction(functionSet, tk, args, true);
+			if (func0) {
+				size_t id1 = allocTmpID(Type_N);
+				ins(R("address %") + to_lstring(id1) + R(" &") + to_lstring(getVarOffset(functionSet, func, R("Local") + DIVISION + R("[this]"))));
+				ins(R("load %") + to_lstring(id1) + R(" %") + to_lstring(id1) + R(" ") + to_lstring(getStructureSize(R("N"))));
+				A.typeName = functionSet.name;
+				A.address = true;
+				A.array = false;
+				A.id = id1;
+
+				buildThisCall(functionSet, func, EX, tk, *func0, A, args, ret, false);
+				
 				goto RET;
+			}
+		}
+		std::vector<lstring> funcType = split(tk, DIVISION);
+		lstring tk1{};
+		if (funcType.size() == 3 && funcType[0] == R("Unknown") && funcType[1] == R("Unknown")) {
+			tk1 = R("Local") + DIVISION + funcType[2] + DIVISION + R("_new_");
+		}
+		//DebugOutput(">>", tk1);
+		if (haveFunction(tk1)) {
+			analyzed_function* func0 = getFunction(functionSet, tk1, args, {});
+			if (func0) {
+				A.typeName = funcType[2];
+				A.address = true;
+				A.array = false;
+				A.id = allocTmpID(A);
+
+				if (buildThisCall(functionSet, func, EX, tk1, *func0, A, args, ret, true)) {
+					goto RET;
+				}
+			}
+		}
+
+		func0 = getFunction(functionSet, tk, args, {});
+		if (!func0) {
+			error(R("找不到可以匹配的函数/方法"));
+			goto RET;
+		}
+		size_t i = 0;
+		for (; i < func0->args.size(); i++) {
+			if (i >= args.size()) {
+				error(R("函数调用参数过少"));
+				goto RET;
+			}
+			generateImplictConversion(func0->args[i], args[i], functionSet, func, EX);
+			arg_T += R(" %") + to_lstring(func0->args[i].id);
+		}
+		if (func0->use_arg_size) {
+			while (i < args.size())
+			{
+				type tmp = func0->args[func0->args.size() - 1];
+				generateImplictConversion(tmp, args[i], functionSet, func, EX);
+				arg_T += R(" %") + to_lstring(tmp.id);
+				i++;
 			}
 		}
 		ret = func0->ret;
@@ -637,6 +643,16 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 		A.array = false;
 		A.id = allocTmpID(Type_Z);
 		ins(R("num %") + to_lstring(A.id) + R(" ?I") + tk);
+		ret = A;
+		goto RET;
+	}
+	else if (type_ == R("uInt")) {
+		type A{};
+		A.typeName = R("N");
+		A.address = false;
+		A.array = false;
+		A.id = allocTmpID(Type_Z);
+		ins(R("num %") + to_lstring(A.id) + R(" ?uI") + tk);
 		ret = A;
 		goto RET;
 	}
@@ -792,8 +808,19 @@ type IRGenerator::compileTree(analyzed_functionSet& functionSet, analyzed_functi
 				error(R("被引用的对象必须为指针"));
 			}
 			else {
+				lstring tk1 = R("Local") + DIVISION + A.typeName + DIVISION + R("get(") + process_quotation_mark(tk) + R(")");
+				if (haveFunction(tk1)) {
+					analyzed_function* func0 = getFunction(functionSet, tk1, {}, {});
+					if (func0 && func0->args.size() == 0) {
+						std::vector<type> args{};
+						buildThisCall(functionSet, func, EX, tk1, *func0, A, args, ret, false);
+						EX.parent();
+						goto RET;
+					}
+				}
 				ins(R("offset %") + to_lstring(A.id) + R(" ") + to_lstring(getElementOffset(functionSet, A.typeName, tk)));
 				ret = getElement(functionSet, A.typeName, tk);
+				DebugOutput(">>", ret.typeName,A.typeName,tk);
 				ret.id = A.id;
 				ret.address = true;
 			}
@@ -865,7 +892,7 @@ type IRGenerator::getElement(analyzed_functionSet& functionSet, lstring struct_,
 				if (y.name != functionSet.name && x.isClass && !y.publiced) {
 					error(R("试图在 ") + struct_ + R(" 中引用未公开的成员 ") + element);
 				}
-				return y;
+				if (y.name == element) return y;
 			}
 		}
 	}
@@ -1042,7 +1069,7 @@ label_handleBuiltInFunctions_1:
 		if (EX.child()) {
 			label++;
 			intptr_t label1 = label;
-			ins(R("#label_while_Start_") + to_lstring(label1));
+			ins(R("#label_Block_Start_") + to_lstring(label1));
 			type A = compileTree(functionSet, func, EX, {});
 			if (A.typeName != R("Boolen") || A.array) {
 				error(R("while语句的条件必须为Boolen类型"));
@@ -1054,17 +1081,17 @@ label_handleBuiltInFunctions_1:
 				ins(R("load %") + to_lstring(id1) + R(" %") + to_lstring(A.id) + R(" ") + to_lstring(getStructureSize(R("Boolen"))));
 				A.id = id1;
 			}
-			ins(R("jz %") + to_lstring(A.id) + R(" #label_while_End_") + to_lstring(label1));
-			loopStartStack.push_back(R("#label_while_Start_") + to_lstring(label1));
-			loopEndStack.push_back(R("#label_while_End_") + to_lstring(label1));
+			ins(R("jz %") + to_lstring(A.id) + R(" #label_Block_End_") + to_lstring(label1));
+			loopStartStack.push_back(R("#label_Block_Start_") + to_lstring(label1));
+			loopEndStack.push_back(R("#label_Block_End_") + to_lstring(label1));
 
 			if (EX.next()) {
 				generateLine(functionSet, func, EX);
 			}
 			loopStartStack.pop_back();
 			loopEndStack.pop_back();
-			ins(R("jmp #label_while_Start_") + to_lstring(label1));
-			ins(R("#label_while_End_") + to_lstring(label1));
+			ins(R("jmp #label_Block_Start_") + to_lstring(label1));
+			ins(R("#label_Block_End_") + to_lstring(label1));
 			EX.parent();
 			return true;
 		}
@@ -1073,8 +1100,8 @@ label_handleBuiltInFunctions_1:
 		if (EX.child()) {
 			label++;
 			intptr_t label1 = label;
-			ins(R("jmp #label_do_while_A_") + to_lstring(label1));
-			ins(R("#label_do_while_Start_") + to_lstring(label1));
+			ins(R("jmp #label_Block_A_") + to_lstring(label1));
+			ins(R("#label_Block_Start_") + to_lstring(label1));
 			type A = compileTree(functionSet, func, EX, {});
 			if (A.typeName != R("Boolen") || A.array) {
 				error(R("do_while语句的条件必须为Boolen类型"));
@@ -1086,19 +1113,19 @@ label_handleBuiltInFunctions_1:
 				ins(R("load %") + to_lstring(id1) + R(" %") + to_lstring(A.id) + R(" ") + to_lstring(getStructureSize(R("Boolen"))));
 				A.id = id1;
 			}
-			ins(R("jz %") + to_lstring(A.id) + R(" #label_do_while_End_") + to_lstring(label1));
+			ins(R("jz %") + to_lstring(A.id) + R(" #label_Block_End_") + to_lstring(label1));
 			if (!EX.next()) {
 				error(R("do_while语句的循环体不能为空"));
 				return false;
 			}
-			ins(R("#label_do_while_A_") + to_lstring(label1));
-			loopStartStack.push_back(R("#label_do_while_Start_") + to_lstring(label1));
-			loopEndStack.push_back(R("#label_do_while_End_") + to_lstring(label1));
+			ins(R("#label_Block_A_") + to_lstring(label1));
+			loopStartStack.push_back(R("#label_Block_Start_") + to_lstring(label1));
+			loopEndStack.push_back(R("#label_Block_End_") + to_lstring(label1));
 			generateLine(functionSet, func, EX);
 			loopStartStack.pop_back();
 			loopEndStack.pop_back();
-			ins(R("jmp #label_do_while_Start_") + to_lstring(label1));
-			ins(R("#label_do_while_End_") + to_lstring(label1));
+			ins(R("jmp #label_Block_Start_") + to_lstring(label1));
+			ins(R("#label_Block_End_") + to_lstring(label1));
 			EX.parent();
 			return true;
 		}
@@ -1194,6 +1221,100 @@ label_handleBuiltInFunctions_1:
 			}
 		}
 	}
+	else if (name == getFullName(R("Block"), *functionSet0)) {
+		label++;
+		size_t label1 = label;
+		if (EX.child()) {
+			ins(R("#label_Block_Start_") + to_lstring(label1));
+			loopStartStack.push_back(R("#label_Block_Start_") + to_lstring(label1));
+			loopEndStack.push_back(R("#label_Block_End_") + to_lstring(label1));
+			error_lineStack.push_back(error_line);
+			error_line = 0;
+			do
+			{
+				generateLine(functionSet, func, EX);
+				error_line++;
+			} while (EX.next());
+			error_line = error_lineStack.back();
+			error_lineStack.pop_back();
+			ins(R("#label_Block_End_") + to_lstring(label1));
+			loopEndStack.pop_back();
+			loopStartStack.pop_back();
+			EX.parent();
+			return true;
+		}
+	}
+	else if (name == getFullName(R("case"), *functionSet0)) {
+		if (EX.child()) {
+			type A = compileTree(functionSet, func, EX, {});
+			if (A.typeName != R("Boolen") || A.array) {
+				error(R("case语句的条件必须为Boolen类型"));
+				EX.parent();
+				return false;
+			}
+			if (A.address) {
+				size_t id1 = allocTmpID(Type_Boolen);
+				ins(R("load %") + to_lstring(id1) + R(" %") + to_lstring(A.id) + R(" ") + to_lstring(getStructureSize(R("Boolen"))));
+				A.id = id1;
+			}
+			label++;
+			size_t label1 = label;
+			ins(R("jz %") + to_lstring(A.id) + R(" #label_case_") + to_lstring(label1));
+			while (EX.next()) {
+				generateLine(functionSet, func, EX);
+			}
+			ins(R("jmp ") + loopEndStack.back());
+			ins(R("#label_case_") + to_lstring(label1));
+			EX.parent();
+			return true;
+		}
+	}
+	else if (name == getFullName(R("for"), *functionSet0)) {
+		if (EX.child()) {
+			type A = compileTree(functionSet, func, EX, {});
+			if (EX.next()) {
+				label++;
+				size_t label1 = label;
+				ins(R("#label_Block_Start_") + to_lstring(label1));
+				loopStartStack.push_back(R("#label_Block_Start_") + to_lstring(label1));
+				loopEndStack.push_back(R("#label_Block_End_") + to_lstring(label1));
+				type A = compileTree(functionSet, func, EX, {});
+				if (A.typeName != R("Boolen") || A.array) {
+					error(R("for语句的条件必须为Boolen类型"));
+					EX.parent();
+					return false;
+				}
+				if (A.address) {
+					size_t id1 = allocTmpID(Type_Boolen);
+					ins(R("load %") + to_lstring(id1) + R(" %") + to_lstring(A.id) + R(" ") + to_lstring(getStructureSize(R("Boolen"))));
+					A.id = id1;
+				}
+				ins(R("jz %") + to_lstring(A.id) + R(" ") + loopEndStack.back());
+				if (EX.next()) {
+					std::vector<Tree<node>> trees{};
+					Tree<node>* curr = EX.LocateCurrentTree();
+					while (EX.next()) {
+						trees.push_back(*curr);
+						trees.back().reset();
+						curr = EX.LocateCurrentTree();
+					}
+					generateLine(functionSet, func, EX);
+					for (size_t i = 0; i < trees.size(); i++) {
+						generateLine(functionSet, func, trees[i]);
+					}
+					
+					ins(R("jmp ") + loopStartStack.back());
+					
+				}
+				loopEndStack.pop_back();
+				loopStartStack.pop_back();
+				ins(R("#label_Block_End_") + to_lstring(label1));
+			}
+			EX.parent();
+			return true;
+		}
+	}
+
 	else if (name == getFullName(R("break"), *functionSet0)) {
 		if (loopEndStack.size()) {
 			ins(R("jmp ") + loopEndStack.back());
@@ -1513,7 +1634,7 @@ bool IRGenerator::setHasFunction(const analyzed_functionSet& functionSet, lstrin
 }
 type IRGenerator::maxPrecision(const type& A, const type& B) {
 	type t{};
-	t.typeName = precisionLevelToType(max_(precisionLevel(A), precisionLevel(B)));
+	t.typeName = A.typeName==R("N") && B.typeName == R("N") ? R("N") : precisionLevelToType(max_(precisionLevel(A), precisionLevel(B)));
 	return t;
 }
 int IRGenerator::precisionLevel(const type& A) {
@@ -1928,6 +2049,7 @@ bool IRGenerator::analyze(
 	size_t tmp2 = allocTmpID(Type_R);
 	initSetVars(globalVars, tmp, 0, R("$"), false);
 	size_t j = countVarSize(globalVars);
+	size_t j_0 = j;
 	for (auto& x : analyzed_functionSets) {
 		if (!x.isClass) {
 			initSetVars(x.local, tmp, j, R("$"), false);
@@ -1938,6 +2060,14 @@ bool IRGenerator::analyze(
 	IR.insert(curr, tmpCode);
 	tmpCode = tmpCodeStack.back();
 	tmpCodeStack.pop_back();
+	destroySetVars(globalVars, tmp, 0, R("$"), false);
+	j = j_0;
+	for (auto& x : analyzed_functionSets) {
+		if (!x.isClass) {
+			destroySetVars(x.local, tmp, j, R("$"), false);
+			j += x.size;
+		}
+	}
 	//ins(R("loadQ %") + to_lstring(tmp2));
 	ins(R("tmpEnd"));
 	analyzed_functionSet* MainSet{};

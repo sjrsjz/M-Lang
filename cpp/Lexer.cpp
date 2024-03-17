@@ -60,10 +60,10 @@ intptr_t Lexer::analyze_function(functionSet& set, lstring space, std::vector<ls
     intptr_t ip_ = ip;
     std::vector<lstring> head{};
     if (ip + 1 > tks.size()) return ip;
-    while (iftk(tks, R("["), ip) && iftk(tks, R("]"), ip + 2))
-    {
-        head.push_back(process_quotation_mark(tks[ip]));
-        ip += 3;
+    while (!iftk(tks, R("("), ip + 1) && ip <= tks.size()) {
+        if (tks[ip - 1] == R(";")) return ip_;
+        head.push_back(process_quotation_mark(tks[ip - 1]));
+        ip += 1;
     }
     if (!iftk(tks, R("("), ip + 1)) return ip_;
     lstring t1; t1 = process_quotation_mark(tks[ip - 1]);
@@ -113,7 +113,7 @@ intptr_t Lexer::analyze_function(functionSet& set, lstring space, std::vector<ls
     }
     SubTokens(tks, tk0, ip + 1, final - 1);
     ip0 = 1;
-    ip1 = search(tk0, R(";"), 0, ip0, 0);
+    ip1 = search(tk0, R(";"), 0, ip0 - 1, 0);
     func.codes.resize(0);
     func.local.resize(0);
     code code0{};
@@ -122,7 +122,7 @@ intptr_t Lexer::analyze_function(functionSet& set, lstring space, std::vector<ls
         code0.tokens = tk1;
         func.codes.push_back(code0);
         ip0 = ip1 + 1;
-        ip1 = search(tk0, R(";"), 0, ip0, 0);
+        ip1 = search(tk0, R(";"), 0, ip0 - 1, 0);
     }
     SubTokens(tk0, tk1, ip0, tk0.size());
     code0.tokens = tk1;
@@ -152,12 +152,16 @@ intptr_t Lexer::analyze_function(functionSet& set, lstring space, std::vector<ls
     return final + 1;
 }
 intptr_t Lexer::analyze_externedFunction(functionSet& set, lstring DLL, std::vector<lstring> tks, size_t ip) {
-    if (ip + 6 > tks.size() || tks[ip] != R("(")) return ip;
+    if (tks[ip - 1] == R("(")) return ip;
+    if (tks[ip - 1] == R(";")) return ip + 1;
+    size_t ip_ = ip;
     std::vector<lstring> head{}, tk0{}, tk1{};
-    while (iftk(tks, R("["), ip) && iftk(tks, R("]"), ip + 2)) {
-        head.push_back(process_quotation_mark(tks[ip]));
-        ip += 3;
+    while (!iftk(tks, R("("), ip + 1) && ip <= tks.size()) {
+        if (tks[ip - 1] == R(";")) return ip_;
+        head.push_back(process_quotation_mark(tks[ip - 1]));
+        ip += 1;
     }
+    if (!iftk(tks, R("("), ip + 1)) return ip_;
     lstring name = process_quotation_mark(tks[ip - 1]);
     intptr_t final = search(tks, R(")"), 0, ip + 1, -1);
     if (final == -1) {
@@ -213,6 +217,11 @@ intptr_t Lexer::analyze_externedFunction(functionSet& set, lstring DLL, std::vec
         else if (head[i] == R("ArgSize")) func.use_arg_size = true;
         else { error(tks, R("非法前缀:") + head[i], ip); return -1; }
     }
+    for (const auto& x : set.func) {
+        if (x.name == func.name) {
+            final + 2;
+		}
+    }
     set.func.push_back(func);
     return final + 2;
 
@@ -228,17 +237,21 @@ intptr_t Lexer::analyze_setVars(functionSet& set, lstring space, std::vector<lst
     if (final == -1) final = tks.size() + 1;
     SubTokens(tks, tk0, ip, final - 1);
     if (analyze_vars(tk0, var)) {
+        for (const auto& x : set.local) {
+            if (x.name == var.name) { error(tks, R("变量重定义:") + var.name, ip); return final + 1; }
+        }
         set.local.push_back(var); return final + 1;
     }
     else return ip;
 }
 bool Lexer::analyze_vars(std::vector<lstring> tks, type& var) {
-    lstring head{};
+    std::vector<lstring> head{};
     intptr_t final{}, offset{}, lp{};
     std::vector<size_t> dim{};
-    if (iftk(tks, R("["), 1) && iftk(tks, R("]"), 3)) {
-        head = process_quotation_mark(tks[1]);
-        offset = 3;
+    if (!iftk(tks, R(":"), offset + 2) && offset + 1<= tks.size()) {
+        if (tks[offset] == R(";")) return false;
+        head.push_back(process_quotation_mark(tks[offset]));
+        offset++;
     }
     if (iftk(tks, R(":"), offset + 2) && (intptr_t)tks.size() >= offset + 3) {
         var.typeName = process_quotation_mark(tks[offset]);
@@ -247,9 +260,11 @@ bool Lexer::analyze_vars(std::vector<lstring> tks, type& var) {
         var.dim = dim;
         lp = tks.size() + 1;
         if (final == lp) {
-            if (head == R("Public")) var.publiced = true;
-            else if (head == R("Private") || head == R("")) var.publiced = false;
-            else { error(tks, R("非法前缀:") + head, 2); }
+            for (const auto& x : head) {
+                if (x == R("Public")) var.publiced = true;
+                else if (x == R("Private") || x == R("")) var.publiced = false;
+                else { error(tks, R("非法前缀:") + x, 2); return false; }
+            }
             return true;
         }
     }
@@ -266,6 +281,7 @@ intptr_t Lexer::analyze_externedFunctionSet(std::vector<lstring> tks, size_t ip)
             return -1;
         }
         SubTokens(tks, tk1, ip + 4, final - 1);
+        ip1 = 1;
         while (ip1 <= (intptr_t)tk1.size()) {
             ip0 = ip1;
             ip1 = analyze_externedFunction(ExternFunctions, Extra, tk1, ip1);
@@ -305,15 +321,30 @@ intptr_t Lexer::analyze_functionSet(std::vector<lstring> tks, size_t ip) {
         set.func.clear();
         set.local.clear();
         lexical_analyze(set, R(""), tk0);
-        functionSets.push_back(set);
         if (set.isClass) {
             struct0.name = set.name;
             struct0.size = 0;
             struct0.publiced = set.publiced;
             struct0.elements = set.local;
             struct0.isClass = true;
-            structures.push_back(struct0);
+            for (auto& x : structures) {
+                if (x.name == struct0.name) {
+                    x.elements.insert(x.elements.end(), struct0.elements.begin(), struct0.elements.end());
+                    x.elements.insert(x.elements.end(), struct0.elements.begin(), struct0.elements.end());
+                    goto Label1;
+				}
+            }
+            structures.push_back(struct0); 
         }
+    Label1:
+        for (auto& x : functionSets) {
+            if (x.name == set.name) {
+                x.local.insert(x.local.end(), set.local.begin(), set.local.end());
+                x.local.insert(x.local.end(), set.local.begin(), set.local.end());
+                return final + 1;
+            }
+        }
+        functionSets.push_back(set);
         return final + 1;
     }
     return ip0;
@@ -328,6 +359,12 @@ intptr_t Lexer::analyze_globalVars(std::vector<lstring> tks, size_t ip) {
     SubTokens(tks, tk0, ip, final - 1);
     DebugOutput(tk0);
     if (analyze_vars(tk0, var)) {
+        for (const auto& x : globals) {
+			if (x.name == var.name) {
+				error(tks, R("变量重定义:") + var.name, ip);
+				return final + 1;
+			}
+		}
         globals.push_back(var);
         return final + 1;
     }
@@ -465,10 +502,24 @@ bool Lexer::analyze_type(std::vector<lstring>& tk, type& var) {
     }
     return false;
 }
+bool fileExist(lstring path) {
+#if  G_UNICODE_
+    std::wifstream fin{};
+    std::wstring buf;
+#else
+    std::ifstream fin{};
+    std::string buf;
+#endif
+	fin.open(path.c_str(), std::ios::in);
+	if (!fin.is_open()) return false;
+	fin.close();
+	return true;
+}
 void Lexer::preprocesser(std::vector<lstring>& tk) {
     size_t i{}, size{};
     std::vector<lstring> ttk{};
     lstring t{}, t2{}, t3{}, path{}, file{}, a{}, b{};
+    std::unordered_set<lstring> set{};
     while (i<tk.size())
     {
         
@@ -480,9 +531,18 @@ void Lexer::preprocesser(std::vector<lstring>& tk) {
                 if (i + 3 <= tk.size() && tk[i] == R("<") && tk[i + 2] == R(">")) {
                     t3 = tk[i + 1];
                     path = process_quotation_mark((t3.substr(0, 1) == R("@")) ? t3.substr(2, t3.size() - 2) : t3);
-                    file = readFileString((t3.substr(0, 1) == R("@")) ? path : workPath + path);
-                    cut_tokens(file, ttk);
-                    tk.insert(tk.end(),ttk.begin(),ttk.end());
+                    lstring path_ = (t3.substr(0, 1) == R("@")) ? path : workPath + path;
+                    //if path_ does not exist
+                    if (!fileExist(path_)) {
+						error(tk, R("文件不存在:") + path_, i);
+                        return;
+					}
+                    if (set.find(path_)==set.end()) {
+                        file = readFileString(path_);
+                        cut_tokens(file, ttk);
+                        tk.insert(tk.end(),ttk.begin(),ttk.end());
+                    }
+                    set.insert(path_);
                     tk.erase(tk.begin() + i - 1, tk.begin() + i + 4);
                     i--;
                 }

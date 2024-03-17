@@ -1,0 +1,40 @@
+﻿#include<"Utils.txt">;
+
+Extra:"Bass.dll"{
+	BASS_StreamFree(
+		N:hStream)->Z:=BASS_StreamFree;
+		
+	BASS_Init(
+		Z:iDevice,
+		N:dwFreq,
+		N:dwFlags,
+		N:hWnd,
+		N:pclsid)->N:=BASS_Init;
+
+	BASS_StreamCreateFile(
+		Z:bMem,
+		N:pFile,
+		N:ullOffsetLo,
+		N:ullOffsetHi,
+		N:ullLenLo,
+		N:ullLenHi,
+		N:dwFlags)->Z:=BASS_StreamCreateFile;
+}
+
+Main{
+main()->N:={
+	B:szInput[512];
+	InputEx(szInput,256);
+
+	Z:b=BASS_Init(-1,44100,0,0,0);
+	if(b==0)
+	{
+		print("Bass failed to load!");
+		return(0);
+	};
+	
+	b=BASS_StreamCreateFile(0,szInput,0,0,0,0,2147483648);
+	printN(b);
+	return(0);
+}
+}

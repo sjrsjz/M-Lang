@@ -43,7 +43,7 @@ public:
         pointer = o.pointer;
         located = o.located;
     }
-    ~Tree() { data.~T(); }
+    ~Tree(){}
     bool next() {
         Tree* c = LocateParentTree(nullptr);
         Tree* curr = LocateCurrentTree();
@@ -130,7 +130,6 @@ public:
     bool push_back(const T& o) {
         Tree* c = LocateCurrentTree();
         if (!c) { nodes.clear(); pointer = 0; data = o; located = true; return true; }
-        if (c->pointer > (intptr_t)c->nodes.size()) return false;
         Tree t;
         t.data = o;
         c->nodes.push_back(t);
@@ -148,7 +147,6 @@ public:
     bool push_back(const Tree& o) {
         Tree* c = LocateCurrentTree();
         if (!c) { pointer = 0; nodes = o.nodes; located = true; return true; }
-        if (c->pointer > (intptr_t)c->nodes.size()) return false;
         c->nodes.push_back(o);
         return true;
     }
@@ -185,4 +183,38 @@ public:
         while (next());
         return true;
     }
+    size_t getDepth() {
+        Tree* c = LocateCurrentTree();
+		size_t depth = 0;
+        while (c->haveParent()) {
+			c = c->LocateParentTree(nullptr);
+			depth++;
+		}
+		return depth;
+    }
+
+    void LocateCurrentTree (std::vector<size_t>& list) {
+        if (located) return;
+        if (pointer >= (intptr_t)nodes.size() || pointer < 0) return;
+        list.push_back(pointer);
+        nodes[pointer].LocateCurrentTree(list);
+    }
+
+    std::vector<size_t> getLocationList() {
+        std::vector<size_t> list;
+        LocateCurrentTree(list);
+		return list;
+    }
+    bool setLocationList(const std::vector<size_t>& list) {
+		Tree* c = this;
+        c->located = false;
+        for (size_t i = 0; i < list.size(); i++) {
+			if (list[i] >= c->size()) return false;
+			c = &c->nodes[list[i]];
+            c->pointer=list[i];
+            c->located = false;
+		}
+		c->located = true;
+		return true;
+	}
 };

@@ -1,0 +1,38 @@
+#include<"Utils.txt">;
+#include<"Bass.txt">;
+
+
+Main{
+main()->N:={
+	print("  >>> 低音爱慕浪 <<<\n输入文件名：");
+
+	B:szInput[512];
+	InputEx(szInput,256);
+	
+	print("\n");
+	
+	Z:b=BASS_Init(-1,44100,0,0,0);
+	if(b==0)
+	{
+		print("Bass初始化失败！\n");
+		return(0);
+	}
+	{
+		print("OK！\n");
+	};
+	
+	N:hStream=BASS_StreamCreateFile(0,szInput,0,0,0,0,2147483648);
+	if(hStream==0)
+	{
+		print("打开失败！");
+		BASS_Free();
+		return(0);
+	}
+	{
+		print("打开成功");
+	};
+	BASS_ChannelPlay(hStream,1);
+	while(1<2){};
+	return(0);
+}
+}

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "Common.h"
 #include "ByteArray.h"
 
@@ -18,7 +18,7 @@ namespace MLang {
 		ARG_CHAR,
 		ARG_BOOL,
 	};
-	size_t argTypeSize[] = {
+	static size_t argTypeSize[] = {
 		sizeof(int),
 		sizeof(unsigned int),
 		sizeof(short int),
@@ -29,12 +29,12 @@ namespace MLang {
 		sizeof(unsigned long long int),
 		sizeof(float),
 		sizeof(double),
-		sizeof(char),
+		sizeof(char) * 2,
 		sizeof(bool)
 	};
 
 
-	ByteArray<unsigned char>BuildVMInterfaceFunction(const void (*function)(void*, const void*, const std::vector<enum argType>&, const enum argType),
+	ByteArray<unsigned char>BuildVMInterfaceFunction(size_t uid, const void (*function)(size_t, void*, void*, const std::vector<enum argType>&, const enum argType),
 			void* argBuffer, const void* retBuffer, const std::vector<argType>& argType, const enum argType retType, bool cdeclmode);
 }
 

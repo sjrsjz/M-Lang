@@ -1,0 +1,37 @@
+#include<"Utils.txt">;
+
+Main{
+main()->N:={
+	B:szInput[1024];
+	WIN32_FIND_DATAW:wfd;
+	N:hFind;
+	N:c=1;
+	N:cch=0;
+
+	cch=InputEx(szInput,512);
+
+	hFind=FindFirstFileW(szInput,wfd);
+	if(hFind==-1)
+	{
+		print("\n枚举文件失败！");
+		return(0);
+	};
+	
+	print("\n");
+	print(&wfd.cFileName);
+	print("\n");
+	
+	while(FindNextFileW(hFind,wfd)!=0)
+	{
+		print(&wfd.cFileName);
+		print("\n");
+		c=c+1;
+	};
+	FindClose(hFind);
+	
+	print("枚举文件完成，共有 ");
+	printN(c);
+	print(" 个文件/文件夹");
+	return(0);
+}
+}

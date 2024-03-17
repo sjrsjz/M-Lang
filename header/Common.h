@@ -1,25 +1,38 @@
 ﻿#pragma once
+
 #ifndef _COMMON_HEAD_
 #define _COMMON_HEAD_
 #include <iostream>
 #include <stdlib.h>
 #include <assert.h>
 #include <string>
+#include <cstring>
 #include <optional>
 #include <vector>
 #include <sstream>
 #include <fstream>
 #include <codecvt>
+#include <unordered_set>
+
+#ifdef _MSC_VER
+#define LOCALE(x) imbue(std::locale(x));
+#define LOCALE_WCOUT std::wcout.LOCALE("zh-CN")
+#define LOCALE_FIN fin.LOCALE("zh-CN.utf8")
+#else
+#define LOCALE(x) ;
+#define LOCALE_WCOUT ;
+#define LOCALE_FIN ;
+#endif
 
 #define G_X64_ _WIN64
-#define G_UNICODE_ UNICODE
+#define G_UNICODE_ 1
 
 #if defined(_WIN32) || defined(_WIN64)
 #include <Windows.h>
 #endif // _WIN32 || _WIN64
 
 
-#ifdef G_UNICODE_
+#if G_UNICODE_
 typedef std::wstring lstring;
 typedef std::wstringstream lstringstream;
 typedef wchar_t lchar;
@@ -40,14 +53,25 @@ typedef std::stringstream lstringstream;
 #define st_size_t(x) std::stoull(x)
 #define st_intptr_t(x) std::stoll(x)
 #else
-#define st_size_t(x) std::stoul(x)
-#define st_intptr_t(x) std::stol(x)
+#define st_size_t(x) std::stoull(x)
+#define st_intptr_t(x) std::stoll(x)
 #endif // X64
 #endif // !_COMMON_HEAD_
 
 #include "ByteArray.h"
 
 #define foreach(x, y) for(auto y=x.begin();y<x.end();y++)
+
+#if defined _MSC_VER
+#define _stdcall __stdcall
+#define _cdecl __cdecl
+
+#elif defined __GNUC__
+#define _stdcall __attribute__((__stdcall__))
+#define _cdecl __attribute__((__cdecl__))
+
+#endif // _MSC_VER
+
 
 #define RESET   R("\033[0m")
 #define BLACK   R("\033[30m")      /* Black */
@@ -85,15 +109,16 @@ namespace MLang {
     lstring RemoveSpaceLR(lstring str);
     lstring subreplace(lstring resource_str, lstring sub_str, lstring new_str);
     bool isNum(lstring str);
-    bool isNum_(lstring str);
+    bool isNum_(const lstring &s);
     void output(std::vector<lstring> tk,lstring str,intptr_t pos);
     lstring gather(std::vector<lstring> tks, size_t c);
-    lstring readFileString(lstring path);
+    lstring readFileString(const lstring& path);
     lstring getDictionary(lstring path);
-    template<typename T>
-    inline ByteArray<T> readFileByteArray(lstring path) {
+    template <typename T>
+    inline ByteArray<T> readFileByteArray(const lstring &path)
+    {
         std::ifstream fin{};
-        fin.open(path, std::ios::in | std::ios::binary);
+        fin.open(path.c_str(), std::ios::in | std::ios::binary);
         if (!fin.is_open()) return ByteArray<T>{};
         fin.seekg(0, std::ios::end);
         size_t size = fin.tellg();
@@ -104,10 +129,10 @@ namespace MLang {
         return buf;
     }
 
-    bool writeFileString(lstring path, lstring str);
+    bool writeFileString(const lstring &path, lstring str);
     bool inline writeFileByteArray(lstring path, ByteArray<> data) {
         std::ofstream fout{};
-        fout.open(path, std::ios::out | std::ios::binary);
+        fout.open(path.c_str(), std::ios::out | std::ios::binary);
         if (!fout.is_open()) return false;
         fout.write(reinterpret_cast<char*>(data.ptr), data.size * sizeof(data.ptr[0]));
         fout.close();
@@ -120,27 +145,36 @@ namespace MLang {
     //convert string to wstring
     inline std::wstring to_wide_string(const std::string& input)
     {
-#pragma warning(suppress : 4996)
-        std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-#pragma warning(suppress : 4996)
-        return converter.from_bytes(input);
+
+        std::mbstate_t state = std::mbstate_t();
+        std::wstring ret(input.size(), 0);
+        const char *data = input.data();
+        wchar_t *ptr = &ret[0];
+        std::locale loc;
+        size_t res = std::use_facet<std::codecvt<wchar_t, char, std::mbstate_t>>(loc).in(state, data, data + input.size(), data, ptr, ptr + ret.size(), ptr);
+        ret.resize(ptr - &ret[0]);
+        return ret;
+
     }
     inline std::wstring to_wide_string(const std::wstring& input) {
         return input;
     }
-
-    //convert wstring to string 
+    //convert wstring to string
     inline std::string to_byte_string(const std::wstring& input)
     {
-#pragma warning(suppress : 4996)
-        std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-#pragma warning(suppress : 4996)
-        return converter.to_bytes(input);
+        std::mbstate_t state = std::mbstate_t();
+        std::string ret(input.size(), 0);
+        const wchar_t *data = input.data();
+        char *ptr = &ret[0];
+        std::locale loc;
+        size_t res = std::use_facet<std::codecvt<wchar_t, char, std::mbstate_t>>(loc).out(state, data, data + input.size(), data, ptr, ptr + ret.size(), ptr);
+        ret.resize(ptr - &ret[0]);
+        return ret;
     }
     inline std::string to_byte_string(const std::string& input) {
         return input;
     }
-   
+
     // 默认情况：is_vector为false
     template<typename T,typename... Types>
     struct is_vector : std::false_type {};
@@ -168,9 +202,20 @@ namespace MLang {
             ss << "}";
         }
         else {
-            if constexpr (std::is_same<decltype(data), const lstring&>::value) {
-				ss << R("\"") << data << R("\"");
-			}
+            if constexpr (std::is_same<decltype(data), const std::string&>::value) {
+#if G_UNICODE_
+                ss << R("\"") << to_wide_string(data) << R("\"");
+#else
+                ss << R("\"") << data << R("\"");
+#endif // G_UNICODE_
+            }
+            else if constexpr (std::is_same<decltype(data), const std::wstring&>::value) {
+#ifdef G_UNICODE_
+                ss << R("\"") << data << R("\"");
+#else
+                ss << R("\"") << to_byte_string(data) << R("\"");
+#endif // G_UNICODE_
+            }
             else {
 				ss << data;
 			}
@@ -185,9 +230,14 @@ namespace MLang {
     void DebugOutput(const T& data, const Types&... args) {
 #if _DEBUG
         lstring tmp = DebugOutputString(data, args...).str();
-#if defined(_WIN32) || defined(_WIN64)
-        OutputDebugString(tmp.c_str());
-        OutputDebugString(R("\n"));
+#if (defined(_WIN32) || defined(_WIN64)) //&& defined(_MSC_VER)
+#if G_UNICODE_
+        OutputDebugStringW(tmp.c_str());
+        OutputDebugStringW(R("\n"));
+#else
+        OutputDebugStringA(tmp.c_str());
+        OutputDebugStringA(R("\n"));
+#endif // G_UNICODE_
 #else
         std::cout << tmp << std::endl;
 #endif

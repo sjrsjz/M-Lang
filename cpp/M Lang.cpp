@@ -11,6 +11,7 @@
 #include "../header/x86.h"
 #endif // WIN32
 
+
 using namespace MLang;
 
 void NewType(std::vector<structure>& structure_, lstring name, bool publiced, size_t size) {
@@ -55,6 +56,7 @@ void PrepareLexer(Lexer& lex) {
     type ret{};
     functionSet builtIn{};
     ret.typeName = R("N");
+    NewBuiltInFunction(builtIn, R("Block"), args, ret, false);
     NewBuiltInFunction(builtIn, R("break"), args, ret, false);
     NewBuiltInFunction(builtIn, R("continue"), args, ret, false);
     NewBuiltInFunction(builtIn, R("Pause"), args, ret, false);
@@ -68,7 +70,7 @@ void PrepareLexer(Lexer& lex) {
     NewBuiltInFunction(builtIn, R("if"), args, ret, false);
     NewBuiltInFunction(builtIn, R("while"), args, ret, false);
     NewBuiltInFunction(builtIn, R("do_while"), args, ret, false);
-    NewBuiltInFunction(builtIn, R("switch"), args, ret, false);
+    NewBuiltInFunction(builtIn, R("case"), args, ret, false);
     args[0].typeName = R("N");
     NewBuiltInFunction(builtIn, R("return"), args, ret, false);
     NewBuiltInFunction(builtIn, R("print"), args, ret, true);
@@ -124,7 +126,8 @@ void PrepareLexer(Lexer& lex) {
     NewBuiltInFunction(builtIn, R("memcopy"), args, ret, false);
     ret.typeName = R("Boolen");
     NewBuiltInFunction(builtIn, R("CmpMem"), args, ret, false);
-
+    args[2].typeName = R("Boolen");
+    NewBuiltInFunction(builtIn, R("for"), args, ret, false);
 
 
     Lexer lex2{};
@@ -140,7 +143,7 @@ void PrepareLexer(Lexer& lex) {
 }
 
 bool IR2MEXE(const lstring& ir,ByteArray<unsigned char>& mexe) {
-#ifdef _WIN32
+#if _WIN32 and !(defined _WIN64)
     x86Generator x86{};
     x86.generate(ir);
     if (x86.Error) {
@@ -174,15 +177,16 @@ bool IR2MEXE(const lstring& ir,ByteArray<unsigned char>& mexe) {
     mexe = sm.build();
     return true;
 #endif
+    return false;
 }
 
 int test(int argn,char* argv[])
 {
     Lexer lex{};
 
-#ifdef G_UNICODE_
-	std::wcout.imbue(std::locale("zh_CN"));
-#endif 
+#if G_UNICODE_
+    LOCALE_WCOUT
+#endif
 
     bool err = lex.analyze(R(R"ABC(
 
@@ -202,7 +206,7 @@ _string_{
     }
 }
 Class:string{
-    [Public]N:ad;[Public]N:size;
+    Public N:ad;Public N:size;
     _init_()->N:={
         ad=0;size=0
     }
@@ -213,20 +217,20 @@ Class:string{
     _string_:={
         N:ad,N:size
     }
-    [Public]"return(string)"(string:s)->N:={//prevent RAII destroys data
+    Public "return(string)"(string:s)->N:={//prevent RAII destroys data
         _destroy_();
         ad=new(s.size);
         size=s.size;
         memcopy(ad,s.ad,size);
     }
-    [Public]=(string:s)->string:={
+    Public =(string:s)->string:={
         _destroy_();
-        ad=new(s.size); 
+        ad=new(s.size);
         size=s.size;
         memcopy(ad,s.ad,s.size);
         return(this)
     }
-    [Public]const(N:str)->N:={
+    Public const(N:str)->N:={
         _destroy_();
         N:i=0;
         while(N(str+i)->B!=0 or N(str+i+1)->B!=0){i=i+2};
@@ -234,7 +238,7 @@ Class:string{
         ad=new(size);
         memcopy(ad,str,size);
     }
-    [Public]+(string:s)->string:={
+    Public +(string:s)->string:={
         string:tmp;
         if(size!=0){
             tmp.size=s.size+size-2;
@@ -246,7 +250,7 @@ Class:string{
         };
         return(tmp)
     }
-    [Public]*(N:times)->string:={
+    Public *(N:times)->string:={
         string:tmp;
         N:i=0;
         while(i<times){
@@ -255,26 +259,26 @@ Class:string{
         };
         return(tmp)
     }
-    [Public]"R()"()->R:={
+    Public "R()"()->R:={
         return(T2R(ad))
     }
-    [Public]==(string:s)->Boolen:={
+    Public ==(string:s)->Boolen:={
         return(CmpStr(ad,s.ad))
     }
-    [Public]!=(string:s)->Boolen:={
+    Public !=(string:s)->Boolen:={
         return(not CmpStr(ad,s.ad))
     }
-    [Public]"N()"()->N:={
+    Public "N()"()->N:={
 		return(ad)
 	}
 }
 Class:test{
-    [Public]"sizeof()"(Z:arg)->N:={
+    Public "sizeof()"(Z:arg)->N:={
         print("Z");
 
         return(arg)
     }
-    [Public]"sizeof()"(R:arg)->N:={
+    Public "sizeof()"(R:arg)->N:={
         print("R");
         return(233)
     }
@@ -310,7 +314,7 @@ Main{
     PrepareLexer(lex);
 
     AST ast{};
-	
+
     ast.analyze(lex.importedLibs, lex.globals, lex.functionSets, lex.structures, lex.ExternFunctions, lex.constants);
 
 	IRGenerator ir{};
@@ -322,7 +326,7 @@ Main{
     ByteArray<unsigned char> mexe;
     err = !IR2MEXE(ir.IR, mexe);
     if (err) return 0;
-#ifdef _WIN32
+#if _WIN32 and !(defined _WIN64)
     x86Runner::LoadMEXE(mexe);
     x86Runner::run();
 #endif // _WIN32
@@ -356,6 +360,10 @@ bool process_command(std::vector<lstring> args) {
 		if (err) return false;
 		ByteArray<unsigned char> mexe;
 		err = !IR2MEXE(ir.IR, mexe);
+#ifdef _DEBUG
+        std_lcout << ir.IR << std::endl;
+#endif // _DEBUG
+
 		if (err) return false;
 #ifdef _WIN32
         x86Runner::LoadMEXE(mexe);
@@ -392,7 +400,7 @@ bool process_command(std::vector<lstring> args) {
         ByteArray<unsigned char> mexe;
 		if (!IR2MEXE(readFileString(args[1]), mexe)) return false;
 		writeFileByteArray(args[2], mexe);
-		return true;	
+		return true;
     }
     else if (args.size() == 3 && args[0] == R("build")) {
         workPath = getDictionary(args[1]) + R("\\");
@@ -426,23 +434,26 @@ bool process_command(std::vector<lstring> args) {
 		if (err) return false;
 		ByteArray<unsigned char> mexe;
 		err = !IR2MEXE(ir.IR, mexe);
-        //std_lcout << ir.IR;
+#ifdef _DEBUG
+        std_lcout << ir.IR << std::endl;
+#endif // _DEBUG
 		if (err) return false;
-#ifdef _WIN32
-        x86Runner::LoadMEXE(mexe);
-        x86Runner::run();
+#if _WIN32 and !(defined _WIN64)
+        if (x86Runner::LoadMEXE(mexe))
+            x86Runner::run();
 #endif // _WIN32
-		return true;	
+		return true;
     }
 }
 
 int main(int argn, char* argv[]) {
-#ifdef G_UNICODE_
-    std::wcout.imbue(std::locale("zh_CN"));
-#endif 
-//#if _DEBUG
-//    test(argn, argv);
-//#else
+#if G_UNICODE_
+    LOCALE_WCOUT
+#endif
+
+#if _DEBUG && false
+    test(argn, argv);
+#else
     if (argn == 1) {
         std::cout << "Usage:\n";
 		std::cout << "runIR <IR file>\n";
@@ -455,9 +466,13 @@ int main(int argn, char* argv[]) {
     }
     std::vector<lstring> args;
     for (int i = 1; i < argn; i++) {
+#if G_UNICODE_
         args.push_back(to_wide_string(argv[i]));
+#else
+        args.push_back(argv[i]);
+#endif
     }
     process_command(args);
-//#endif // _DEBUG
+#endif // _DEBUG
 	return 0;
 }

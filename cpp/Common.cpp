@@ -45,15 +45,18 @@ namespace MLang {
         if (sin >> c) return false;
         return true;
     }
-    bool isNum_(lstring str) {
-        try {
-            std::stold(str);
-            return true;
+
+    bool isNum_(const lstring &s)
+    {
+        try{
+            std::stold(s);
         }
-        catch (std::exception e) {
+        catch (std::invalid_argument e) {
             return false;
         }
+        return true;
     }
+
     intptr_t search(std::vector<lstring>& tks, lstring str, int type, std::optional<intptr_t> begin, intptr_t offset) {
         if (!tks.size() || begin > tks.size()) return -1;
         if (!begin.has_value()) begin = type == 0 ? 0 : tks.size();
@@ -109,20 +112,31 @@ namespace MLang {
         return head;
     }
 
-    lstring readFileString(lstring path) {
-        std::ifstream fin{};
-        fin.open(path, std::ios::in);
-        if (!fin.is_open()) return R("");
-        std::string buf;
-        lstring buf2{};
-        while (std::getline(fin, buf, '\0')) {//?
-#ifdef  G_UNICODE_
-            buf2 += to_wide_string(buf);
+    lstring readFileString(const lstring& path) {
+#if  G_UNICODE_
+        std::wifstream fin{};
+        LOCALE_FIN
+        std::wstring buf;
 #else
-            buf2 += buf;
-#endif //  UNICODE
+        std::ifstream fin{};
+        std::string buf;
+#endif
+        fin.open(path.c_str(), std::ios::in);
+        if (!fin.is_open()) return R("");
+#if G_UNICODE_
+        // Check for BOM
+        wchar_t bom[1];
+        fin.read(bom, 1);
+        if (bom[0] != 65279) {
+            // If it's not a BOM, put the bytes back into the stream
+            fin.seekg(0);
         }
+#endif
+        lstring buf2{};
+        while (std::getline(fin, buf, R('\0')))
+            buf2 += buf;
         fin.close();
+        DebugOutput(buf2);
         return buf2;
     }
 
@@ -145,13 +159,14 @@ namespace MLang {
         tmp.push_back(str.substr(lp, str.size() - lp + 1));
         return tmp;
     }
-    bool writeFileString(lstring path, lstring str) {
+    bool writeFileString(const lstring &path, lstring str)
+    {
 #if G_UNICODE_
         std::wofstream fout{};
 #else
         std::ofstream fout{};
 #endif // UNICODE
-        fout.open(path, std::ios::out);
+        fout.open(path.c_str(), std::ios::out);
         if (!fout.is_open()) return false;
         fout << str;
         fout.close();

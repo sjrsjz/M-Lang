@@ -4,7 +4,7 @@ static const std::string base64_chars =
 "abcdefghijklmnopqrstuvwxyz"
 "0123456789+/";
 
-std::string base64_encode(const std::string& input) {
+std::string base64_encode_(const std::string& input) {
     std::string encoded;
     int i = 0;
     int j = 0;
@@ -43,7 +43,7 @@ std::string base64_encode(const std::string& input) {
     return encoded;
 }
 
-std::string base64_decode(const std::string& input) {
+std::string base64_decode_(const std::string& input) {
     int in_len = input.size();
     int i = 0;
     int j = 0;
@@ -91,19 +91,19 @@ lstring base64_encode(const lstring& input) {
     std::string tmp{};
     tmp.resize(input.size() * sizeof(wchar_t));
     memcpy((void*)tmp.c_str(), (void*)input.c_str(), input.size() * sizeof(wchar_t));
-    return MLang::to_wide_string(base64_encode(tmp));
+    return MLang::to_wide_string(base64_encode_(tmp));
 #else
-    return base64_encode(lstring);
+    return base64_encode_(input);
 #endif
 }
 lstring base64_decode(const lstring& input) {
 #if G_UNICODE_
-    std::string tmp = base64_decode(MLang::to_byte_string(input));
+    std::string tmp = base64_decode_(MLang::to_byte_string(input));
     std::wstring tmp2{};
     tmp2.resize(tmp.size() / sizeof(wchar_t));
     memcpy((void*)tmp2.c_str(), (void*)tmp.c_str(), tmp.size());
     return tmp2;
 #else
-    return base64_decode(lstring);
+    return base64_decode_(input);
 #endif
 }

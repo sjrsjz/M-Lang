@@ -365,3 +365,8 @@ FodyWeavers.xsd
 /example/Win32 api/M Lang.exe
 /example/ir.txt
 /example/test.mexe
+
+/build/
+.vscode/
+/example/Win32 api/run.bat
+/example/bass.dll

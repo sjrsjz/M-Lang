@@ -5,14 +5,14 @@
 
 
 Class:A{
-    [Public]N:a;
-    [Public]N:b;
+    Public N:a;
+    Public N:b;
 
-    [Public]_init_()->N:={
+    Public _init_()->N:={
         a=0;b=1024;
         print("init ");printN(&this);print("\n");
     }
-    [Public]_destroy_()->N:={
+    Public _destroy_()->N:={
         print("destroy ");printN(&this);print("\n"); 
     }
 }
@@ -43,6 +43,7 @@ Main{
         Array:A.set_init_destroy(~A$_init_,~A$_destroy_);
         A.ReDim(sizeof:A,2,3);
         A[0][0]->A=g();
+	N:a0;((&a0)->N)=((&a0+1)->N);
         A[0][1]->A.a=2;
         A[0][2]->A.a=3;
         A[1][0]->A.a=4;

@@ -1,0 +1,16 @@
+
+Main{
+	main()->N:={
+		for(N:i=0;i<100;i=i+1){
+			for(N:j=0;j<100;j=j+1){
+				Block()
+					print("A")
+					print("B")
+					print("C")
+					print("D")
+
+			};
+			print("\n")
+		}
+	}
+}
